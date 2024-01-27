@@ -15,5 +15,10 @@
 ////
 typedef os_int_t os_priority_t;
 
+////////////////////////////////////////////////////////////////////////////////
+////
+#ifndef OS_PRIORITY_MAX
+#define OS_PRIORITY_MAX 32
+#endif
 
 #endif /*INCLUDED_OS_PRIORITY_H*/

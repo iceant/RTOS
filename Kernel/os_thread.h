@@ -27,10 +27,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define OS_THREAD_STATE_IDLE        0
-#define OS_THREAD_STATE_READY       1
-#define OS_THREAD_STATE_SUSPENDED   2
-#define OS_THREAD_STATE_RUNNING     4
-#define OS_THREAD_STATE_WAIT        8
+#define OS_THREAD_STATE_READY       (1<<0)
+#define OS_THREAD_STATE_SUSPENDED   (1<<1)
+#define OS_THREAD_STATE_RUNNING     (1<<2)
+#define OS_THREAD_STATE_WAIT        (1<<3)
+#define OS_THREAD_STATE_EXIT        (1<<4)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

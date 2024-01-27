@@ -11,5 +11,9 @@
 #define NAME_MAX_SIZE 8
 #endif
 
+#ifndef OS_PRIORITY_MAX
+#define OS_PRIORITY_MAX 32
+#endif
+
 
 #endif /*INCLUDED_OS_KERNEL_CONFIG_H*/

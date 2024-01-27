@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
+
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+
 project(RTOS C)
 
 set(CMAKE_C_STANDARD 11)
@@ -21,3 +24,12 @@ endif ()
 
 add_dependencies(RTOS-Kernel RTOS-CPU)
 
+include(ExternalProject)
+ExternalProject_Add(Proj_CortexM4ContextSwitchDemo
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Applications/CortexM4ContextSwitchDemo
+    INSTALL_COMMAND ""
+    CMAKE_GENERATOR Ninja
+    CMAKE_ARGS
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/CMake/Toolchain/toolchain-arm-gnu.cmake
+        -DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/CMake
+)

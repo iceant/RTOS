@@ -1,11 +1,17 @@
 #include <os_thread.h>
 #include <string.h>
 #include <os_macros.h>
+#include <os_memory.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_thread__exit(os_thread_t * thread){
-
+    if(thread->state==OS_THREAD_STATE_EXIT) return;
+    thread->state = OS_THREAD_STATE_EXIT;
+    thread->remain_ticks = 0;
+    thread->curr_priority = OS_PRIORITY_MAX;
+    OS_LIST_REMOVE(&thread->ready_node);
+    OS_LIST_REMOVE(&thread->wait_node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +42,8 @@ os_err_t os_thread_init(os_thread_t * thread
     thread->thread_exit = os_thread__exit;
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->wait_node);
-
+    thread->state = OS_THREAD_STATE_IDLE;
+    
     int err = cpu_stack_init(thread_entry, parameter, stack_addr, stack_size, &thread->sp);
 
     return err==0?OS_EOK:OS_ERROR;
