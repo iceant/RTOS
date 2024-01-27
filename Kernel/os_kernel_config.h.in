@@ -1,0 +1,15 @@
+#ifndef INCLUDED_OS_KERNEL_CONFIG_H
+#define INCLUDED_OS_KERNEL_CONFIG_H
+
+#if defined(USE_TLSF)
+#ifndef TLSF_MEMORY_POOL_SIZE
+#define TLSF_MEMORY_POOL_SIZE (5*1024)
+#endif
+#endif
+
+#ifndef NAME_MAX_SIZE
+#define NAME_MAX_SIZE 8
+#endif
+
+
+#endif /*INCLUDED_OS_KERNEL_CONFIG_H*/
