@@ -37,30 +37,24 @@ unsigned int svc_exc_return;
 static void task0(void){
     while(1){
         printf("task0...\n");
-        delay(0x0003FFFF);
     }
-    
 }
 
 static void task1(void){
     while(1){
         printf("task1...\n");
-        delay(0x0003FFFF);
     }
-    
 }
 
 static void task2(void){
     while(1){
         printf("task2...\n");
-        delay(0x0003FFFF);
     }
 }
 
 static void task3(void){
     while(1){
         printf("task3...\n");
-        delay(0x0003FFFF);
     }
 }
 
