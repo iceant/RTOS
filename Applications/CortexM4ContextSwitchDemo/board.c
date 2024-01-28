@@ -53,6 +53,7 @@ static void USART_Configuration(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
 //#ifdef __GNUC__
 //    #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)                                                                \
 //#else                                                                                                      \

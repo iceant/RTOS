@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../CMake)
 include(utils)
 
 include(FetchContent)
@@ -32,7 +33,8 @@ endif ()
 set(N32L40X_SOURCES ${N32L40X_STD_PERIPH_DRIVER_SOURCES} ${N32L40x_CMSIS_SOURCES})
 set(LINKER_FILE "${N32L40X_SOURCE_DIR}/firmware/CMSIS/device/n32l40x_flash.ld")
 
-set(CPU_FLAGS -mthumb -mcpu=cortex-m4 -mfloat-abi=soft)
+set(CPU_FLAGS -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
 
 set(COMPILER_FLAGS
         -ffreestanding
@@ -48,6 +50,10 @@ add_definitions(-DUSE_STDPERIPH_DRIVER -DN32L40X)
 file(GLOB SOURCES *.c)
 set(SOURCES ${SOURCES} ${N32L40X_SOURCES})
 
+if(CMAKE_C_COMPILER_ID MATCHES GNU)
+    list(APPEND SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/asm_gcc.s)
+endif ()
+
 foreach (item IN LISTS SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCES: ${item}")
 endforeach ()
@@ -58,7 +64,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC ${N32L40X_INCLUDE_DIR}
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )
-target_link_options(${PROJECT_NAME} PRIVATE -lc -Wl,--gc-sections -Wl,-T ${LINKER_FILE})
+target_link_options(${PROJECT_NAME} PRIVATE -Wl,--gc-sections -Wl,-T ${LINKER_FILE})
 
 firmware_size(${PROJECT_NAME} sysv)
 generate_object(${PROJECT_NAME} .bin binary)
