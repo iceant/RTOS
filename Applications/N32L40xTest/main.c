@@ -18,16 +18,6 @@ void delay(unsigned long ms){
 #define SVC(code) __asm__ __volatile__("svc %0"::"I"(code):"memory")
 #define OS_Start() __asm volatile ("svc #0x00" : : : "memory")
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
-void os_kernel_cpu_init(void){
-    NVIC_SetPriority(PendSV_IRQn, 0xFF);
-    SysTick_Config(SystemCoreClock/100);
-    __set_CONTROL(0x03);
-    __ISB();
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -47,13 +37,14 @@ static void thread_entry(void* p){
     int id = (int)p;
     while(1){
         printf("Thread %d\n", id);
+        os_thread_mdelay(1000);
     }
 }
 
 void os_kernel_cpu_config(void)
 {
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
-    SysTick_Config(SystemCoreClock/1000); /* 1ms = tick */
+    SysTick_Config(SystemCoreClock/CPU_TICKS_PER_SECOND); /* 1ms = tick */
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////

@@ -63,7 +63,7 @@ int cpu_stack_init(void *thread_entry, void *parameter, void *stack_addr, int st
     CPU_REG(sp + (17 << 2)) = (cpu_uintptr_t) 0x01000000; /*xPSR*/
     CPU_REG(sp + (16 << 2)) = (cpu_uintptr_t) thread_entry; /*PC*/
     CPU_REG(sp + (10 << 2)) = (cpu_uintptr_t) parameter; /*R0*/
-    CPU_REG(sp + (1 << 2)) = (cpu_uintptr_t) 0x03; /*Init CONTROL register with NO_PRIVILEGE|NO_FP*/
+    CPU_REG(sp + (1 << 2)) = (cpu_uintptr_t) 0x02; /*Init CONTROL register with NO_PRIVILEGE|NO_FP*/
     CPU_REG(sp) = (cpu_uintptr_t) 0xFFFFFFFDUL; /*EXC_RETURN*/
 
     if (cpu_sp) {

@@ -23,7 +23,9 @@
 #include <os_list.h>
 #endif /*INCLUDED_OS_LIST_H*/
 
-
+#ifndef INCLUDED_OS_TIMER_H
+#include <os_timer.h>
+#endif /* INCLUDED_OS_TIMER_H */
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define OS_THREAD_STATE_IDLE        0
@@ -51,6 +53,7 @@ typedef struct os_thread_s{
     os_list_node_t ready_node;      /* wait on ready table */
     os_list_node_t wait_node;       /* wait on wait kernel object, like timer, mutex, semaphore etc. */
     void (*thread_exit)(struct os_thread_s*);
+    os_timer_node_t timer_node;
 }os_thread_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +77,10 @@ os_err_t os_thread_suspend(os_thread_t * thread);
 os_err_t os_thread_resume(os_thread_t* thread);
 
 os_err_t os_thread_exit(os_thread_t * thread);
+
+void os_thread_sleep(os_tick_t tick);
+
+void os_thread_mdelay(os_size_t ms);
 
 #endif /*INCLUDED_OS_THREAD_H*/
 

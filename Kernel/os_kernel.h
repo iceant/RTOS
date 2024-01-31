@@ -54,6 +54,13 @@
 #include <os_interrupt.h>
 #endif /* INCLUDED_OS_INTERRUPT_H */
 
+#ifndef INCLUDED_OS_TIMER_H
+#include <os_timer.h>
+#endif /* INCLUDED_OS_TIMER_H */
+
+#ifndef INCLUDED_OS_IDLE_H
+#include <os_idle.h>
+#endif /* INCLUDED_OS_IDLE_H */
 ////////////////////////////////////////////////////////////////////////////////
 ////
 extern void os_kernel_cpu_config(void);

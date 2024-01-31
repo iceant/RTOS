@@ -4,6 +4,7 @@
 #include <os_priority.h>
 #include <os_macros.h>
 #include <os_interrupt.h>
+#include <os_timer.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -41,6 +42,7 @@ static void os_scheduler__on_tick(void)
     }
     cpu_interrupt_enable(level);
     
+    need_schedule_flag = os_timer_tick();
     
     if(need_schedule_flag){
         os_scheduler_schedule();
@@ -73,11 +75,13 @@ os_err_t os_scheduler__ready_table_next(os_thread_t** thread){
     {
         head = &os_scheduler__ready_table[priority];
         node = OS_LIST_NEXT(head);
-        OS_LIST_REMOVE(node);
-        if(OS_LIST_IS_EMPTY(head)){
-            os_priority_unmark(priority);
+        if(priority!=OS_PRIORITY_MAX-1){
+            OS_LIST_REMOVE(node);
+            if(OS_LIST_IS_EMPTY(head)){
+                os_priority_unmark(priority);
+            }
         }
-
+        
         if(thread){
             *thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
         }
@@ -141,7 +145,7 @@ os_err_t os_scheduler_schedule(void)
         curr_stack_p = &curr_thread->sp;
         next_stack_p = &next_thread->sp;
         if(curr_thread->state==OS_THREAD_STATE_YIELD){
-            os_scheduler_append_ready(curr_thread, true);
+            os_scheduler_push_back(curr_thread);
         }
     }
     
@@ -152,21 +156,17 @@ os_err_t os_scheduler_schedule(void)
     
     if(cpu_stack_switch(curr_stack_p, next_stack_p)!=0){
         /*没有被调度，加入就绪表，下次调度*/
-        os_scheduler_append_ready(next_thread, false /*下次调度优先调度这个任务*/);
+        os_scheduler_push_front(next_thread);  /*下次调度优先调度这个任务*/
     }
 
     return OS_EOK;
 }
 
-os_err_t os_scheduler_append_ready(os_thread_t* thread, bool is_push_back)
+os_err_t os_scheduler_push_back(os_thread_t* thread)
 {
     register cpu_uintptr_t level = cpu_interrupt_disable();
     {
-        if(is_push_back){
-            OS_LIST_INSERT_BEFORE(&os_scheduler__ready_table[thread->curr_priority], &thread->ready_node);
-        }else{
-            OS_LIST_INSERT_AFTER(&os_scheduler__ready_table[thread->curr_priority], &thread->ready_node);
-        }
+        OS_LIST_INSERT_BEFORE(&os_scheduler__ready_table[thread->curr_priority], &thread->ready_node);
         thread->remain_ticks = thread->init_ticks;
         thread->state = OS_THREAD_STATE_READY;
         os_priority_mark(thread->curr_priority);
@@ -176,8 +176,62 @@ os_err_t os_scheduler_append_ready(os_thread_t* thread, bool is_push_back)
     return OS_EOK;
 }
 
+os_err_t os_scheduler_push_front(os_thread_t* thread)
+{
+    register cpu_uintptr_t level = cpu_interrupt_disable();
+    {
+        OS_LIST_INSERT_AFTER(&os_scheduler__ready_table[thread->curr_priority], &thread->ready_node);
+        thread->remain_ticks = thread->init_ticks;
+        thread->state = OS_THREAD_STATE_READY;
+        os_priority_mark(thread->curr_priority);
+    }
+    cpu_interrupt_enable(level);
+    
+    return OS_EOK;
+}
+
 os_thread_t * os_scheduler_current_thread(void)
 {
     return os_scheduler__current_thread;
+}
+
+os_err_t os_scheduler_remove(os_thread_t* thread)
+{
+    assert(thread);
+    
+    os_thread_t * curr_thread = thread;
+    os_list_node_t *head = &os_scheduler__ready_table[curr_thread->curr_priority];
+    register cpu_uintptr_t level = cpu_interrupt_disable();
+    {
+        OS_LIST_REMOVE(&curr_thread->ready_node);
+        if(OS_LIST_IS_EMPTY(head)){
+            os_priority_unmark(curr_thread->curr_priority);
+        }
+    }
+    cpu_interrupt_enable(level);
+    return OS_EOK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+static void os_scheduler__timeout(os_time_t time, void* userdata){
+    os_thread_t* thread = (os_thread_t*)userdata;
+    os_scheduler_push_back(thread);
+}
+
+os_err_t os_scheduler_timed_wait(os_thread_t* thread, os_tick_t tick){
+    
+    register cpu_uintptr_t level = cpu_interrupt_disable();
+    thread->state = OS_THREAD_STATE_WAIT;
+    cpu_interrupt_enable(level);
+    
+    os_err_t err = os_timer_add(&thread->timer_node, os_scheduler__timeout, thread, tick);
+    if(err!=OS_EOK){
+        return err;
+    }
+
+    
+    return os_scheduler_schedule();
 }
 

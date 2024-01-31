@@ -64,6 +64,7 @@ typedef os_uint_t   os_size_t;
 #define OS_PRIu     PRIu32
 #define OS_PRIx     PRIx32
 #define OS_PRIX     PRIX32
+#define OS_ALIGN_SIZE sizeof(os_size_t)
 #endif
 
 #if defined(CPU_64BIT)

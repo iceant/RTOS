@@ -16,8 +16,12 @@ os_err_t os_kernel_init(void)
     os_kernel__init_flag = false;
     
     os_memory_init();
-
+    
+    os_timer_init();
+    
     os_scheduler_init();
+    
+    os_idle_init();
     
     os_kernel_cpu_config();
     

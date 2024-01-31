@@ -43,6 +43,7 @@ os_err_t os_thread_init(os_thread_t * thread
     thread->thread_exit = os_thread__exit;
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->wait_node);
+    
     thread->state = OS_THREAD_STATE_IDLE;
     
     int err = cpu_stack_init(thread_entry, parameter, stack_addr, stack_size, &thread->sp);
@@ -55,9 +56,39 @@ os_err_t os_thread_startup(os_thread_t * thread)
 {
     assert(thread);
 
-    os_err_t err = os_scheduler_append_ready(thread, true);
-    
-    return err;
+    return os_scheduler_push_back(thread);
+}
+
+os_thread_t* os_thread_self(void)
+{
+    return os_scheduler_current_thread();
+}
+
+os_err_t os_thread_suspend(os_thread_t * thread)
+{
+    os_scheduler_remove(thread);
+    OS_LIST_REMOVE(&thread->wait_node);
+    thread->state = OS_THREAD_STATE_SUSPENDED;
+    return OS_EOK;
+}
+
+os_err_t os_thread_resume(os_thread_t* thread){
+    return os_scheduler_push_back(thread);
 }
 
 
+os_err_t os_thread_exit(os_thread_t * thread)
+{
+    thread->thread_exit(thread);
+    return OS_EOK;
+}
+
+void os_thread_sleep(os_tick_t tick)
+{
+    os_scheduler_timed_wait(os_thread_self(), tick);
+}
+
+void os_thread_mdelay(os_size_t ms)
+{
+    os_scheduler_timed_wait(os_thread_self(), os_tick_from_millisecond(ms));
+}
