@@ -1,3 +1,11 @@
 pack:
   - ../../Packs/Nationstech.N32L40x_DFP.0.9.0.pack
   - ../../Packs/Nationstech.N32G45x_DFP.1.0.6.pack
+#target:
+#  n32l406cb
+
+probes:
+  601012352:
+    target_override: n32l406cb
+
+frequency: 5000000

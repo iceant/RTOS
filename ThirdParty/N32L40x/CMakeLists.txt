@@ -40,7 +40,7 @@ if(CMAKE_C_COMPILER_ID MATCHES GNU)
             -ffunction-sections
             -fdata-sections
             -fno-common
-            -fshort-enums
+#            -fshort-enums
 #            -ffreestanding
 #            -ffunction-sections
 #            -fdata-sections
@@ -48,9 +48,11 @@ if(CMAKE_C_COMPILER_ID MATCHES GNU)
 #            -fmessage-length=0
 #            -fshort-enums
     )
-    set(LINK_FLAGS -lc -lm -lnosys -Wl,--gc-sections
+    set(LINK_FLAGS -lc -lm -Wl,--gc-sections
             -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--cref -Wl,--print-memory-usage
-            -specs=nano.specs -specs=nosys.specs)
+            -specs=nano.specs
+#            -specs=nosys.specs -lnosys
+    )
 #    add_compile_options(${CPU_FLAGS} ${COMPILER_FLAGS})
 #    add_link_options(${CPU_FLAGS} -T${LINKER_FILE})
     target_link_options(${PROJECT_NAME} PUBLIC ${CPU_FLAGS} -T${LINKER_FILE} ${LINK_FLAGS})
@@ -65,5 +67,5 @@ endforeach ()
 target_sources(${PROJECT_NAME} PUBLIC ${N32L40X_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${N32L40X_INCLUDE_DIR})
 target_compile_options(${PROJECT_NAME} PUBLIC ${CPU_FLAGS} ${COMPILER_FLAGS})
-target_compile_definitions(${PROJECT_NAME} PUBLIC USE_STDPERIPH_DRIVER N32L40X __FPU_PRESENT)
+target_compile_definitions(${PROJECT_NAME} PUBLIC USE_STDPERIPH_DRIVER N32L40X __FPU_PRESENT=1)
 

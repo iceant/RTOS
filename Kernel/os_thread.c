@@ -55,7 +55,9 @@ os_err_t os_thread_startup(os_thread_t * thread)
 {
     assert(thread);
 
-    return os_scheduler_append_ready(thread, true);
+    os_err_t err = os_scheduler_append_ready(thread, true);
+    
+    return err;
 }
 
 

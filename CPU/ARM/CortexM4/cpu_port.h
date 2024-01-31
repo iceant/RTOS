@@ -26,7 +26,4 @@ typedef cpu_int_t       cpu_intptr_t;
 ////
 #define CPU_REG(ADDRESS)  (*((volatile cpu_uintptr_t *)(ADDRESS)))
 
-
-
-
 #endif /*INCLUDED_CPU_PORT_H*/

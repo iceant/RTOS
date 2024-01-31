@@ -24,18 +24,19 @@ if(CMAKE_C_COMPILER_ID MATCHES GNU)
     )
 endif ()
 
-set(CPU_INCLUDE_DIR ${CPU_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}  CACHE STRING "" FORCE)
-set(CPU_SOURCES ${SOURCES} CACHE STRING "" FORCE)
+set(CPU_INCLUDE_DIR ${CPU_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+set(CPU_SOURCES ${SOURCES})
+
+
+add_library(${PROJECT_NAME} "")
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CPU_INCLUDE_DIR})
 
 foreach (item IN LISTS SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
 endforeach ()
 
-include_directories(${CPU_INCLUDE_DIR})
-add_library(${PROJECT_NAME} "")
-target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
-#target_include_directories(${PROJECT_NAME} PUBLIC ${CPU_INCLUDE_DIR})
 
-
-
-
+foreach (item IN LISTS CPU_INCLUDE_DIR)
+    message(STATUS "[${PROJECT_NAME}] INCLUDE: ${item}")
+endforeach ()

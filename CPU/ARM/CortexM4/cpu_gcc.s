@@ -6,10 +6,6 @@
   .equ  SCB_ICSR,                    0xE000ED04
   .equ  SCB_ICSR_PENDSVSET_Msk,      0x10000000
 
-  .type cpu_clz, %function
-  .type cpu_interrupt_enable, %function
-  .type cpu_interrupt_disable, %function
-
   .global  svc_exc_return
   .global  cpu__stack_next_p
   .global  cpu__stack_curr_p
@@ -17,11 +13,6 @@
 
   .global SVC_Handler_C
   .global HardFault_Handler_C
-  .global cpu_clz
-  .global cpu_interrupt_enable
-  .global cpu_interrupt_disable
-
-
 
   .section  .text.SVC_Handler
   .global SVC_Handler
@@ -103,15 +94,14 @@ HardFault_Handler:
     LDR R2, =HardFault_Handler_C
     BX R2
 
-.end
 
 
 /*
  * cpu_uintptr_t cpu_interrupt_disable();
  */
     .section  .text.cpu_interrupt_disable
-    .global cpu_interrupt_disable
-    .type cpu_interrupt_disable, %function
+    .global  cpu_interrupt_disable
+    .type  cpu_interrupt_disable, %function
 cpu_interrupt_disable:
     MRS     r0, PRIMASK
     CPSID   I
@@ -120,9 +110,9 @@ cpu_interrupt_disable:
 /*
  * void cpu_interrupt_enable(cpu_uintptr_t level);
  */
-.section  .text.cpu_interrupt_enable
-.global cpu_interrupt_enable
-.type cpu_interrupt_enable, %function
+    .section  .text.cpu_interrupt_enable
+    .global cpu_interrupt_enable
+    .type cpu_interrupt_enable, %function
 cpu_interrupt_enable:
     MSR     PRIMASK, r0
     BX      LR
@@ -131,11 +121,24 @@ cpu_interrupt_enable:
 /*
  * cpu_uintptr_t cpu_clz(cpu_uintptr_t value);
  */
-.section  .text.cpu_clz
-.global cpu_clz
-.type cpu_clz, %function
+    .section  .text.cpu_clz
+    .global cpu_clz
+    .type cpu_clz, %function
 cpu_clz:
     CLZ     R0, R0
     BX      LR
+
+/*
+ * cpu_uintptr_t cpu_ctz(cpu_uintptr_t value);
+ */
+    .section  .text.cpu_ctz
+    .global cpu_ctz
+    .type cpu_ctz, %function
+cpu_ctz:
+    RBIT    R0, R0
+    CLZ     R0, R0
+    BX      LR
+
+.end
 
 

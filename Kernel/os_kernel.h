@@ -50,6 +50,14 @@
 #include <os_scheduler.h>
 #endif /*INCLUDED_OS_SCHEDULER_H*/
 
+#ifndef INCLUDED_OS_INTERRUPT_H
+#include <os_interrupt.h>
+#endif /* INCLUDED_OS_INTERRUPT_H */
+
+////////////////////////////////////////////////////////////////////////////////
+////
+extern void os_kernel_cpu_config(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 os_err_t os_kernel_init(void);

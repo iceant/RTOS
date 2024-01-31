@@ -20,6 +20,7 @@ typedef os_int_t os_err_t;
 #define OS_EINVAL       (-3)
 #define OS_EFULL        (-4)
 #define OS_EEMPTY       (-5)
+#define OS_EAGAIN       (-6)
 
 
 

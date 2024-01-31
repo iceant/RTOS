@@ -7,8 +7,6 @@
 ////
 cpu_uintptr_t svc_exc_return = 0;
 
-extern void os_kernel_cpu_init(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -18,13 +16,14 @@ void SVC_Handler_C(unsigned  int * svc_args)
     svc_number = ((char*)svc_args[6])[-2];
     switch (svc_number) {
         case 0:
-            os_kernel_cpu_init();
+//            os_kernel_cpu_init();
             /*
             NVIC_SetPriority(PendSV_IRQn, 0xFF);
             SysTick_Config(SystemCoreClock/1000);
             __set_CONTROL(0x03);
             __ISB();
              */
+            svc_exc_return = 0xFFFFFFFDU;
             break;
         default:
             printf("ERROR: Unknown SVC service number.\n");

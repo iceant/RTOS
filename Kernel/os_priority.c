@@ -32,7 +32,7 @@ os_priority_t os_priority_get_highest(void){
         priority += OS_UINTPTR_BITS;
         table_p++;
     }
-    priority += (os_priority_t)cpu_clz(*table_p);
+    priority += (os_priority_t)cpu_ctz(*table_p);
     return priority;
 }
 
@@ -51,7 +51,7 @@ void os_priority_mark(os_priority_t priority)
     bit <<= (OS_UINTPTR_BITS -1u) - bit_nbr;
     os_priority__table[ix] |= bit;
 #endif
-    ((uint8_t *)os_priority__table)[priority/8]|=1<<(priority % 8);
+    ((uint8_t *)os_priority__table)[priority/8]|=(1<<(priority % 8));
 }
 
 void os_priority_unmark(os_priority_t priority)

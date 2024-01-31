@@ -14,13 +14,13 @@ os_err_t os_kernel_init(void)
     if(os_kernel__init_flag) return OS_ERROR;
 
     os_kernel__init_flag = false;
-
+    
     os_memory_init();
 
     os_scheduler_init();
-
-    os_kernel_cpu_init();
-
+    
+    os_kernel_cpu_config();
+    
     os_kernel__init_flag = true;
 
     return OS_EOK;

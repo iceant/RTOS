@@ -54,13 +54,16 @@ static void USART_Configuration(void)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-//#ifdef __GNUC__
-//    #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)                                                                \
-//#else                                                                                                      \
-//    #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)                                                        \
-//#endif
+#ifdef __GNUC__
+    #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+    #define GETCHAR_PROTOTYPE int __io_getchar(void)
+#else
+    #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+    #define GETCHAR_PROTOTYPE int fget(FILE* f)
+#endif
 
-int __io_putchar(int ch)
+
+PUTCHAR_PROTOTYPE
 {
     USART_SendData(USART1, (uint8_t)ch);
     while (USART_GetFlagStatus(USART1, USART_FLAG_TXDE) == RESET)
@@ -69,7 +72,7 @@ int __io_putchar(int ch)
     return (ch);
 }
 
-int __io_getchar(void)
+GETCHAR_PROTOTYPE
 {
     /* Loop until the USARTy Receive Data Register is not empty */
     while (USART_GetFlagStatus(USART1, USART_FLAG_RXDNE) == RESET)
@@ -78,6 +81,7 @@ int __io_getchar(void)
     /* Store the received byte in RxBuffer */
     return USART_ReceiveData(USART1);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
