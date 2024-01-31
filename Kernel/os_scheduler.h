@@ -17,6 +17,8 @@ os_err_t os_scheduler_init(void);
 
 os_err_t os_scheduler_schedule(void);
 
-os_err_t os_scheduler_append_ready(os_thread_t* thread);
+os_err_t os_scheduler_append_ready(os_thread_t* thread, bool is_push_back);
+
+os_thread_t * os_scheduler_current_thread(void);
 
 #endif /*INCLUDED_OS_SCHEDULER_H*/

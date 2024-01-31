@@ -34,15 +34,28 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#ifndef INCLUDED_OS_SCHEDULER_H
-#include <os_scheduler.h>
-#endif /*INCLUDED_OS_SCHEDULER_H*/
+#ifndef INCLUDED_OS_TICK_H
+#include <os_tick.h>
+#endif /*INCLUDED_OS_TICK_H*/
+
+#ifndef INCLUDED_OS_PRIORITY_H
+#include <os_priority.h>
+#endif /*INCLUDED_OS_PRIORITY_H*/
 
 #ifndef INCLUDED_OS_THREAD_H
 #include <os_thread.h>
 #endif /*INCLUDED_OS_THREAD_H*/
 
+#ifndef INCLUDED_OS_SCHEDULER_H
+#include <os_scheduler.h>
+#endif /*INCLUDED_OS_SCHEDULER_H*/
 
+////////////////////////////////////////////////////////////////////////////////
+////
+os_err_t os_kernel_init(void);
 
+os_err_t os_kernel_startup(void);
+
+bool os_kernel_ready(void);
 
 #endif /*INCLUDED_OS_KERNEL_H*/

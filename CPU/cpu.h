@@ -11,6 +11,22 @@
 ////
 
 /*
+  Used in OS Kernel to Init CPU
+ */
+extern void os_kernel_cpu_init(void);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// ASM INTERFACE
+extern int cpu_stack_switch(void** current_stack_p, void** next_stack_p);
+extern void cpu_interrupt_enable(cpu_uintptr_t level);
+extern cpu_uintptr_t cpu_interrupt_disable(void);
+extern cpu_uintptr_t cpu_clz(cpu_uintptr_t value); /*Count Leading Zeros, Use Lookup table if CPU don't support this ASM CODE*/
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+/*
  Return:
     - cpu_sp: SP in CPU
  */

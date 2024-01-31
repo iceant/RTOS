@@ -13,7 +13,7 @@
 #define OS_ALIGN_DOWN(x,align) (x & ~(align-1))
 #define OS_ALIGN_UP(x,align) ((x + （align-1)) & ~(align-1))
 
-#define OS_CONTAINER_OF(ptr, type, member) ((type*)(((char*)ptr) - (unsigned long)(&(((type*)0)->member))))
+#define OS_CONTAINER_OF(ptr, type, member) ((type*)(((char*)ptr) - (os_uintptr_t)(&(((type*)0)->member))))
 
 #define OS_MAX(a, b) ((a)>(b)?(a):(b))
 #define OS_MIN(a, b) ((a)>(b)?(b):(a))

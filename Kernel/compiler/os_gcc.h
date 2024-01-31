@@ -101,6 +101,7 @@ __PACKED_STRUCT T_UINT32_READ { uint32_t v; };
 #endif
 
 
+#if 0
 /* ###########################  Core Function Access  ########################### */
 /** \ingroup  CMSIS_Core_FunctionInterface
     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
@@ -2065,7 +2066,9 @@ __STATIC_FORCEINLINE int32_t __SMMLA (int32_t op1, int32_t op2, int32_t op3)
 #endif /* (__ARM_FEATURE_DSP == 1) */
 /*@} end of group CMSIS_SIMD_intrinsics */
 
+#endif
 
 #pragma GCC diagnostic pop
+
 
 #endif /*INCLUDED_OS_GCC_H*/

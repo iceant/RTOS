@@ -21,4 +21,17 @@ typedef os_int_t os_priority_t;
 #define OS_PRIORITY_MAX 32
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+////
+void os_priority_init(void);
+
+os_priority_t os_priority_get_highest(void);
+
+void os_priority_mark(os_priority_t priority);
+
+void os_priority_unmark(os_priority_t priority);
+
+bool os_priority_is_marked(os_priority_t priority);
+
+
 #endif /*INCLUDED_OS_PRIORITY_H*/

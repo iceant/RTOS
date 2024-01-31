@@ -2,6 +2,7 @@
 #define INCLUDED_CPU_PORT_H
 
 #define CPU_32BIT
+#define CPU_CLZ_ASM_PRESENT
 #define CPU_ALIGN_SIZE          4
 
 #ifndef CPU_TICKS_PER_SECOND

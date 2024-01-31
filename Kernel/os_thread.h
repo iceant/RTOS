@@ -31,7 +31,8 @@
 #define OS_THREAD_STATE_SUSPENDED   (1<<1)
 #define OS_THREAD_STATE_RUNNING     (1<<2)
 #define OS_THREAD_STATE_WAIT        (1<<3)
-#define OS_THREAD_STATE_EXIT        (1<<4)
+#define OS_THREAD_STATE_YIELD       (1<<4)
+#define OS_THREAD_STATE_EXIT        (1<<5)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

@@ -2,7 +2,8 @@
 #include <string.h>
 #include <os_macros.h>
 #include <os_memory.h>
-
+#include <assert.h>
+#include <os_scheduler.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_thread__exit(os_thread_t * thread){
@@ -50,6 +51,11 @@ os_err_t os_thread_init(os_thread_t * thread
 }
 
 
+os_err_t os_thread_startup(os_thread_t * thread)
+{
+    assert(thread);
 
+    return os_scheduler_append_ready(thread, true);
+}
 
 
