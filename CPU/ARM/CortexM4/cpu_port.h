@@ -26,4 +26,26 @@ typedef cpu_int_t       cpu_intptr_t;
 ////
 #define CPU_REG(ADDRESS)  (*((volatile cpu_uintptr_t *)(ADDRESS)))
 
+#define SCB_ICSR  0xE000ED04
+
+#ifndef SCB_ICSR_PENDSVSET_Msk
+#define SCB_ICSR_PENDSVSET_Msk 0x10000000
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// GET CPU Register Value, USE ASM
+extern cpu_uintptr_t cpu_reg_IPSR(void);
+extern cpu_uintptr_t cpu_reg_CONTROL(void);
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#if defined(__GNUC__)
+#define __svc(sNum) __asm volatile("SVC %0" ::"M" (sNum))
+#endif
+
+
 #endif /*INCLUDED_CPU_PORT_H*/
+
+
+
+

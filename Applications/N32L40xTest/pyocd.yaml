@@ -7,5 +7,9 @@ pack:
 probes:
   601012352:
     target_override: n32l406cb
+  29A509317F281FB6DC9254C4D064247F:
+    target_override: n32l406cb
+  110136025431312034323934313038203432303497969903:
+    target_override: n32l406cb
 
 frequency: 5000000

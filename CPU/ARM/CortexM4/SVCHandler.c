@@ -1,7 +1,7 @@
 #include <SVCHandler.h>
 #include <stdio.h>
 #include <cpu.h>
-
+#include <cpu_port.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -16,13 +16,7 @@ void SVC_Handler_C(unsigned  int * svc_args)
     svc_number = ((char*)svc_args[6])[-2];
     switch (svc_number) {
         case 0:
-//            os_kernel_cpu_init();
-            /*
-            NVIC_SetPriority(PendSV_IRQn, 0xFF);
-            SysTick_Config(SystemCoreClock/1000);
-            __set_CONTROL(0x03);
-            __ISB();
-             */
+            CPU_REG(SCB_ICSR) |= SCB_ICSR_PENDSVSET_Msk;
             svc_exc_return = 0xFFFFFFFDU;
             break;
         default:

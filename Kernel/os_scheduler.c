@@ -103,7 +103,7 @@ os_err_t os_scheduler_init(void)
         OS_LIST_INIT(&os_scheduler__ready_table[i]);
     }
     os_scheduler__current_thread = 0;
-//    os_scheduler__schedule_flag = false;
+
     os_priority_init();
     
     cpu_set_tick_handler(os_scheduler__on_tick);

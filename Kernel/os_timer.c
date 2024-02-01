@@ -107,23 +107,28 @@ bool os_timer_tick(void){
     {
         time = os_timer__current_time;
         os_timer__find_wheel(time, &wheel);
-    }
-    cpu_interrupt_enable(level);
-    
-    if(OS_LIST_IS_EMPTY(wheel)) return need_schedule_flag;
-    
-    for(node = OS_LIST_NEXT(wheel); node!=wheel; ){
-        timer_node = OS_CONTAINER_OF(node, os_timer_node_t, node);
-        node = OS_LIST_NEXT(node);
-        if(timer_node->expires <= time){
-            os_timer_remove(timer_node);
-            timer_node->timeout(time, timer_node->userdata);
-            need_schedule_flag = true;
-        }else{
-            break;
+
+        if(OS_LIST_IS_EMPTY(wheel)){
+            cpu_interrupt_enable(level);
+            return need_schedule_flag;
+        }
+
+        for(node = OS_LIST_NEXT(wheel); node!=wheel; ){
+            timer_node = OS_CONTAINER_OF(node, os_timer_node_t, node);
+            node = OS_LIST_NEXT(node);
+            if(timer_node->expires <= time){
+//            os_timer_remove(timer_node);
+                OS_LIST_REMOVE(&timer_node->node);
+                timer_node->timeout(time, timer_node->userdata);
+                need_schedule_flag = true;
+            }else{
+                break;
+            }
         }
     }
-    
+    cpu_interrupt_enable(level);
+
+
     return need_schedule_flag;
 }
 

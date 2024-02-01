@@ -49,6 +49,7 @@ void os_kernel_cpu_config(void)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int main(void){
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
     board_init();
 

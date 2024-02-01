@@ -27,6 +27,7 @@ SVC_Handler:
   BL SVC_Handler_C
   LDR R1, =svc_exc_return
   LDR LR,[R1]
+  ISB
   BX LR
 
   .section  .text.PendSV_Handler
@@ -137,6 +138,27 @@ cpu_clz:
 cpu_ctz:
     RBIT    R0, R0
     CLZ     R0, R0
+    BX      LR
+
+
+/*
+ * cpu_uintptr_t cpu_reg_IPSR(void);
+ */
+    .section  .text.cpu_reg_IPSR
+    .global cpu_reg_IPSR
+    .type cpu_reg_IPSR, %function
+cpu_reg_IPSR:
+    MRS R0, IPSR
+    BX      LR
+
+/*
+ * cpu_uintptr_t cpu_reg_CONTROL(void);
+ */
+    .section  .text.cpu_reg_CONTROL
+    .global cpu_reg_CONTROL
+    .type cpu_reg_CONTROL, %function
+cpu_reg_CONTROL:
+    MRS R0, CONTROL
     BX      LR
 
 .end

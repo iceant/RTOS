@@ -2,13 +2,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-
-#define SCB_ICSR  0xE000ED04
-
-#ifndef SCB_ICSR_PENDSVSET_Msk
-#define SCB_ICSR_PENDSVSET_Msk 0x10000000
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -30,6 +23,17 @@ cpu_uint8_t cpu__stack_switch_flag = CPU_STACK_SWITCH_FLAG_OFF;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static cpu_tick_handler cpu_port__tick_handler=0;
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+/* CPU 是否在特权级别 */
+static int cpu__in_privilege(void){
+    if(cpu_reg_IPSR()!=0) return 1;
+    else if((cpu_reg_CONTROL() & 0x01)==0) return 1;
+    else return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -63,7 +67,7 @@ int cpu_stack_init(void *thread_entry, void *parameter, void *stack_addr, int st
     CPU_REG(sp + (17 << 2)) = (cpu_uintptr_t) 0x01000000; /*xPSR*/
     CPU_REG(sp + (16 << 2)) = (cpu_uintptr_t) thread_entry; /*PC*/
     CPU_REG(sp + (10 << 2)) = (cpu_uintptr_t) parameter; /*R0*/
-    CPU_REG(sp + (1 << 2)) = (cpu_uintptr_t) 0x02; /*Init CONTROL register with NO_PRIVILEGE|NO_FP*/
+    CPU_REG(sp + (1 << 2)) = (cpu_uintptr_t) 0x03; /*Init CONTROL register with NO_PRIVILEGE|NO_FP*/
     CPU_REG(sp) = (cpu_uintptr_t) 0xFFFFFFFDUL; /*EXC_RETURN*/
 
     if (cpu_sp) {
@@ -75,7 +79,7 @@ int cpu_stack_init(void *thread_entry, void *parameter, void *stack_addr, int st
 
 int cpu_stack_switch(void** current_stack_p, void** next_stack_p)
 {
-//    assert(current_stack_p);
+
     assert(next_stack_p);
     
     if(cpu__stack_switch_flag==CPU_STACK_SWITCH_FLAG_ON){
@@ -89,10 +93,15 @@ int cpu_stack_switch(void** current_stack_p, void** next_stack_p)
         cpu__stack_next_p = next_stack_p;
     }
     cpu_interrupt_enable(level);
-    
-    /*需要特权吗?*/
-    CPU_REG(SCB_ICSR) |= SCB_ICSR_PENDSVSET_Msk;
-    
+
+    if(cpu__in_privilege()==1){
+        /*设置中断需要特权，已在特权模式，直接设置*/
+        CPU_REG(SCB_ICSR) |= SCB_ICSR_PENDSVSET_Msk;
+    }else{
+        /*设置中断需要特权，没有特权，通过 SVC 来设置*/
+        __svc(0);
+    }
+
     return 0;
 }
 
