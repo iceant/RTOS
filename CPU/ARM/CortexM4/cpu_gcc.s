@@ -3,9 +3,6 @@
   .fpu softvfp
   .thumb
 
-  .equ  SCB_ICSR,                    0xE000ED04
-  .equ  SCB_ICSR_PENDSVSET_Msk,      0x10000000
-
   .global  svc_exc_return
   .global  cpu__stack_next_p
   .global  cpu__stack_curr_p

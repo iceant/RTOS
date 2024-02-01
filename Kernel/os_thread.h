@@ -28,20 +28,22 @@
 #endif /* INCLUDED_OS_TIMER_H */
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define OS_THREAD_STATE_IDLE        0
-#define OS_THREAD_STATE_READY       (1<<0)
-#define OS_THREAD_STATE_SUSPENDED   (1<<1)
-#define OS_THREAD_STATE_RUNNING     (1<<2)
-#define OS_THREAD_STATE_WAIT        (1<<3)
-#define OS_THREAD_STATE_YIELD       (1<<4)
-#define OS_THREAD_STATE_EXIT        (1<<5)
+#define OS_THREAD_STATE_IDLE                (0)
+#define OS_THREAD_STATE_READY               (1<<0)
+#define OS_THREAD_STATE_SUSPENDED           (1<<1)
+#define OS_THREAD_STATE_RUNNING             (1<<2)
+#define OS_THREAD_STATE_WAIT                (1<<3)          /* 等待通知,没有时间限制 */
+#define OS_THREAD_STATE_YIELD               (1<<4)
+#define OS_THREAD_STATE_EXIT                (1<<5)
+#define OS_THREAD_STATE_TIMEWAIT            (1<<6)          /* 等待时间到期 */
+#define OS_THREAD_STATE_TIMEOUT             (1<<7)          /* 等待时间到期，超时了 */
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct os_thread_s{
     void* sp;
     os_int_t state;
-    char name[NAME_MAX_SIZE];
+    char name[OS_NAME_MAX_SIZE];
     void* stack_addr;
     os_size_t stack_size;
     void (*thread_entry)(void*);
@@ -60,7 +62,7 @@ typedef struct os_thread_s{
 ////
 
 os_err_t os_thread_init(os_thread_t * thread
-                        , const char name[NAME_MAX_SIZE]
+                        , const char name[OS_NAME_MAX_SIZE]
                         , void (*thread_entry)(void*)
                         , void* parameter
                         , void* stack_addr

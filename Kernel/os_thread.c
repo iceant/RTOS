@@ -19,7 +19,7 @@ static void os_thread__exit(os_thread_t * thread){
 ////
 
 os_err_t os_thread_init(os_thread_t * thread
-        , const char name[NAME_MAX_SIZE]
+        , const char name[OS_NAME_MAX_SIZE]
         , void (*thread_entry)(void*)
         , void* parameter
         , void* stack_addr
@@ -28,7 +28,7 @@ os_err_t os_thread_init(os_thread_t * thread
         , os_tick_t init_ticks)
 {
     size_t name_size = strlen(name);
-    name_size = OS_MIN(name_size, NAME_MAX_SIZE-1);
+    name_size = OS_MIN(name_size, OS_NAME_MAX_SIZE-1);
     memcpy(thread->name, name, name_size);
     thread->name[name_size]='\0';
 
@@ -43,6 +43,7 @@ os_err_t os_thread_init(os_thread_t * thread
     thread->thread_exit = os_thread__exit;
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->wait_node);
+    OS_LIST_INIT(&thread->timer_node.node);
     
     thread->state = OS_THREAD_STATE_IDLE;
     

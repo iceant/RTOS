@@ -76,3 +76,10 @@ bool os_priority_is_marked(os_priority_t priority){
     assert(priority>=0 && priority<OS_PRIORITY_MAX);
     return ((((uint8_t*)os_priority__table)[priority/8] >> (priority%8))&1);
 }
+
+/* 小的优先级高 */
+int os_priority_cmp(os_priority_t a, os_priority_t b)
+{
+    return (a==b)?0:((a)<(b)?1:-1);
+}
+

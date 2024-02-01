@@ -32,7 +32,7 @@ static void os_scheduler__on_tick(void)
 //        printf("tick: %d\n", os_scheduler__tick_count);
         curr_thread = os_scheduler__current_thread;
         
-        if(curr_thread->state==OS_THREAD_STATE_RUNNING){
+        if(curr_thread->state & OS_THREAD_STATE_RUNNING){
             curr_thread->remain_ticks--;
             if(curr_thread->remain_ticks<=0){
                 need_schedule_flag = true;
@@ -114,7 +114,7 @@ os_err_t os_scheduler_init(void)
 
 os_err_t os_scheduler_schedule(void)
 {
-    cpu_uintptr_t level;
+    register cpu_uintptr_t level;
     os_thread_t * curr_thread;
     os_thread_t * next_thread;
     void** curr_stack_p = 0;
@@ -127,8 +127,8 @@ os_err_t os_scheduler_schedule(void)
     cpu_interrupt_enable(level);
 
     /*线程的时间片还没有用完，继续*/
-    if(curr_thread!=0 && ((curr_thread->state == OS_THREAD_STATE_RUNNING) && curr_thread->remain_ticks>0)){
-        return OS_ERROR;
+    if(curr_thread!=0 && ((curr_thread->state & OS_THREAD_STATE_RUNNING) && curr_thread->remain_ticks>0)){
+        return OS_EOK;
     }
 
     /*取出下一个任务*/
@@ -144,12 +144,12 @@ os_err_t os_scheduler_schedule(void)
     }else{
         curr_stack_p = &curr_thread->sp;
         next_stack_p = &next_thread->sp;
-        if(curr_thread->state==OS_THREAD_STATE_YIELD){
+        if(curr_thread->state & OS_THREAD_STATE_YIELD){
             os_scheduler_push_back(curr_thread);
         }
     }
-    
-    next_thread->state = OS_THREAD_STATE_RUNNING;
+    next_thread->state &= ~OS_THREAD_STATE_READY;
+    next_thread->state |= OS_THREAD_STATE_RUNNING;
     level = cpu_interrupt_disable();
     os_scheduler__current_thread = next_thread;
     cpu_interrupt_enable(level);
@@ -161,6 +161,7 @@ os_err_t os_scheduler_schedule(void)
 
     return OS_EOK;
 }
+
 
 os_err_t os_scheduler_push_back(os_thread_t* thread)
 {
@@ -217,20 +218,27 @@ os_err_t os_scheduler_remove(os_thread_t* thread)
 
 static void os_scheduler__timeout(os_time_t time, void* userdata){
     os_thread_t* thread = (os_thread_t*)userdata;
-    os_scheduler_push_back(thread);
+    register cpu_uintptr_t level = cpu_interrupt_disable();
+    {
+        OS_LIST_REMOVE(&thread->wait_node);             /* 如果之前挂在别的等待对象上，清除 */
+        os_scheduler_push_back(thread);                 /* 添加到就绪表中 */
+        thread->state |= OS_THREAD_STATE_TIMEOUT;       /* 标记当前线程出现了 TIMEOUT 事件 */
+    }
+    cpu_interrupt_enable(level);
 }
 
 os_err_t os_scheduler_timed_wait(os_thread_t* thread, os_tick_t tick){
     
+    os_err_t err;
+    
     register cpu_uintptr_t level = cpu_interrupt_disable();
-    thread->state = OS_THREAD_STATE_WAIT;
+    thread->state = OS_THREAD_STATE_TIMEWAIT;
+    err = os_timer_add(&thread->timer_node, os_scheduler__timeout, thread, tick, OS_TIMER_TYPE_ONCE);
     cpu_interrupt_enable(level);
     
-    os_err_t err = os_timer_add(&thread->timer_node, os_scheduler__timeout, thread, tick);
     if(err!=OS_EOK){
         return err;
     }
-
     
     return os_scheduler_schedule();
 }

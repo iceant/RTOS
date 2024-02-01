@@ -118,3 +118,7 @@ void SysTick_Handler(void)
     }
 }
 
+int cpu_in_interrupt(void){
+    return (cpu_reg_IPSR()!=0)?(1):(0);
+}
+

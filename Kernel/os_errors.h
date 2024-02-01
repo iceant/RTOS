@@ -22,6 +22,7 @@ typedef os_int_t os_err_t;
 #define OS_EEMPTY       (-5)
 #define OS_EAGAIN       (-6)
 #define OS_ESTATE       (-7)
+#define OS_ETIMEOUT     (-8)
 
 
 

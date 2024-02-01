@@ -86,7 +86,12 @@ typedef os_uint_t   os_size_t;
 #define OS_TRUE     true
 #define OS_FALSE    false
 
+////////////////////////////////////////////////////////////////////////////////
+//// CONSTANTS
 
+#define OS_WAIT_INFINITY (-1U)
 
+#define OS_QUEUE_FIFO (1<<0)
+#define OS_QUEUE_PRIO (1<<1)
 
 #endif /*INCLUDED_OS_TYPES_H*/

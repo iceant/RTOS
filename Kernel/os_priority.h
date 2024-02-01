@@ -33,5 +33,7 @@ void os_priority_unmark(os_priority_t priority);
 
 bool os_priority_is_marked(os_priority_t priority);
 
+/* 0:=, 1: >, -1: < */
+int os_priority_cmp(os_priority_t a, os_priority_t b);
 
 #endif /*INCLUDED_OS_PRIORITY_H*/

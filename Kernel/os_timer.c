@@ -117,10 +117,12 @@ bool os_timer_tick(void){
             timer_node = OS_CONTAINER_OF(node, os_timer_node_t, node);
             node = OS_LIST_NEXT(node);
             if(timer_node->expires <= time){
-//            os_timer_remove(timer_node);
                 OS_LIST_REMOVE(&timer_node->node);
                 timer_node->timeout(time, timer_node->userdata);
                 need_schedule_flag = true;
+                if(timer_node->flag & OS_TIMER_TYPE_REPEAT){
+                    os_timer_insert(timer_node);
+                }
             }else{
                 break;
             }
@@ -132,8 +134,26 @@ bool os_timer_tick(void){
     return need_schedule_flag;
 }
 
+os_err_t os_timer_insert(os_timer_node_t* node)
+{
+    register cpu_uintptr_t level;
+    os_list_t * wheel;
+    
+    OS_LIST_INIT(&node->node);
 
-os_err_t os_timer_add(os_timer_node_t* node, os_timer_timeout timeout, void* userdata, os_time_t time)
+    level = cpu_interrupt_disable();
+    {
+        node->expires = os_timer__current_time + node->time;
+        os_timer__find_wheel(node->expires, &wheel);
+        os_timer__insert_by_expires(node, wheel);
+    }
+    cpu_interrupt_enable(level);
+    
+    return OS_EOK;
+}
+
+
+os_err_t os_timer_add(os_timer_node_t* node, os_timer_timeout timeout, void* userdata, os_time_t time, int flag)
 {
     register cpu_uintptr_t level;
     os_list_t * wheel;
@@ -141,6 +161,8 @@ os_err_t os_timer_add(os_timer_node_t* node, os_timer_timeout timeout, void* use
     OS_LIST_INIT(&node->node);
     node->timeout = timeout;
     node->userdata = userdata;
+    node->flag = flag;
+    node->time = time;
     
     level = cpu_interrupt_disable();
     {

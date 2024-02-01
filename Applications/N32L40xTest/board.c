@@ -51,6 +51,21 @@ static void USART_Configuration(void)
 
 }
 
+static void NVIC_Configuration(void){
+    NVIC_InitType NVIC_InitStructure;
+    
+    /* Configure the NVIC Preemption Priority Bits */
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+    
+    /* Enable the USART1 Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel            = USART1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd         = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    USART_ConfigInt(USART1, USART_INT_RXDNE, ENABLE);
+    
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -90,6 +105,7 @@ void board_init(void)
 {
     RCC_Configuration();
     GPIO_Configuration();
+    NVIC_Configuration();
     USART_Configuration();
 }
 
