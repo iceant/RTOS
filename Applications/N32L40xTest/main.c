@@ -54,8 +54,9 @@ static void sem_thread_entry(void* p){
     while(1){
 //        err = os_sem_take(&rx_sem, OS_WAIT_INFINITY);
         err = os_sem_take(&rx_sem, os_tick_from_millisecond(1000));
-        printf("thread: %p, wait=%d, buffer_size=%d\n", (void*)os_thread_self(), err, USART1_RxIdx);
+        if(USART1_RxIdx==0) continue;
         if(strstr(USART1_RxBuffer, "\r\n")!=0){
+            printf("thread: %p, wait=%d, buffer_size=%d\n", (void*)os_thread_self(), err, USART1_RxIdx);
             printf("%s\n", USART1_RxBuffer);
             memset(USART1_RxBuffer, 0, sizeof(USART1_RxBuffer));
             USART1_RxIdx = 0;
@@ -80,13 +81,13 @@ int main(void){
     os_thread_init(&thread1, "Thread1", thread_entry, 1, stack1, STACK_SIZE, 20, 10);
     os_thread_startup(&thread1);
     
-    os_thread_init(&thread2, "Thread2", thread_entry, 2, stack2, STACK_SIZE, 20, 10);
+    os_thread_init(&thread2, "Thread2", thread_entry, 2, stack2, STACK_SIZE, 20, 5);
     os_thread_startup(&thread2);
     
-    os_thread_init(&thread3, "Thread3", thread_entry, 3, stack3, STACK_SIZE, 20, 10);
+    os_thread_init(&thread3, "Thread3", thread_entry, 3, stack3, STACK_SIZE, 10, 10);
     os_thread_startup(&thread3);
     
-    os_thread_init(&thread4, "Thread4", thread_entry, 4, stack4, STACK_SIZE, 20, 10);
+    os_thread_init(&thread4, "Thread4", thread_entry, 4, stack4, STACK_SIZE, 15, 5);
     os_thread_startup(&thread4);
     
     os_sem_init(&rx_sem, "rx_sem", 0, OS_QUEUE_FIFO);

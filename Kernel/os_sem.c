@@ -110,7 +110,6 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks)
             
             /* 有等待时间，挂在 timer 上 */
             os_scheduler_timed_wait(current_thread, ticks);
-            printf("current_thread(%s)->state=%d\n", current_thread->name, current_thread->state);
             /* 线程唤醒以后，检查是否超时 */
             if(current_thread->state & OS_THREAD_STATE_TIMEOUT){
                 return OS_ETIMEOUT;
