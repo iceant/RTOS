@@ -111,11 +111,9 @@ void USART1_IRQHandler(void)
     os_interrupt_enter();
     if (USART_GetIntStatus(USART1, USART_INT_RXDNE) != RESET)
     {
-        while(USART_GetIntStatus(USART1, USART_INT_RXDNE) != RESET){
-            USART1_RxBuffer[USART1_RxIdx++] = USART_ReceiveData(USART1);
-            if(USART1_RxIdx==USART1_RX_BUFFER_SZ) {
-                USART1_RxIdx = 0;
-            }
+        USART1_RxBuffer[USART1_RxIdx++] = USART_ReceiveData(USART1);
+        if(USART1_RxIdx==USART1_RX_BUFFER_SZ) {
+            USART1_RxIdx = 0;
         }
         os_sem_release(&rx_sem);
     }
