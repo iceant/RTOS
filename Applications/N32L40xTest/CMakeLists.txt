@@ -9,7 +9,7 @@ include(utils)
 ####
 option(CPU_ARM_CORTEX_M4 "Use ARM Cortex-M4 CPU" ON)
 option(USE_TLSF "Use TLSF Memory Allocator" ON)
-add_definitions(-DCPU_TICKS_PER_SECOND=100)
+add_definitions(-DCPU_TICKS_PER_SECOND=100 -D__FPU_PRESENT=1)
 ########################################################################################################################
 ####
 

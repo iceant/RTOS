@@ -53,16 +53,14 @@ static void os_scheduler__on_tick(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Ready Table
-
-os_err_t os_scheduler__ready_table_next(os_thread_t** thread){
+/* Used in os_scheduler_schedule() ONLY! */
+static os_err_t os_scheduler__ready_table_next(os_thread_t** thread){
 
     os_priority_t priority;
     os_list_node_t * head;
     os_list_node_t * node;
 
-    register cpu_uintptr_t level = cpu_interrupt_disable();
     priority = os_priority_get_highest();
-    cpu_interrupt_enable(level);
 
     if(priority==0){
         if(thread){
@@ -71,22 +69,18 @@ os_err_t os_scheduler__ready_table_next(os_thread_t** thread){
         return OS_EEMPTY;
     }
 
-    level = cpu_interrupt_disable();
-    {
-        head = &os_scheduler__ready_table[priority];
-        node = OS_LIST_NEXT(head);
-        if(priority!=OS_PRIORITY_MAX-1){
-            OS_LIST_REMOVE(node);
-            if(OS_LIST_IS_EMPTY(head)){
-                os_priority_unmark(priority);
-            }
-        }
-        
-        if(thread){
-            *thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
+    head = &os_scheduler__ready_table[priority];
+    node = OS_LIST_NEXT(head);
+    if(priority!=OS_PRIORITY_MAX-1){
+        OS_LIST_REMOVE(node);
+        if(OS_LIST_IS_EMPTY(head)){
+            os_priority_unmark(priority);
         }
     }
-    cpu_interrupt_enable(level);
+
+    if(thread){
+        *thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
+    }
 
     return OS_EOK;
 }
@@ -124,16 +118,17 @@ os_err_t os_scheduler_schedule(void)
     
     level = cpu_interrupt_disable();
     curr_thread = os_scheduler__current_thread;
-    cpu_interrupt_enable(level);
 
     /*线程的时间片还没有用完，继续*/
     if(curr_thread!=0 && ((curr_thread->state & OS_THREAD_STATE_RUNNING) && curr_thread->remain_ticks>0)){
+        cpu_interrupt_enable(level);
         return OS_EOK;
     }
 
     /*取出下一个任务*/
     os_err_t  err = os_scheduler__ready_table_next(&next_thread);
     if(err!=OS_EOK){
+        cpu_interrupt_enable(level);
         return err;
     }
 
@@ -148,10 +143,9 @@ os_err_t os_scheduler_schedule(void)
             os_scheduler_push_back(curr_thread);
         }
     }
-    next_thread->state &= ~OS_THREAD_STATE_READY;
     next_thread->state |= OS_THREAD_STATE_RUNNING;
-    level = cpu_interrupt_disable();
     os_scheduler__current_thread = next_thread;
+
     cpu_interrupt_enable(level);
     
     if(cpu_stack_switch(curr_stack_p, next_stack_p)!=0){

@@ -74,13 +74,15 @@ os_err_t os_thread_suspend(os_thread_t * thread)
 }
 
 os_err_t os_thread_resume(os_thread_t* thread){
+    assert(thread->state & OS_THREAD_STATE_SUSPENDED);
     return os_scheduler_push_back(thread);
 }
 
-
 os_err_t os_thread_exit(os_thread_t * thread)
 {
-    thread->thread_exit(thread);
+    if(thread->thread_exit){
+        thread->thread_exit(thread);
+    }
     return OS_EOK;
 }
 

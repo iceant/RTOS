@@ -111,6 +111,14 @@ void cpu_set_tick_handler(cpu_tick_handler handler)
     cpu_port__tick_handler = handler;
 }
 
+int cpu_in_interrupt(void){
+    return (cpu_reg_IPSR()!=0)?(1):(0);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// IRQ Handlers
+
 void SysTick_Handler(void)
 {
     if(cpu_port__tick_handler){
@@ -118,7 +126,6 @@ void SysTick_Handler(void)
     }
 }
 
-int cpu_in_interrupt(void){
-    return (cpu_reg_IPSR()!=0)?(1):(0);
-}
+
+
 

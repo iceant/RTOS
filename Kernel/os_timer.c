@@ -101,10 +101,9 @@ bool os_timer_tick(void){
     os_timer_node_t * timer_node;
     bool need_schedule_flag = false;
     
-    os_timer__current_time++;
-    
     level = cpu_interrupt_disable();
     {
+        os_timer__current_time++;
         time = os_timer__current_time;
         os_timer__find_wheel(time, &wheel);
 
