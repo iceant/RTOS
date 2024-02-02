@@ -158,6 +158,7 @@ cpu_reg_CONTROL:
     MRS R0, CONTROL
     BX      LR
 
+
 .end
 
 

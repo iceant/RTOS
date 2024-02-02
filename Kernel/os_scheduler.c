@@ -15,7 +15,6 @@
 static os_list_t os_scheduler__ready_table[OS_PRIORITY_MAX];
 static os_thread_t * os_scheduler__current_thread = 0;
 static os_size_t os_scheduler__tick_count=0;
-//static os_bool_t os_scheduler__schedule_flag = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// STATIC METHODS
@@ -29,7 +28,6 @@ static void os_scheduler__on_tick(void)
     register cpu_uintptr_t level = cpu_interrupt_disable();
     {
         os_scheduler__tick_count++;
-//        printf("tick: %d\n", os_scheduler__tick_count);
         curr_thread = os_scheduler__current_thread;
         
         if(curr_thread->state & OS_THREAD_STATE_RUNNING){
