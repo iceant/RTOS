@@ -67,6 +67,7 @@ int os_ringbuffer_count(os_ringbuffer_t* ringbuffer, int start, int end, const c
 int os_ringbuffer_find(os_ringbuffer_t* buffer, int offset,  uint8_t* data, os_size_t data_size);
 int os_ringbuffer_find_str(os_ringbuffer_t* ringbuffer, int offset,  const char* string);
 int os_ringbuffer_index(os_ringbuffer_t * ringbuffer, int index);
+/* 从 buffer 中找到 prefix xxxx postfix 之间的内容，成功返回 0 否则返回负数 */
 int os_ringbuffer_cut(os_ringbuffer_text_t * result, os_ringbuffer_t * buffer, int start, int end, const char* prefix, const char* postfix);
 unsigned long os_ringbuffer_strtoul(os_ringbuffer_t* buffer, int offset, int* endptr, int base);
 
