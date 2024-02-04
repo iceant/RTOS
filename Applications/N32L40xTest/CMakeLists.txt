@@ -17,6 +17,7 @@ add_subdirectory(../../ThirdParty/N32L40x ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty
 add_subdirectory(../../ThirdParty/TLSF-2.4.6 ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/TLSF-2.4.6)
 add_subdirectory(../../Kernel ${CMAKE_CURRENT_BINARY_DIR}/Kernel)
 add_subdirectory(../../CPU ${CMAKE_CURRENT_BINARY_DIR}/CPU)
+add_subdirectory(../../SDK ${CMAKE_CURRENT_BINARY_DIR}/SDK)
 
 ########################################################################################################################
 ####
@@ -31,6 +32,7 @@ target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
 target_link_libraries(${PROJECT_NAME}
         PUBLIC n32l40x
         PUBLIC RTOS-Kernel
+        PUBLIC RTOS-SDK
 )
 
 firmware_size(${PROJECT_NAME} sysv)

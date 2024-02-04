@@ -6,6 +6,7 @@
 #include <os_kernel.h>
 #include <string.h>
 #include <os_spinlock.h>
+#include <os_mutex.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -47,10 +48,26 @@ static os_thread_t lock3_thread;
 static uint8_t USART1_RxBuffer[USART1_RX_BUFFER_SZ];
 static os_size_t USART1_RxIdx=0;
 
+static os_mutex_t debug_mutex;
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+static int __put(int ch, void* cl)
+{
+    USART_SendData(USART1, (uint8_t)ch);
+    while (USART_GetFlagStatus(USART1, USART_FLAG_TXDE) == RESET)
+        ;
+    
+    return (ch);
+}
+
+#define __debug(...) do{os_mutex_lock(&debug_mutex); printf(__VA_ARGS__);os_mutex_unlock(&debug_mutex);}while(0)
+
 static void thread_entry(void* p){
     int timeout = (int)p;
     while(1){
-        printf("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
+        __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
         os_thread_mdelay(timeout);
     }
 }
@@ -65,8 +82,8 @@ static void sem_thread_entry(void* p){
         err = os_sem_take(&rx_sem, os_tick_from_millisecond(1000));
         if(USART1_RxIdx==0) continue;
         if(strstr(USART1_RxBuffer, "\r\n")!=0){
-            printf("thread: %p, wait=%d, buffer_size=%d\n", (void*)os_thread_self(), err, USART1_RxIdx);
-            printf("%s\n", USART1_RxBuffer);
+            __debug("thread: %p, wait=%d, buffer_size=%d\n", (void*)os_thread_self(), err, USART1_RxIdx);
+            __debug("%s\n", USART1_RxBuffer);
             memset(USART1_RxBuffer, 0, sizeof(USART1_RxBuffer));
             USART1_RxIdx = 0;
         }
@@ -76,9 +93,10 @@ static void sem_thread_entry(void* p){
 static void lock_thread_entry(void* p){
     while(1){
         os_spinlock_lock(&lock);
-        printf("spin 0x%08x locked!\n", os_thread_self());
+        __debug("spin 0x%08x locked!\n", os_thread_self());
+        os_thread_mdelay(1000);
         os_spinlock_unlock(&lock);
-        os_thread_mdelay(100);
+        os_thread_mdelay(1000);
     }
 }
 
@@ -103,10 +121,10 @@ int main(void){
     
     os_idle_set_hook(idle_hook, 0);
     
-    os_thread_init(&thread1, "Thread1", thread_entry, (void*)1000, stack1, STACK_SIZE, 20, 5);
+    os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);
     os_thread_startup(&thread1);
 
-    os_thread_init(&thread2, "Thread2", thread_entry, (void*)5000, stack2, STACK_SIZE, 20, 5);
+    os_thread_init(&thread2, "Thread2", thread_entry, (void*)50, stack2, STACK_SIZE, 20, 5);
     os_thread_startup(&thread2);
 //
 //    os_thread_init(&thread3, "Thread3", thread_entry, (void*)3000, stack3, STACK_SIZE, 10, 10);
@@ -120,21 +138,21 @@ int main(void){
     os_thread_init(&sem_thread, "sem_thd", sem_thread_entry, 0, sem_thread_stack, sizeof(sem_thread_stack), 20, 10);
     os_thread_startup(&sem_thread);
     
-//    os_thread_init(&lock1_thread, "lock1_thd", lock_thread_entry, 0, lock1_thread_stack, sizeof(lock1_thread_stack), 20, 10);
-//    os_thread_startup(&lock1_thread);
-//
-//    os_thread_init(&lock2_thread, "lock2_thd", lock_thread_entry, 0, lock2_thread_stack, sizeof(lock2_thread_stack), 20, 10);
-//    os_thread_startup(&lock2_thread);
-//
-//    os_thread_init(&lock3_thread, "lock3_thd", lock_thread_entry, 0, lock3_thread_stack, sizeof(lock3_thread_stack), 20, 10);
-//    os_thread_startup(&lock3_thread);
+    os_thread_init(&lock1_thread, "lock1_thd", lock_thread_entry, 0, lock1_thread_stack, sizeof(lock1_thread_stack), 20, 10);
+    os_thread_startup(&lock1_thread);
+
+    os_thread_init(&lock2_thread, "lock2_thd", lock_thread_entry, 0, lock2_thread_stack, sizeof(lock2_thread_stack), 20, 10);
+    os_thread_startup(&lock2_thread);
+
+    os_thread_init(&lock3_thread, "lock3_thd", lock_thread_entry, 0, lock3_thread_stack, sizeof(lock3_thread_stack), 20, 10);
+    os_thread_startup(&lock3_thread);
     
     os_kernel_startup();
     
-//    while(1){
-//        printf("Main Running...\n");
-//        delay(0x3fffff);
-//    }
+    while(1){
+        printf("Main Running...\n");
+        delay(0x3fffff);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

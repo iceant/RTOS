@@ -9,7 +9,7 @@ void os_spinlock_lock(os_spinlock_t *s)
     while(1){
         int zero = 0;
         int one = 1;
-        if(cpu_atomic_cmpxchg((cpu_atomic_t *)s, zero, one)==one){
+        if(cpu_atomic_cmpxchg((cpu_atomic_t *)s, zero, one)){
             return;
         }
     }

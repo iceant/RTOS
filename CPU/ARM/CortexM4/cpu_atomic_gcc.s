@@ -14,13 +14,14 @@ cpu_atomic_add_1:
     LDREX R2, [R0]
     ADD R2, R2, R1
     STREX R3, R2, [R0]
+    DMB
     CBZ R3, cpu_atomic_add_2
     B cpu_atomic_add_1
 cpu_atomic_add_2:
     BX LR
 
 /*
- * int cpu_atomic_cmpxchg(cpu_atomic_t* atomic, cpu_int_t old_value, cpu_int_t new_value);
+ * bool cpu_atomic_cmpxchg(cpu_atomic_t* atomic, cpu_int_t old_value, cpu_int_t new_value);
  */
     .section  .text.cpu_atomic_cmpxchg
     .global cpu_atomic_cmpxchg
@@ -28,13 +29,17 @@ cpu_atomic_add_2:
 cpu_atomic_cmpxchg:
     PUSH {r4}
     LDREX r3, [r0]
-    MOV r4, r1
+    MOV r4, #0
     TEQ r3, r1
     BNE __cpu_atomic_cmpxchg_exit
     STREX r3, r2, [r0]
-    MOV r4, r2
+    DMB
+    CMP r3, #0
+    ITE EQ
+    MOVEQ R4, #1
+    MOVNE R4, #0
 __cpu_atomic_cmpxchg_exit:
-    MOV R0, R4
+    MOV r0, r4
     POP {r4}
     DMB
     BX lr
@@ -59,3 +64,6 @@ __cpu_atomic_store_exit:
 
 
 .end
+
+
+
