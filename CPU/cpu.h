@@ -36,6 +36,4 @@ void cpu_set_tick_handler(cpu_tick_handler handler);
 
 int cpu_in_interrupt(void);
 
-void cpu_atomic_compare_exchange(void* lock, int* );
-
 #endif /*INCLUDED_CPU_H*/

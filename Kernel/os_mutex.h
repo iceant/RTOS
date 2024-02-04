@@ -19,14 +19,18 @@
 #include <os_tick.h>
 #endif /*INCLUDED_OS_TICK_H*/
 
-
+#ifndef INCLUDED_OS_THREAD_H
+#include <os_thread.h>
+#endif /* INCLUDED_OS_THREAD_H */
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct os_mutex_s{
-    int value;
+    os_uintptr_t value;
     char name[OS_NAME_MAX_SIZE];
     int flag; /*OS_QUEUE_FIFO | OS_QUEUE_PRIO*/
     os_list_t list;
+    os_thread_t * owner;
+    os_priority_t current_priority;
 }os_mutex_t;
 
 

@@ -1,10 +1,10 @@
 #include <os_idle.h>
-
+#include <stdio.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 #ifndef OS_IDLE_STACK_SIZE
-    #define OS_IDLE_STACK_SIZE 1024
+    #define OS_IDLE_STACK_SIZE 512
 #endif
 
 #ifndef OS_IDLE_THREAD_PRIORITY
@@ -37,7 +37,7 @@ static void os_idle__thread_entry(void* p)
 
 os_err_t os_idle_init(void)
 {
-    os_thread_init(&os_idle__thread, "os_idle", &os_idle__thread_entry, 0, os_idle__stack, sizeof(os_idle__stack), OS_IDLE_THREAD_PRIORITY, OS_IDLE_THREAD_TIME_SLICE);
+    os_thread_init(&os_idle__thread, "idle", &os_idle__thread_entry, 0, os_idle__stack, sizeof(os_idle__stack), OS_IDLE_THREAD_PRIORITY, OS_IDLE_THREAD_TIME_SLICE);
     os_thread_startup(&os_idle__thread);
     
     return OS_EOK;

@@ -18,6 +18,12 @@
 #define OS_TIMER_WHEELx_MASK (OS_TIMER_WHEELx_SIZE-1)
 
 #define OS_TIMER_WHEELx_INDEX(E, N) (((E) >> ((OS_TIMER_WHEEL0_BITS) + (N) * OS_TIMER_WHEELx_BITS)) & OS_TIMER_WHEELx_MASK)
+
+#define WHEEL0_MAX (1<<8)
+#define WHEEL1_MAX (1<<14)
+#define WHEEL2_MAX (1<<20)
+#define WHEEL3_MAX (1<<26)
+#define WHEEL4_MAX (0xFFFFFFFFU)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_time_t os_timer__current_time;
@@ -30,18 +36,17 @@ static os_list_t os_timer__wheel4[OS_TIMER_WHEELx_SIZE];    /* 0x04000000 ~ 0xFF
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-
 __STATIC_FORCEINLINE void os_timer__find_wheel(os_time_t expires, os_list_t** wheel){
-    if(expires<0x00000100){
+    if(expires<WHEEL0_MAX){ /* 1111 1111*/
         *wheel = &os_timer__wheel0[expires];
-    }else if(expires < 0x00004000){
-        *wheel = &os_timer__wheel1[OS_TIMER_WHEELx_INDEX(expires, 0)];
-    }else if(expires < 0x00100000){
-        *wheel = &os_timer__wheel2[OS_TIMER_WHEELx_INDEX(expires, 1)];
-    }else if(expires < 0x04000000){
-        *wheel = &os_timer__wheel3[OS_TIMER_WHEELx_INDEX(expires, 2)];
-    }else if(expires <= 0xFFFFFFFF){
-        *wheel = &os_timer__wheel4[OS_TIMER_WHEELx_INDEX(expires, 3)];
+    }else if(expires < WHEEL1_MAX){ /* 11 1111 1111 1111 */
+        *wheel = &os_timer__wheel1[((expires >> 8)&0x3F)];
+    }else if(expires < WHEEL2_MAX){ /* 1111 1111 1111 1111 1111 */
+        *wheel = &os_timer__wheel2[((expires >> 14)&0x3F)];
+    }else if(expires < WHEEL3_MAX){ /* 11 1111 1111 1111 1111 1111 1111 */
+        *wheel = &os_timer__wheel3[((expires >> 20)&0x3F)];
+    }else if(expires <= WHEEL4_MAX){ /* 1111 1111 1111 1111 1111 1111 1111 1111 */
+        *wheel = &os_timer__wheel4[((expires >> 26)&0x3F)];
     }
 }
 

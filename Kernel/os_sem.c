@@ -100,14 +100,18 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks)
         assert(current_thread->state & OS_THREAD_STATE_RUNNING);
         assert(OS_LIST_IS_EMPTY(&current_thread->wait_node));
 
-//        OS_LIST_REMOVE(&current_thread->wait_node); /* 如果之前挂在别的等待对象上，清除! 不应该发生 */
-        os_sem__insert(sem, current_thread); /* 挂在 sem 上 */
-
-        if(ticks == OS_WAIT_INFINITY){
+        if(ticks==0){
+            cpu_interrupt_enable(level);
+            return OS_ETIMEOUT;
+        }else if(ticks == OS_WAIT_INFINITY){
+            os_sem__insert(sem, current_thread); /* 挂在 sem 上 */
+            
             current_thread->state = OS_THREAD_STATE_WAIT;
             cpu_interrupt_enable(level);
             return os_scheduler_schedule();
         }else{
+            os_sem__insert(sem, current_thread); /* 挂在 sem 上 */
+            
             cpu_interrupt_enable(level);
             /* 有等待时间，挂在 timer 上, 这里会调度 */
             os_scheduler_timed_wait(current_thread, ticks);

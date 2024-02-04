@@ -14,6 +14,7 @@ if(CPU_ARM_CORTEX_M4)
     list(APPEND SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/cpu_port.c
             ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/HardFaultHandler.c
             ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/SVCHandler.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/cpu_atomic.c
     )
     set(CPU_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/)
 endif ()
@@ -21,6 +22,7 @@ endif ()
 if(CMAKE_C_COMPILER_ID MATCHES GNU)
     list(APPEND SOURCES
             ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/cpu_gcc.s
+            ${CMAKE_CURRENT_SOURCE_DIR}/ARM/CortexM4/cpu_atomic_gcc.s
     )
 endif ()
 

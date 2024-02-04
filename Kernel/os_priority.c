@@ -80,6 +80,6 @@ bool os_priority_is_marked(os_priority_t priority){
 /* 小的优先级高 */
 int os_priority_cmp(os_priority_t a, os_priority_t b)
 {
-    return (a==b)?0:((a)<(b)?1:-1);
+    return (a==b)?OS_PRIORITY_CMP_EQUAL:((a)<(b)?OS_PRIORITY_CMP_HIGH:OS_PRIORITY_CMP_LOW);
 }
 

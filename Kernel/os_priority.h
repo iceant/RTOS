@@ -23,6 +23,12 @@ typedef os_int_t os_priority_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#define OS_PRIORITY_CMP_HIGH    (1)
+#define OS_PRIORITY_CMP_LOW     (-1)
+#define OS_PRIORITY_CMP_EQUAL   (0)
+
+////////////////////////////////////////////////////////////////////////////////
+////
 void os_priority_init(void);
 
 os_priority_t os_priority_get_highest(void);
@@ -33,7 +39,6 @@ void os_priority_unmark(os_priority_t priority);
 
 bool os_priority_is_marked(os_priority_t priority);
 
-/* 0:=, 1: >, -1: < */
 int os_priority_cmp(os_priority_t a, os_priority_t b);
 
 #endif /*INCLUDED_OS_PRIORITY_H*/

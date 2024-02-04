@@ -85,7 +85,7 @@ int cpu_stack_switch(void** current_stack_p, void** next_stack_p)
     if(cpu__stack_switch_flag==CPU_STACK_SWITCH_FLAG_ON){
         return -1;
     }
-
+    
     register cpu_uintptr_t level = cpu_interrupt_disable();
     {
         cpu__stack_switch_flag = CPU_STACK_SWITCH_FLAG_ON;
