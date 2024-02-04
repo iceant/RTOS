@@ -13,15 +13,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// STATIC
 static os_list_t os_scheduler__ready_table[OS_PRIORITY_MAX];
-static os_thread_t * os_scheduler__current_thread = 0;
-static os_size_t os_scheduler__tick_count=0;
+static volatile os_thread_t * os_scheduler__current_thread = 0;
+static volatile os_size_t os_scheduler__tick_count=0;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// STATIC METHODS
 static void os_scheduler__on_tick(void)
 {
-    os_thread_t * curr_thread;
+    volatile os_thread_t * curr_thread;
     bool need_schedule_flag = false;
+    bool timer_need_schedule_flag = false;
     
     os_interrupt_enter();
     
@@ -30,23 +31,24 @@ static void os_scheduler__on_tick(void)
         os_scheduler__tick_count++;
         curr_thread = os_scheduler__current_thread;
         
-        if(curr_thread->state & OS_THREAD_STATE_RUNNING){
+        if(curr_thread->state == OS_THREAD_STATE_RUNNING){
             curr_thread->remain_ticks--;
             if(curr_thread->remain_ticks<=0){
                 need_schedule_flag = true;
                 curr_thread->state = OS_THREAD_STATE_YIELD;
             }
         }
+        
+        timer_need_schedule_flag = os_timer_tick();
     }
     cpu_interrupt_enable(level);
     
-    need_schedule_flag = os_timer_tick();
-    
-    if(need_schedule_flag){
+    if(need_schedule_flag || timer_need_schedule_flag){
         os_scheduler_schedule();
     }
     
     os_interrupt_leave();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,8 +61,8 @@ static os_err_t os_scheduler__ready_table_next(os_thread_t** thread){
     os_list_node_t * node;
 
     priority = os_priority_get_highest();
-
-    if(priority==0){
+    
+    if(priority==0 || priority>=OS_PRIORITY_MAX){
         if(thread){
             *thread = NULL;
         }
@@ -74,7 +76,7 @@ static os_err_t os_scheduler__ready_table_next(os_thread_t** thread){
     if(OS_LIST_IS_EMPTY(head)){
         os_priority_unmark(priority);
     }
-
+    
     if(thread){
         *thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
     }
@@ -106,7 +108,7 @@ os_err_t os_scheduler_init(void)
 os_err_t os_scheduler_schedule(void)
 {
     register cpu_uintptr_t level;
-    os_thread_t * curr_thread;
+    volatile os_thread_t * curr_thread;
     os_thread_t * next_thread;
     void** curr_stack_p = 0;
     void** next_stack_p = 0;
@@ -116,7 +118,7 @@ os_err_t os_scheduler_schedule(void)
     level = cpu_interrupt_disable();
     curr_thread = os_scheduler__current_thread;
     /*线程的时间片还没有用完，继续*/
-    if(curr_thread!=0 && (curr_thread->state & OS_THREAD_STATE_RUNNING)){
+    if(curr_thread!=0 && (curr_thread->state & OS_THREAD_STATE_RUNNING) && (curr_thread->remain_ticks>0)){
         cpu_interrupt_enable(level);
         return OS_EOK;
     }
@@ -140,7 +142,7 @@ os_err_t os_scheduler_schedule(void)
             os_scheduler_push_back(curr_thread);
         }
     }
-    
+    next_thread->error = OS_THREAD_EOK;
     next_thread->state = OS_THREAD_STATE_RUNNING;
     os_scheduler__current_thread = next_thread;
     cpu_interrupt_enable(level);
@@ -211,7 +213,7 @@ static void os_scheduler__timeout(os_time_t time, void* userdata){
     os_thread_t* thread = (os_thread_t*)userdata;
     register cpu_uintptr_t level = cpu_interrupt_disable();
     {
-        thread->state |= OS_THREAD_STATE_TIMEOUT;       /* 标记当前线程出现了 TIMEOUT 事件 */
+        thread->error = OS_THREAD_ETIMEOUT;
         OS_LIST_REMOVE(&thread->wait_node);             /* 如果之前挂在别的等待对象上，清除 */
         os_timer_remove(&thread->timer_node);
         if(thread->timer_node.flag & OS_TIMER_TYPE_ONCE){

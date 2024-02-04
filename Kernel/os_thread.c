@@ -41,6 +41,7 @@ os_err_t os_thread_init(os_thread_t * thread
     thread->remain_ticks = init_ticks;
     thread->curr_priority = init_priority;
     thread->thread_exit = os_thread__exit;
+    thread->error = OS_THREAD_EOK;
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->wait_node);
     OS_LIST_INIT(&thread->timer_node.node);

@@ -1,6 +1,7 @@
 #include <os_priority.h>
 #include <assert.h>
 #include <cpu.h>
+#include <stdio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //// CONSTANTS
@@ -56,8 +57,6 @@ void os_priority_mark(os_priority_t priority)
 
 void os_priority_unmark(os_priority_t priority)
 {
-
-    assert(priority>=0 && priority<OS_PRIORITY_MAX);
 #if 0
     os_uintptr_t bit;
     os_uintptr_t bit_nbr;
@@ -77,7 +76,6 @@ bool os_priority_is_marked(os_priority_t priority){
     return ((((uint8_t*)os_priority__table)[priority/8] >> (priority%8))&1);
 }
 
-/* 小的优先级高 */
 int os_priority_cmp(os_priority_t a, os_priority_t b)
 {
     return (a==b)?OS_PRIORITY_CMP_EQUAL:((a)<(b)?OS_PRIORITY_CMP_HIGH:OS_PRIORITY_CMP_LOW);

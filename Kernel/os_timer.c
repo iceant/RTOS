@@ -1,6 +1,7 @@
 #include <os_timer.h>
 #include <cpu.h>
 #include <os_macros.h>
+#include <stdio.h>
 #include <os_scheduler.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -26,7 +27,7 @@
 #define WHEEL4_MAX (0xFFFFFFFFU)
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static os_time_t os_timer__current_time;
+static volatile os_time_t os_timer__current_time;
 static os_list_t os_timer__wheel0[OS_TIMER_WHEEL0_SIZE];    /* 0x00000000 ~ 0x000000FF */
 static os_list_t os_timer__wheel1[OS_TIMER_WHEELx_SIZE];    /* 0x00000100 ~ 0x00003FFF */
 static os_list_t os_timer__wheel2[OS_TIMER_WHEELx_SIZE];    /* 0x00004000 ~ 0x000FFFFF */
@@ -112,29 +113,23 @@ bool os_timer_tick(void){
         time = os_timer__current_time;
         os_timer__find_wheel(time, &wheel);
 
-        if(OS_LIST_IS_EMPTY(wheel)){
-            cpu_interrupt_enable(level);
-            return need_schedule_flag;
-        }
-
         for(node = OS_LIST_NEXT(wheel); node!=wheel; ){
             timer_node = OS_CONTAINER_OF(node, os_timer_node_t, node);
             node = OS_LIST_NEXT(node);
-            if(timer_node->expires <= time){
+            if(time >= timer_node->expires){
                 OS_LIST_REMOVE(&timer_node->node);
+                
                 timer_node->timeout(time, timer_node->userdata);
-                need_schedule_flag = true;
                 if(timer_node->flag & OS_TIMER_TYPE_REPEAT){
                     os_timer_insert(timer_node);
                 }
-            }else{
-                break;
+                
+                need_schedule_flag = true;
             }
         }
     }
     cpu_interrupt_enable(level);
-
-
+    
     return need_schedule_flag;
 }
 
@@ -175,6 +170,9 @@ os_err_t os_timer_add(os_timer_node_t* node, os_timer_timeout timeout, void* use
         os_timer__insert_by_expires(node, wheel);
     }
     cpu_interrupt_enable(level);
+    
+//    os_thread_t* thread = OS_CONTAINER_OF(node, os_thread_t, timer_node);
+//    printf("[TIMER] ADD %s - expires: %d\n", thread->name, node->expires);
     
     return OS_EOK;
 }

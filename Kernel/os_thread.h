@@ -32,11 +32,13 @@
 #define OS_THREAD_STATE_READY               (1<<0)
 #define OS_THREAD_STATE_SUSPENDED           (1<<1)
 #define OS_THREAD_STATE_RUNNING             (1<<2)
-#define OS_THREAD_STATE_WAIT                (1<<3)          /* 等待通知,没有时间限制 */
+#define OS_THREAD_STATE_WAIT                (1<<3)
 #define OS_THREAD_STATE_YIELD               (1<<4)
 #define OS_THREAD_STATE_EXIT                (1<<5)
-#define OS_THREAD_STATE_TIMEWAIT            (1<<6)          /* 等待时间到期 */
-#define OS_THREAD_STATE_TIMEOUT             (1<<7)          /* 等待时间到期，超时了 */
+#define OS_THREAD_STATE_TIMEWAIT            (1<<6)
+
+#define OS_THREAD_EOK                       (0)
+#define OS_THREAD_ETIMEOUT                  (1<<0)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -56,6 +58,7 @@ typedef struct os_thread_s{
     os_list_node_t wait_node;       /* wait on wait kernel object, like timer, mutex, semaphore etc. */
     void (*thread_exit)(struct os_thread_s*);
     os_timer_node_t timer_node;
+    int error; /* TIMEOUT */
 }os_thread_t;
 
 ////////////////////////////////////////////////////////////////////////////////

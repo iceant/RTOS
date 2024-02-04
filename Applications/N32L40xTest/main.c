@@ -50,7 +50,7 @@ static os_size_t USART1_RxIdx=0;
 static void thread_entry(void* p){
     int timeout = (int)p;
     while(1){
-        printf("Thread %s 0x%08x\n",os_thread_self()->name, os_thread_self());
+        printf("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
         os_thread_mdelay(timeout);
     }
 }
@@ -87,6 +87,11 @@ void os_kernel_cpu_config(void)
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
     SysTick_Config(SystemCoreClock/CPU_TICKS_PER_SECOND); /* 1ms = tick */
 }
+
+static void idle_hook(void* p){
+//    printf("idle\n");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int main(void){
@@ -96,17 +101,19 @@ int main(void){
 
     os_kernel_init();
     
-    os_thread_init(&thread1, "Thread1", thread_entry, (void*)1000, stack1, STACK_SIZE, 20, 10);
+    os_idle_set_hook(idle_hook, 0);
+    
+    os_thread_init(&thread1, "Thread1", thread_entry, (void*)1000, stack1, STACK_SIZE, 20, 5);
     os_thread_startup(&thread1);
 
-    os_thread_init(&thread2, "Thread2", thread_entry, (void*)500, stack2, STACK_SIZE, 20, 5);
+    os_thread_init(&thread2, "Thread2", thread_entry, (void*)5000, stack2, STACK_SIZE, 20, 5);
     os_thread_startup(&thread2);
-
-    os_thread_init(&thread3, "Thread3", thread_entry, (void*)200, stack3, STACK_SIZE, 10, 10);
-    os_thread_startup(&thread3);
-
-    os_thread_init(&thread4, "Thread4", thread_entry, (void*)100, stack4, STACK_SIZE, 15, 5);
-    os_thread_startup(&thread4);
+//
+//    os_thread_init(&thread3, "Thread3", thread_entry, (void*)3000, stack3, STACK_SIZE, 10, 10);
+//    os_thread_startup(&thread3);
+//
+//    os_thread_init(&thread4, "Thread4", thread_entry, (void*)1000, stack4, STACK_SIZE, 15, 5);
+//    os_thread_startup(&thread4);
 
     os_sem_init(&rx_sem, "rx_sem", 0, OS_QUEUE_FIFO);
 
@@ -124,10 +131,10 @@ int main(void){
     
     os_kernel_startup();
     
-    while(1){
-        printf("Main Running...\n");
-        delay(0x3fffff);
-    }
+//    while(1){
+//        printf("Main Running...\n");
+//        delay(0x3fffff);
+//    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

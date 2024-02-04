@@ -65,6 +65,7 @@
 #ifndef INCLUDED_OS_SEM_H
 #include <os_sem.h>
 #endif /* INCLUDED_OS_SEM_H */
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 extern void os_kernel_cpu_config(void);
