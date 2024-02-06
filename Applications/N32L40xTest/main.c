@@ -116,7 +116,9 @@ int main(void){
     NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
     board_init();
-
+    
+    os_mutex_init(&debug_mutex, "DBG", OS_QUEUE_PRIO);
+    
     os_kernel_init();
     
     os_idle_set_hook(idle_hook, 0);
@@ -126,7 +128,7 @@ int main(void){
 
     os_thread_init(&thread2, "Thread2", thread_entry, (void*)50, stack2, STACK_SIZE, 20, 5);
     os_thread_startup(&thread2);
-//
+
 //    os_thread_init(&thread3, "Thread3", thread_entry, (void*)3000, stack3, STACK_SIZE, 10, 10);
 //    os_thread_startup(&thread3);
 //
@@ -160,7 +162,7 @@ int main(void){
 
 void USART1_IRQHandler(void)
 {
-//    os_interrupt_enter();
+    os_interrupt_enter();
     if (USART_GetIntStatus(USART1, USART_INT_RXDNE) != RESET)
     {
         USART1_RxBuffer[USART1_RxIdx++] = USART_ReceiveData(USART1);
@@ -169,6 +171,6 @@ void USART1_IRQHandler(void)
         }
         os_sem_release(&rx_sem);
     }
-//    os_interrupt_leave();
+    os_interrupt_leave();
 }
 

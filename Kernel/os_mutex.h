@@ -28,11 +28,14 @@ typedef struct os_mutex_s{
     os_uintptr_t value;
     char name[OS_NAME_MAX_SIZE];
     os_thread_t * owner;
+    os_priority_t original_priority;
+    os_list_t list;
+    int flag;
 }os_mutex_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-os_err_t os_mutex_init(os_mutex_t * mutex, const char* name);
+os_err_t os_mutex_init(os_mutex_t * mutex, const char* name, int flag);
 
 os_err_t os_mutex_lock(os_mutex_t* mutex);
 

@@ -37,6 +37,8 @@ static void os_scheduler__on_tick(void)
                 need_schedule_flag = true;
                 curr_thread->state = OS_THREAD_STATE_YIELD;
             }
+        }else{
+            need_schedule_flag = true;
         }
         
         timer_need_schedule_flag = os_timer_tick();
@@ -142,7 +144,7 @@ os_err_t os_scheduler_schedule(void)
             os_scheduler_push_back(curr_thread);
         }
     }
-    next_thread->error = OS_THREAD_EOK;
+    
     next_thread->state = OS_THREAD_STATE_RUNNING;
     os_scheduler__current_thread = next_thread;
     cpu_interrupt_enable(level);

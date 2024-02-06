@@ -17,4 +17,6 @@ void os_spinlock_lock(os_spinlock_t *s);
 
 void os_spinlock_unlock(os_spinlock_t *s);
 
+os_bool_t os_spinlock_try_lock(os_spinlock_t* s);
+
 #endif /*INCLUDED_OS_SPINLOCK_H*/

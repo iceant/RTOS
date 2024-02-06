@@ -14,10 +14,10 @@ cpu_atomic_add_1:
     LDREX R2, [R0]
     ADD R2, R2, R1
     STREX R3, R2, [R0]
-    DMB
     CBZ R3, cpu_atomic_add_2
     B cpu_atomic_add_1
 cpu_atomic_add_2:
+    DMB
     BX LR
 
 /*
@@ -33,7 +33,6 @@ cpu_atomic_cmpxchg:
     TEQ r3, r1
     BNE __cpu_atomic_cmpxchg_exit
     STREX r3, r2, [r0]
-    DMB
     CMP r3, #0
     ITE EQ
     MOVEQ R4, #1
@@ -55,11 +54,11 @@ cpu_atomic_store:
 __cpu_atomic_store_loop:
     LDREX r2, [r0]
     STREX r3, r1, [r0]
-    DMB
     CBZ r3, __cpu_atomic_store_exit
     B __cpu_atomic_store_loop
 __cpu_atomic_store_exit:
     MOV r0, r2
+    DMB
     BX lr
 
 
