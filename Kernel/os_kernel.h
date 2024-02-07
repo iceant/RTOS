@@ -66,6 +66,9 @@
 #include <os_sem.h>
 #endif /* INCLUDED_OS_SEM_H */
 
+#ifndef INCLUDED_OS_MUTEX_H
+#include <os_mutex.h>
+#endif /* INCLUDED_OS_MUTEX_H */
 ////////////////////////////////////////////////////////////////////////////////
 ////
 extern void os_kernel_cpu_config(void);

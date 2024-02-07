@@ -8,8 +8,8 @@
 #define RB_ISFULL(B) ((((B)->write_offset+1)%(B)->buffer_size)==(B)->read_offset)
 #define RB_ISEMPTY(B) ((B)->write_offset==(B)->read_offset)
 #define RB_USED(B) (((B)->write_offset > (B)->read_offset)? \
-    ((B)->write_offset - (B)->read_offset)                            \
-        :((B)->write_offset + (B)->buffer_size - (B)->read_offset)%(B)->buffer_size)
+                    ((B)->write_offset - (B)->read_offset)  \
+                    :((B)->write_offset + (B)->buffer_size - (B)->read_offset))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ os_size_t os_ringbuffer_try_read(os_ringbuffer_t *buffer, int offset, uint8_t *b
 os_size_t os_ringbuffer_used(os_ringbuffer_t *buffer) {
     return (buffer->write_offset > buffer->read_offset) ?
            (buffer->write_offset - buffer->read_offset) :
-           ((buffer->write_offset + buffer->buffer_size - buffer->read_offset) % buffer->buffer_size);
+           (buffer->write_offset + buffer->buffer_size - buffer->read_offset);
 }
 
 uint8_t os_ringbuffer_peek(os_ringbuffer_t *buffer, int idx) {

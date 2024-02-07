@@ -93,9 +93,10 @@ static void sem_thread_entry(void* p){
 static void lock_thread_entry(void* p){
     while(1){
         os_spinlock_lock(&lock);
-        __debug("spin 0x%08x locked!\n", os_thread_self());
+        __debug("spin 0x%08x locked! >>>\n", os_thread_self());
         os_thread_mdelay(1000);
         os_spinlock_unlock(&lock);
+        __debug("spin 0x%08x unlocked! <<<\n", os_thread_self());
         os_thread_mdelay(1000);
     }
 }

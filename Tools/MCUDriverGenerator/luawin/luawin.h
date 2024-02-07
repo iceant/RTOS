@@ -1,0 +1,17 @@
+#ifndef INCLUDED_LUAWIN_H
+#define INCLUDED_LUAWIN_H
+
+#ifndef INCLUDED_LUABIND_H
+#include <luabind.h>
+#endif /* INCLUDED_LUABIND_H */
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define LUAWIN_METATABLE_NAME "luawin"
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+int luaopen_luawin(lua_State* L);
+
+#endif /* INCLUDED_LUAWIN_H */

@@ -5,17 +5,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-void os_ring_init(os_ring_t * ring, void* array, os_size_t array_size, os_size_t object_size)
+void os_ring_init(os_ring_t * ring, void* array, os_size_t element_count, os_size_t element_size)
 {
     assert(ring);
     assert(array);
-    assert(array_size > object_size);
-
-    os_size_t i;
+    assert(element_count > element_size);
 
     ring->array = array;
-    ring->capacity = array_size;
-    ring->object_size = object_size;
+    ring->capacity = element_count;
+    ring->object_size = element_size;
     ring->read_idx = 0;
     ring->write_idx = 0;
 }
@@ -60,11 +58,15 @@ os_err_t os_ring_get(os_ring_t * ring, void* object){
 }
 
 os_size_t os_ring_used(os_ring_t * ring){
-    return (ring->write_idx > ring->read_idx)?(ring->write_idx-ring->read_idx):(ring->write_idx + ring->capacity - ring->read_idx);
+    return (ring->write_idx > ring->read_idx) ?
+           (ring->write_idx - ring->read_idx) :
+           (ring->write_idx + ring->capacity - ring->read_idx);
 }
 
 os_err_t os_ring_read(os_ring_t * ring, os_size_t offset, void* object){
-    os_size_t used = (ring->write_idx > ring->read_idx)?(ring->write_idx-ring->read_idx):(ring->write_idx + ring->capacity - ring->read_idx);
+    os_size_t used = (ring->write_idx > ring->read_idx) ?
+                     (ring->write_idx - ring->read_idx) :
+                     (ring->write_idx + ring->capacity - ring->read_idx);
 
     assert(ring);
     assert(object);
@@ -92,7 +94,9 @@ os_err_t os_ring_read(os_ring_t * ring, os_size_t offset, void* object){
 
 void* os_ring_peek(os_ring_t * ring, os_size_t offset /*0<= offset <used*/){
 
-    os_size_t used = (ring->write_idx > ring->read_idx)?(ring->write_idx-ring->read_idx):(ring->write_idx + ring->capacity - ring->read_idx);
+    os_size_t used = (ring->write_idx > ring->read_idx) ?
+                     (ring->write_idx - ring->read_idx) :
+                     (ring->write_idx + ring->capacity - ring->read_idx);
 
     assert(ring);
     assert(offset<used);

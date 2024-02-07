@@ -112,8 +112,8 @@ os_err_t os_scheduler_schedule(void)
     register cpu_uintptr_t level;
     volatile os_thread_t * curr_thread;
     os_thread_t * next_thread;
-    void** curr_stack_p = 0;
-    void** next_stack_p = 0;
+    volatile void** curr_stack_p = 0;
+    volatile void** next_stack_p = 0;
     
 //    assert(os_interrupt_nested()<2);
     

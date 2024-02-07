@@ -13,12 +13,14 @@ add_definitions(-DCPU_TICKS_PER_SECOND=100 -DOS_IDLE_THREAD_TIME_SLICE -D__FPU_P
 ########################################################################################################################
 ####
 
+set(DRIVER_HOME ${CMAKE_CURRENT_SOURCE_DIR}/../../Drivers)
+
 add_subdirectory(../../ThirdParty/N32L40x ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/N32L40X)
 add_subdirectory(../../ThirdParty/TLSF-2.4.6 ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/TLSF-2.4.6)
 add_subdirectory(../../Kernel ${CMAKE_CURRENT_BINARY_DIR}/Kernel)
 add_subdirectory(../../CPU ${CMAKE_CURRENT_BINARY_DIR}/CPU)
 add_subdirectory(../../SDK ${CMAKE_CURRENT_BINARY_DIR}/SDK)
-
+add_subdirectory(../../Drivers/ ${CMAKE_CURRENT_BINARY_DIR}/Drivers)
 ########################################################################################################################
 ####
 
@@ -26,6 +28,8 @@ file(GLOB SOURCES *.c)
 foreach (item IN LISTS SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
 endforeach ()
+
+
 
 add_executable(${PROJECT_NAME} "")
 target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
