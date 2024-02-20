@@ -128,7 +128,7 @@ os_err_t os_mutex_lock(os_mutex_t* mutex)
 os_err_t os_mutex_unlock(os_mutex_t * mutex)
 {
     if(mutex->owner!=0 && mutex->owner==os_thread_self()){
-        mutex->owner->curr_priority = mutex->original_priority;
+        mutex->owner->curr_priority = mutex->owner->init_priority;
         mutex->owner = 0;
         os_mutex__notify_all(mutex);
     }
