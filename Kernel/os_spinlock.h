@@ -13,6 +13,9 @@ typedef volatile os_uintptr_t os_spinlock_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
+void os_spinglock_init(os_spinlock_t * s);
+
 void os_spinlock_lock(os_spinlock_t *s);
 
 void os_spinlock_unlock(os_spinlock_t *s);

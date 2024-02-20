@@ -34,6 +34,9 @@ int cpu_stack_init(void* thread_entry, void* parameter, void* stack_addr, int st
  */
 void cpu_set_tick_handler(cpu_tick_handler handler);
 
-int cpu_in_interrupt(void);
+/*
+ CPU in Interrupt or Not
+ */
+//int cpu_in_interrupt(void);
 
 #endif /*INCLUDED_CPU_H*/

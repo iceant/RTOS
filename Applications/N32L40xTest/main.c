@@ -140,7 +140,9 @@ int main(void){
 
     os_thread_init(&sem_thread, "sem_thd", sem_thread_entry, 0, sem_thread_stack, sizeof(sem_thread_stack), 20, 10);
     os_thread_startup(&sem_thread);
-    
+
+    os_spinglock_init(&lock);
+
     os_thread_init(&lock1_thread, "lock1_thd", lock_thread_entry, 0, lock1_thread_stack, sizeof(lock1_thread_stack), 20, 10);
     os_thread_startup(&lock1_thread);
 

@@ -81,3 +81,11 @@ int os_priority_cmp(os_priority_t a, os_priority_t b)
     return (a==b)?OS_PRIORITY_CMP_EQUAL:((a)<(b)?OS_PRIORITY_CMP_HIGH:OS_PRIORITY_CMP_LOW);
 }
 
+void os_priority_swap(os_priority_t a, os_priority_t b){
+    os_priority_t tmp;
+    tmp = a;
+    a = b;
+    b = tmp;
+}
+
+

@@ -41,4 +41,6 @@ bool os_priority_is_marked(os_priority_t priority);
 
 int os_priority_cmp(os_priority_t a, os_priority_t b);
 
+void os_priority_swap(os_priority_t a, os_priority_t b);
+
 #endif /*INCLUDED_OS_PRIORITY_H*/

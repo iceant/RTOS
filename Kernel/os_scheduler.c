@@ -136,12 +136,12 @@ os_err_t os_scheduler_schedule(void)
     if(curr_thread==0){
         /* first time schedule */
         curr_stack_p = 0;
-        next_stack_p = &next_thread->sp;
+        next_stack_p = (volatile void** )&next_thread->sp;
     }else{
-        curr_stack_p = &curr_thread->sp;
-        next_stack_p = &next_thread->sp;
+        curr_stack_p = (volatile void** )&curr_thread->sp;
+        next_stack_p = (volatile void** )&next_thread->sp;
         if(curr_thread->state & OS_THREAD_STATE_YIELD){
-            os_scheduler_push_back(curr_thread);
+            os_scheduler_push_back((os_thread_t*)curr_thread);
         }
     }
     
@@ -149,7 +149,7 @@ os_err_t os_scheduler_schedule(void)
     os_scheduler__current_thread = next_thread;
     cpu_interrupt_enable(level);
     
-    if(cpu_stack_switch(curr_stack_p, next_stack_p)!=0){
+    if(cpu_stack_switch((void**)curr_stack_p, (void**)next_stack_p)!=0){
         /*没有被调度，加入就绪表，下次调度*/
         os_scheduler_push_front(next_thread);  /*下次调度优先调度这个任务*/
     }
