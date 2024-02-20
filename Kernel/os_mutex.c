@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <cpu_atomic.h>
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 __STATIC_FORCEINLINE void os_mutex__insert(os_mutex_t * mutex, os_thread_t* thread)
@@ -87,6 +88,7 @@ os_err_t os_mutex_init(os_mutex_t * mutex, const char* name, int flag)
     }
     mutex->owner = 0;
     mutex->flag = flag;
+    mutex->hold = 0;
     OS_LIST_INIT(&mutex->list);
     
     return OS_EOK;
@@ -96,6 +98,7 @@ os_err_t os_mutex_try_lock(os_mutex_t* mutex){
     os_bool_t lock_result;
     while(1){
         if(mutex->owner == os_thread_self()){
+            mutex->hold+=1;
             return OS_EOK;
         }
 
@@ -103,6 +106,7 @@ os_err_t os_mutex_try_lock(os_mutex_t* mutex){
         if(lock_result==OS_TRUE){
             mutex->owner = os_thread_self();
             mutex->original_priority = mutex->owner->curr_priority;
+            mutex->hold+=1;
             return OS_EOK;
         }else{
             return OS_EAGAIN;
@@ -116,6 +120,7 @@ os_err_t os_mutex_lock(os_mutex_t* mutex)
     
     while(1){
         if(mutex->owner == os_thread_self()){
+            mutex->hold+=1;
             return OS_EOK;
         }
         
@@ -123,6 +128,7 @@ os_err_t os_mutex_lock(os_mutex_t* mutex)
         if(lock_result==OS_TRUE){
             mutex->owner = os_thread_self();
             mutex->original_priority = mutex->owner->curr_priority;
+            mutex->hold+=1;
             return OS_EOK;
         }else{
             /*current thread requiring a lock, but failed. let current thread wait on mutex.*/
@@ -140,7 +146,7 @@ os_err_t os_mutex_lock(os_mutex_t* mutex)
                 cpu_interrupt_enable(level);
                 
                 /* Don't wast CPU, switch to next thread */
-                os_scheduler_schedule();
+                return os_scheduler_schedule();
             }
         }
     }
@@ -148,11 +154,21 @@ os_err_t os_mutex_lock(os_mutex_t* mutex)
 
 os_err_t os_mutex_unlock(os_mutex_t * mutex)
 {
+    register os_uintptr_t level;
+
     if(mutex->owner!=0 && mutex->owner==os_thread_self()){
-        mutex->owner->curr_priority = mutex->owner->init_priority;
-        mutex->owner = 0;
-        os_mutex__notify_all(mutex);
+        level = cpu_interrupt_disable();
+        mutex->hold--;
+        if(mutex->hold<=0){
+            mutex->owner->curr_priority = mutex->owner->init_priority;
+            mutex->owner = 0;
+            mutex->hold = 0;
+            os_mutex__notify_all(mutex);
+            os_spinlock_unlock(&mutex->value);
+        }
+        cpu_interrupt_enable(level);
+        return os_scheduler_schedule();
     }
-    os_spinlock_unlock(&mutex->value);
-    return OS_EOK;
+
+    return OS_ERROR;
 }

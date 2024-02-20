@@ -63,6 +63,7 @@ static int __put(int ch, void* cl)
 }
 
 #define __debug(...) do{os_mutex_lock(&debug_mutex); printf(__VA_ARGS__);os_mutex_unlock(&debug_mutex);}while(0)
+//#define __debug(...) printf(__VA_ARGS__)
 
 static void thread_entry(void* p){
     int timeout = (int)p;

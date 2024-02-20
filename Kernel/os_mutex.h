@@ -31,6 +31,7 @@ typedef struct os_mutex_s{
     os_priority_t original_priority;
     os_list_t list;
     int flag;
+    os_uint_t hold;
 }os_mutex_t;
 
 ////////////////////////////////////////////////////////////////////////////////
