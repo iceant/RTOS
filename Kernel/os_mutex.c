@@ -92,6 +92,24 @@ os_err_t os_mutex_init(os_mutex_t * mutex, const char* name, int flag)
     return OS_EOK;
 }
 
+os_err_t os_mutex_try_lock(os_mutex_t* mutex){
+    os_bool_t lock_result;
+    while(1){
+        if(mutex->owner == os_thread_self()){
+            return OS_EOK;
+        }
+
+        lock_result = os_spinlock_try_lock(&mutex->value);
+        if(lock_result==OS_TRUE){
+            mutex->owner = os_thread_self();
+            mutex->original_priority = mutex->owner->curr_priority;
+            return OS_EOK;
+        }else{
+            return OS_EAGAIN;
+        }
+    }
+}
+
 os_err_t os_mutex_lock(os_mutex_t* mutex)
 {
     os_bool_t lock_result;
@@ -126,7 +144,6 @@ os_err_t os_mutex_lock(os_mutex_t* mutex)
             }
         }
     }
-    
 }
 
 os_err_t os_mutex_unlock(os_mutex_t * mutex)
