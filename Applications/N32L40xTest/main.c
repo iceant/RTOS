@@ -114,8 +114,6 @@ static void idle_hook(void* p){
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int main(void){
-    NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
-    SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
     board_init();
     
     os_mutex_init(&debug_mutex, "DBG", OS_QUEUE_PRIO);

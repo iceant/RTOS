@@ -77,10 +77,14 @@ __STATIC_FORCEINLINE void os_mutex__notify_one(os_mutex_t * mutex){
 os_err_t os_mutex_init(os_mutex_t * mutex, const char* name, int flag)
 {
     mutex->value = 0;
-    int name_size = strlen(name);
-    name_size = (name_size>(OS_NAME_MAX_SIZE-1))?(OS_NAME_MAX_SIZE-1):name_size;
-    memcpy(mutex->name, name, name_size);
-    mutex->name[name_size]='\0';
+    if(name){
+        int name_size = strlen(name);
+        name_size = (name_size>(OS_NAME_MAX_SIZE-1))?(OS_NAME_MAX_SIZE-1):name_size;
+        memcpy(mutex->name, name, name_size);
+        mutex->name[name_size]='\0';
+    }else{
+        memset(mutex->name, 0, sizeof(mutex->name));
+    }
     mutex->owner = 0;
     mutex->flag = flag;
     OS_LIST_INIT(&mutex->list);

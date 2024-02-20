@@ -29,10 +29,14 @@ foreach (item IN LISTS SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
 endforeach ()
 
-
+file(GLOB N32L40x_DRIVER_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/n32l40x_drivers/*.c)
+foreach (item IN LISTS N32L40x_DRIVER_SOURCES)
+    message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
+endforeach ()
 
 add_executable(${PROJECT_NAME} "")
-target_sources(${PROJECT_NAME} PUBLIC ${SOURCES})
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCES} ${N32L40x_DRIVER_SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/n32l40x_drivers)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC n32l40x
         PUBLIC RTOS-Kernel

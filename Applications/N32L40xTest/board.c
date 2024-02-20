@@ -103,6 +103,9 @@ GETCHAR_PROTOTYPE
 
 void board_init(void)
 {
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
+    SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
+
     RCC_Configuration();
     GPIO_Configuration();
     NVIC_Configuration();

@@ -7,6 +7,11 @@
 #include <drv_usart.h>
 #endif /*INCLUDED_DRV_USART_H*/
 
+#ifndef INCLUDED_OS_RINGBUFFER_H
+#include <os_ringbuffer.h>
+#endif /*INCLUDED_OS_RINGBUFFER_H*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define ESP01S_RX_BUFFER_SIZE 1024
