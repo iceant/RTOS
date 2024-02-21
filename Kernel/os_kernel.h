@@ -77,11 +77,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-extern void os_kernel_cpu_config(void);
-
-////////////////////////////////////////////////////////////////////////////////
-////
-os_err_t os_kernel_init(void);
+os_err_t os_kernel_init(os_err_t (*os_kernel_init_on_start)(void), os_err_t (*os_kernel_init_on_finished)(void));
 
 os_err_t os_kernel_startup(void);
 

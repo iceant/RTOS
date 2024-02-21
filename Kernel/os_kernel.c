@@ -13,11 +13,20 @@ static int8_t os_kernel__startup_flag = FLAG_OFF;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-os_err_t os_kernel_init(void)
+os_err_t os_kernel_init(os_err_t (*os_kernel_init_on_start)(void), os_err_t (*os_kernel_init_on_finished)(void))
 {
+    os_err_t err;
+
     if(os_kernel__init_flag>FLAG_OFF) return OS_ERROR;
 
     os_kernel__init_flag = FLAG_START;
+
+    if(os_kernel_init_on_start){
+        err = os_kernel_init_on_start();
+        if(err!=OS_EOK){
+            return err;
+        }
+    }
 
     os_memory_init();
     
@@ -27,11 +36,16 @@ os_err_t os_kernel_init(void)
     
     os_idle_init();
 
-    os_kernel_cpu_config();
+    if(os_kernel_init_on_finished){
+        err = os_kernel_init_on_finished();
+        if(err!=OS_EOK){
+            return err;
+        }
+    }
 
+    err = OS_EOK;
     os_kernel__init_flag = FLAG_DONE;
-
-    return OS_EOK;
+    return err;
 }
 
 os_err_t os_kernel_startup(void)

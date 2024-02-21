@@ -102,10 +102,11 @@ static void lock_thread_entry(void* p){
     }
 }
 
-void os_kernel_cpu_config(void)
+os_err_t os_kernel_cpu_config(void)
 {
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
     SysTick_Config(SystemCoreClock/CPU_TICKS_PER_SECOND); /* 1ms = tick */
+    return OS_EOK;
 }
 
 static void idle_hook(void* p){
@@ -119,7 +120,7 @@ int main(void){
     
     os_mutex_init(&debug_mutex, "DBG", OS_QUEUE_PRIO);
     
-    os_kernel_init();
+    os_kernel_init(NULL, os_kernel_cpu_config);
     
     os_idle_set_hook(idle_hook, 0);
     
