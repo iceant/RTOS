@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 #include <cpu_atomic.h>
+#include <stdio.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +168,7 @@ os_err_t os_mutex_unlock(os_mutex_t * mutex)
             os_spinlock_unlock(&mutex->value);
         }
         cpu_interrupt_enable(level);
-        return os_scheduler_schedule();
     }
 
-    return OS_ERROR;
+    return OS_EAGAIN;
 }
