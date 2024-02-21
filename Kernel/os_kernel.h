@@ -69,6 +69,12 @@
 #ifndef INCLUDED_OS_MUTEX_H
 #include <os_mutex.h>
 #endif /* INCLUDED_OS_MUTEX_H */
+
+#ifndef INCLUDED_OS_CONDV_H
+#include <os_condv.h>
+#endif /*INCLUDED_OS_CONDV_H*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 extern void os_kernel_cpu_config(void);
