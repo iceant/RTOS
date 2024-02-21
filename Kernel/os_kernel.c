@@ -21,6 +21,8 @@ os_err_t os_kernel_init(os_err_t (*os_kernel_init_on_start)(void), os_err_t (*os
 
     os_kernel__init_flag = FLAG_START;
 
+    os_memory_init();
+
     if(os_kernel_init_on_start){
         err = os_kernel_init_on_start();
         if(err!=OS_EOK){
@@ -28,8 +30,6 @@ os_err_t os_kernel_init(os_err_t (*os_kernel_init_on_start)(void), os_err_t (*os
         }
     }
 
-    os_memory_init();
-    
     os_timer_init();
     
     os_scheduler_init();
