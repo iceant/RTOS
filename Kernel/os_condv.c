@@ -46,8 +46,6 @@ os_err_t os_condv_init(os_condv_t * condv)
 {
     condv->mutex = 0;
     OS_LIST_INIT(&condv->list);
-    condv->timeout_ms = 0;
-
     return OS_EOK;
 }
 

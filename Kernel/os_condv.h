@@ -17,7 +17,6 @@
 typedef struct os_condv_s{
     os_mutex_t * mutex;
     os_list_t list;
-    uint32_t timeout_ms;
 }os_condv_t;
 
 ////////////////////////////////////////////////////////////////////////////////
