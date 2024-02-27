@@ -19,12 +19,17 @@
 #include <stddef.h>
 #endif /* INCLUDED_STDDEF_H */
 
+#ifndef INCLUDED_OS_RINGBUFFER_H
+#include <os_ringbuffer.h>
+#endif /*INCLUDED_OS_RINGBUFFER_H*/
+
+#ifndef INCLUDED_DEV_USART1_H
+#include <dev_usart1.h>
+#endif /*INCLUDED_DEV_USART1_H*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 void board_init(void);
-
-void USART1_SendBytes(uint8_t* bytes, size_t size);
-
-void USART1_SendString(const char* string);
 
 #endif /* INCLUDED_BOARD_H */

@@ -1,71 +1,10 @@
 #include "board.h"
 #include <string.h>
+#include <os_kernel.h>
+#include <os_ringbuffer.h>
+#include <dev_usart1.h>
 
-////////////////////////////////////////////////////////////////////////////////
-////
 
-static void RCC_Configuration(void)
-{
-    /* Enable GPIO clock */
-    RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOA, ENABLE);
-    /* Enable USARTx Clock */
-    RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_USART1, ENABLE);
-}
-
-static void GPIO_Configuration(void)
-{
-    GPIO_InitType GPIO_InitStructure;
-    
-    /* Initialize GPIO_InitStructure */
-    GPIO_InitStruct(&GPIO_InitStructure);
-    
-    /* Configure USARTx Tx as alternate function push-pull */
-    GPIO_InitStructure.Pin            = GPIO_PIN_9;
-    GPIO_InitStructure.GPIO_Mode      = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Alternate = GPIO_AF4_USART1;
-    GPIO_InitPeripheral(GPIOA, &GPIO_InitStructure);
-    
-    /* Configure USARTx Rx as alternate function push-pull and pull-up */
-    GPIO_InitStructure.Pin            = GPIO_PIN_10;
-    GPIO_InitStructure.GPIO_Pull      = GPIO_Pull_Up;
-    GPIO_InitStructure.GPIO_Alternate = GPIO_AF4_USART1;
-    GPIO_InitPeripheral(GPIOA, &GPIO_InitStructure);
-}
-
-static void USART_Configuration(void)
-{
-    USART_InitType USART_InitStructure;
-    
-    USART_StructInit(&USART_InitStructure);
-    USART_InitStructure.BaudRate            = 115200;
-    USART_InitStructure.WordLength          = USART_WL_8B;
-    USART_InitStructure.StopBits            = USART_STPB_1;
-    USART_InitStructure.Parity              = USART_PE_NO;
-    USART_InitStructure.HardwareFlowControl = USART_HFCTRL_NONE;
-    USART_InitStructure.Mode                = USART_MODE_RX | USART_MODE_TX;
-    
-    /* Configure USARTx */
-    USART_Init(USART1, &USART_InitStructure);
-    /* Enable the USARTx */
-    USART_Enable(USART1, ENABLE);
-
-}
-
-static void NVIC_Configuration(void){
-    NVIC_InitType NVIC_InitStructure;
-    
-    /* Configure the NVIC Preemption Priority Bits */
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
-    
-    /* Enable the USART1 Interrupt */
-    NVIC_InitStructure.NVIC_IRQChannel            = USART1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd         = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-    USART_ConfigInt(USART1, USART_INT_RXDNE, ENABLE);
-    
-}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -98,6 +37,53 @@ GETCHAR_PROTOTYPE
 }
 
 
+static void I2C1_Configuration(void){
+    I2C_InitType i2c_master;
+    GPIO_InitType i2c_gpio;
+
+    I2C_Module * I2Cx = I2C1;
+    GPIO_Module * SCL_GPIO = GPIOB;
+    uint16_t SCL_Pin = GPIO_PIN_8;
+    uint32_t SCL_Alternate = GPIO_AF4_I2C1;
+
+    GPIO_Module * SDA_GPIO = GPIOB;
+    uint16_t SDA_Pin = GPIO_PIN_9;
+    uint32_t SDA_Alternate = GPIO_AF4_I2C1;
+
+    RCC_EnableAPB1PeriphClk(RCC_APB1_PERIPH_I2C1, ENABLE);
+    RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_AFIO, ENABLE);
+    RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOB, ENABLE);
+
+    /*PB8 -- SCL; PB9 -- SDA*/
+    GPIO_InitStruct(&i2c_gpio);
+    i2c_gpio.Pin               = SCL_Pin;
+    i2c_gpio.GPIO_Slew_Rate    = GPIO_Slew_Rate_High;
+    i2c_gpio.GPIO_Mode         = GPIO_Mode_AF_OD;
+    i2c_gpio.GPIO_Alternate    = SCL_Alternate;
+    i2c_gpio.GPIO_Pull         = GPIO_Pull_Up;
+    GPIO_InitPeripheral(SCL_GPIO, &i2c_gpio);
+
+    i2c_gpio.Pin               = SDA_Pin;
+    i2c_gpio.GPIO_Slew_Rate    = GPIO_Slew_Rate_High;
+    i2c_gpio.GPIO_Mode         = GPIO_Mode_AF_OD;
+    i2c_gpio.GPIO_Alternate    = SDA_Alternate;
+    i2c_gpio.GPIO_Pull         = GPIO_Pull_Up;
+    GPIO_InitPeripheral(SDA_GPIO, &i2c_gpio);
+
+    I2C_DeInit(I2Cx);
+    i2c_master.BusMode     = I2C_BUSMODE_I2C;
+    i2c_master.FmDutyCycle = I2C_FMDUTYCYCLE_2;
+    i2c_master.OwnAddr1    = 0x00;
+    i2c_master.AckEnable   = I2C_ACKEN;
+    i2c_master.AddrMode    = I2C_ADDR_MODE_7BIT;
+    i2c_master.ClkSpeed    = 100000; // 100K
+
+    I2C_Init(I2Cx, &i2c_master);
+    I2C_Enable(I2Cx, ENABLE);
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -106,24 +92,9 @@ void board_init(void)
     NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
 
-    RCC_Configuration();
-    GPIO_Configuration();
-    NVIC_Configuration();
-    USART_Configuration();
-}
+    dev_USART1.init();
 
-void USART1_SendBytes(uint8_t* bytes, size_t size)
-{
-    for(size_t i=0; i<size; i++){
-        USART_SendData(USART1, *bytes++);
-        while (USART_GetFlagStatus(USART1, USART_FLAG_TXDE) == RESET)
-            ;
-    }
-}
-
-void USART1_SendString(const char* string)
-{
-    USART1_SendBytes((uint8_t*)string, strlen(string));
+    I2C1_Configuration();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

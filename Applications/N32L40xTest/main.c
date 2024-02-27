@@ -76,21 +76,6 @@ static void thread_entry(void* p){
 static os_sem_t rx_sem;
 static os_spinlock_t lock;
 
-static void sem_thread_entry(void* p){
-    os_err_t  err;
-    while(1){
-//        err = os_sem_take(&rx_sem, OS_WAIT_INFINITY);
-        err = os_sem_take(&rx_sem, os_tick_from_millisecond(1000));
-        if(USART1_RxIdx==0) continue;
-        if(strstr(USART1_RxBuffer, "\r\n")!=0){
-            __debug("thread: %p, wait=%d, buffer_size=%d\n", (void*)os_thread_self(), err, USART1_RxIdx);
-            __debug("%s\n", USART1_RxBuffer);
-            memset(USART1_RxBuffer, 0, sizeof(USART1_RxBuffer));
-            USART1_RxIdx = 0;
-        }
-    }
-}
-
 static void lock_thread_entry(void* p){
     while(1){
         os_spinlock_lock(&lock);
@@ -113,15 +98,28 @@ static void idle_hook(void* p){
 //    printf("idle\n");
 }
 
+static dev_usart_recv_result USART1_RxHandler(os_ringbuffer_t * buffer){
+    int find = os_ringbuffer_find_str(buffer, 0, "\r\n");
+    if(find!=-1){
+        int used = os_ringbuffer_used(buffer);
+        __debug("thread: %p, buffer_size=%d\n", (void*)os_thread_self(), used);
+        __debug("%s\n", buffer->buffer);
+        return kDevUSARTRecvResult_DONE;
+    }
+    return kDevUSARTRecvResult_CONTINUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int main(void){
     board_init();
-    
+
     os_mutex_init(&debug_mutex, "DBG", OS_QUEUE_PRIO);
-    
     os_kernel_init(NULL, os_kernel_cpu_config);
-    
+
+    dev_USART1.recv = USART1_RxHandler;
+    dev_USART1.startup();
+
     os_idle_set_hook(idle_hook, 0);
     
     os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);
@@ -137,9 +135,6 @@ int main(void){
 //    os_thread_startup(&thread4);
 
     os_sem_init(&rx_sem, "rx_sem", 0, OS_QUEUE_FIFO);
-
-    os_thread_init(&sem_thread, "sem_thd", sem_thread_entry, 0, sem_thread_stack, sizeof(sem_thread_stack), 20, 10);
-    os_thread_startup(&sem_thread);
 
     os_spinglock_init(&lock);
 
@@ -160,20 +155,4 @@ int main(void){
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
-void USART1_IRQHandler(void)
-{
-    os_interrupt_enter();
-    if (USART_GetIntStatus(USART1, USART_INT_RXDNE) != RESET)
-    {
-        USART1_RxBuffer[USART1_RxIdx++] = USART_ReceiveData(USART1);
-        if(USART1_RxIdx==USART1_RX_BUFFER_SZ) {
-            USART1_RxIdx = 0;
-        }
-        os_sem_release(&rx_sem);
-    }
-    os_interrupt_leave();
-}
 
