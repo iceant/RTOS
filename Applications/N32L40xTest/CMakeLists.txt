@@ -34,10 +34,16 @@ foreach (item IN LISTS DRIVER_SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
 endforeach ()
 
+file(GLOB OLED_DRIVER_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/drivers/OLED/*.c)
+foreach (item IN LISTS OLED_DRIVER_SOURCES)
+    message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
+endforeach ()
+
 add_executable(${PROJECT_NAME} "")
-target_sources(${PROJECT_NAME} PUBLIC ${SOURCES} ${DRIVER_SOURCES})
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCES} ${DRIVER_SOURCES} ${OLED_DRIVER_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/drivers)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/drivers/OLED)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC n32l40x
         PUBLIC RTOS-Kernel

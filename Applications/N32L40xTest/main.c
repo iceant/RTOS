@@ -1,5 +1,6 @@
 #include "main.h"
 #include "board.h"
+#include "OLED.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <n32l40x.h>
@@ -7,6 +8,7 @@
 #include <string.h>
 #include <os_spinlock.h>
 #include <os_mutex.h>
+#include <bmp.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -67,8 +69,33 @@ static int __put(int ch, void* cl)
 
 static void thread_entry(void* p){
     int timeout = (int)p;
+    int ch = ' ';
+    int x = 0;
+    int y = 0;
+//    OLED_DrawBMP(0, 0, 127, 8, MENU);
+
     while(1){
-        __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
+//        __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
+        __debug("X=%d, Y=%d\n", x, y);
+//        OLED_ShowChar(x, y, ch++, 6);
+//        x+=6;
+//        if(x>=122){
+//            x=0;
+//            if(y++==8){
+//                y=1;
+//            }
+//        }
+//        if(ch>'~'){
+//            ch=' ';
+//        }
+        OLED_DrawBMP(0, 0, 48, 8, IMG1);
+        OLED_DrawBMP(0, 0, 48, 8, IMG2);
+        OLED_DrawBMP(0, 0, 48, 8, IMG3);
+        OLED_DrawBMP(0, 0, 48, 8, IMG4);
+        OLED_DrawBMP(0, 0, 48, 8, IMG5);
+        OLED_DrawBMP(0, 0, 48, 8, IMG6);
+        OLED_DrawBMP(0, 0, 48, 8, IMG7);
+
         os_thread_mdelay(timeout);
     }
 }
@@ -104,6 +131,7 @@ static dev_usart_recv_result USART1_RxHandler(os_ringbuffer_t * buffer){
         int used = os_ringbuffer_used(buffer);
         __debug("thread: %p, buffer_size=%d\n", (void*)os_thread_self(), used);
         __debug("%s\n", buffer->buffer);
+        OLED_ShowString(1, 1, (char*)buffer->buffer, 6);
         return kDevUSARTRecvResult_DONE;
     }
     return kDevUSARTRecvResult_CONTINUE;
