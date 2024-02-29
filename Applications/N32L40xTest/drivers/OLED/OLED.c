@@ -110,7 +110,10 @@ void Write_IIC_Command(unsigned char IIC_Command)
 //    IIC_Wait_Ack();
 //    IIC_Stop();
     uint8_t data[]={0x00, IIC_Command};
-    OLED__device->send(OLED_ADDRESS, data, 2);
+    int err = OLED__device->send(OLED_ADDRESS, data, 2);
+    if(err<0){
+        printf("OLED Write CMD 0x%02X Failed! Err=%d\n", IIC_Command, err);
+    }
 }
 
 /**********************************************
@@ -127,7 +130,10 @@ void Write_IIC_Data(unsigned char IIC_Data)
 //    IIC_Wait_Ack();
 //    IIC_Stop();
     uint8_t data[]={0x40, IIC_Data};
-    OLED__device->send(OLED_ADDRESS, data, 2);
+    int err = OLED__device->send(OLED_ADDRESS, data, 2);
+    if(err<0){
+        printf("OLED Write Data 0x%02X Failed! Err=%d\n", IIC_Data, err);
+    }
 }
 
 void OLED_WR_Byte(unsigned dat,unsigned cmd)
@@ -150,12 +156,12 @@ void fill_picture(unsigned char fill_Data)
     unsigned char m,n;
     for(m=0;m<8;m++)
     {
-        OLED_WR_Byte(0xb0+m,0);		//page0-page1
-        OLED_WR_Byte(0x02,0);		//low column start address
-        OLED_WR_Byte(0x10,0);		//high column start address
+        OLED_WR_Byte(0xb0+m,OLED_CMD);		//page0-page1
+        OLED_WR_Byte(0x02,OLED_CMD);		//low column start address
+        OLED_WR_Byte(0x10,OLED_CMD);		//high column start address
         for(n=0;n<128;n++)
         {
-            OLED_WR_Byte(fill_Data,1);
+            OLED_WR_Byte(fill_Data,OLED_DATA);
         }
     }
 }
@@ -300,11 +306,12 @@ void OLED_ShowString(u8 x,u8 y,u8 *chr,u8 Char_Size)
         OLED_ShowChar(x,y,chr[j],Char_Size);
         x+=6;
         if(x>120){x=0;y+=1;}
+        if(y>8){y=0;}
         j++;
     }
 }
 //显示汉字
-void OLED_ShowCHinese(u8 x,u8 y,u8 no)
+void OLED_ShowChinese(u8 x,u8 y,u8 no)
 {
     u8 t,adder=0;
     OLED_Set_Pos(x,y);

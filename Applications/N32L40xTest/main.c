@@ -1,6 +1,7 @@
 #include "main.h"
 #include "board.h"
 #include "OLED.h"
+#include "dev_i2c1.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <n32l40x.h>
@@ -75,8 +76,8 @@ static void thread_entry(void* p){
 //    OLED_DrawBMP(0, 0, 127, 8, MENU);
 
     while(1){
-//        __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
-        __debug("X=%d, Y=%d\n", x, y);
+        __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
+//        __debug("X=%d, Y=%d\n", x, y);
 //        OLED_ShowChar(x, y, ch++, 6);
 //        x+=6;
 //        if(x>=122){
@@ -88,15 +89,49 @@ static void thread_entry(void* p){
 //        if(ch>'~'){
 //            ch=' ';
 //        }
-        OLED_DrawBMP(0, 0, 48, 8, IMG1);
-        OLED_DrawBMP(0, 0, 48, 8, IMG2);
-        OLED_DrawBMP(0, 0, 48, 8, IMG3);
-        OLED_DrawBMP(0, 0, 48, 8, IMG4);
-        OLED_DrawBMP(0, 0, 48, 8, IMG5);
-        OLED_DrawBMP(0, 0, 48, 8, IMG6);
-        OLED_DrawBMP(0, 0, 48, 8, IMG7);
 
         os_thread_mdelay(timeout);
+    }
+}
+
+#define OLED_DRAW_THREAD_STACK_SIZE 1024
+__ALIGNED(OS_ALIGN_SIZE)
+static uint8_t oled_draw_thread_stack[OLED_DRAW_THREAD_STACK_SIZE];
+static os_thread_t oled_draw_thread;
+
+static void oled_draw_thread_entry(void*p){
+    int sleepMs = 1000;
+
+    while(1){
+        OLED_Display_Off();
+        OLED_Clear();
+        OLED_DrawBMP(0, 0, 118, 8, IMG1);
+        OLED_Display_On();
+        os_thread_mdelay(sleepMs);
+
+        OLED_Display_Off();
+        OLED_Clear();
+        OLED_DrawBMP(0, 0, 118, 8, IMG2);
+        OLED_Display_On();
+        os_thread_mdelay(sleepMs);
+
+        OLED_Display_Off();
+        OLED_Clear();
+        OLED_DrawBMP(0, 0, 118, 8, IMG3);
+        OLED_Display_On();
+        os_thread_mdelay(sleepMs);
+
+        OLED_Display_Off();
+        OLED_Clear();
+        OLED_DrawBMP(0, 0, 118, 8, IMG4);
+        OLED_Display_On();
+        os_thread_mdelay(sleepMs);
+
+        OLED_Display_Off();
+        OLED_Clear();
+        OLED_DrawBMP(0, 0, 118, 8, IMG5);
+        OLED_Display_On();
+        os_thread_mdelay(sleepMs);
     }
 }
 
@@ -129,9 +164,9 @@ static dev_usart_recv_result USART1_RxHandler(os_ringbuffer_t * buffer){
     int find = os_ringbuffer_find_str(buffer, 0, "\r\n");
     if(find!=-1){
         int used = os_ringbuffer_used(buffer);
+        OLED_ShowString(1, 1, (char*)buffer->buffer, 6);
         __debug("thread: %p, buffer_size=%d\n", (void*)os_thread_self(), used);
         __debug("%s\n", buffer->buffer);
-        OLED_ShowString(1, 1, (char*)buffer->buffer, 6);
         return kDevUSARTRecvResult_DONE;
     }
     return kDevUSARTRecvResult_CONTINUE;
@@ -148,13 +183,14 @@ int main(void){
     dev_USART1.recv = USART1_RxHandler;
     dev_USART1.startup();
 
+
     os_idle_set_hook(idle_hook, 0);
     
-    os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);
-    os_thread_startup(&thread1);
-
-    os_thread_init(&thread2, "Thread2", thread_entry, (void*)50, stack2, STACK_SIZE, 20, 5);
-    os_thread_startup(&thread2);
+//    os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);
+//    os_thread_startup(&thread1);
+//
+//    os_thread_init(&thread2, "Thread2", thread_entry, (void*)50, stack2, STACK_SIZE, 20, 5);
+//    os_thread_startup(&thread2);
 
 //    os_thread_init(&thread3, "Thread3", thread_entry, (void*)3000, stack3, STACK_SIZE, 10, 10);
 //    os_thread_startup(&thread3);
@@ -174,7 +210,10 @@ int main(void){
 
     os_thread_init(&lock3_thread, "lock3_thd", lock_thread_entry, 0, lock3_thread_stack, sizeof(lock3_thread_stack), 20, 10);
     os_thread_startup(&lock3_thread);
-    
+
+    os_thread_init(&oled_draw_thread, "oled_draw_thd", oled_draw_thread_entry, 0, oled_draw_thread_stack, sizeof(oled_draw_thread_stack), 20, 10);
+    os_thread_startup(&oled_draw_thread);
+
     os_kernel_startup();
     
     while(1){

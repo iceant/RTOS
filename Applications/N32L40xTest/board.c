@@ -48,7 +48,6 @@ void board_init(void)
 
     dev_USART1.init();
     dev_I2C1.init();
-
     OLED_Init(&dev_I2C1);
 }
 
