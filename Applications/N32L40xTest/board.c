@@ -1,5 +1,6 @@
 #include "board.h"
 #include "dev_i2c1.h"
+#include "dev_i2c2.h"
 #include <string.h>
 #include <os_kernel.h>
 #include <os_ringbuffer.h>
@@ -48,6 +49,7 @@ void board_init(void)
 
     dev_USART1.init();
     dev_I2C1.init();
+    dev_I2C2.init();
     OLED_Init(&dev_I2C1);
 }
 

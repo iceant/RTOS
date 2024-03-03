@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-void os_spinglock_init(os_spinlock_t * s)
+void os_spinlock_init(os_spinlock_t * s)
 {
     cpu_atomic_store((cpu_atomic_t *) s, 0);
 }

@@ -2,6 +2,7 @@
 #include "board.h"
 #include "OLED.h"
 #include "dev_i2c1.h"
+#include "dev_i2c2.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <n32l40x.h>
@@ -10,6 +11,7 @@
 #include <os_spinlock.h>
 #include <os_mutex.h>
 #include <bmp.h>
+#include <DS1307.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -74,23 +76,22 @@ static void thread_entry(void* p){
     int x = 0;
     int y = 0;
 //    OLED_DrawBMP(0, 0, 127, 8, MENU);
-
+    char buf[32]={0};
+    
     while(1){
         __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
-//        __debug("X=%d, Y=%d\n", x, y);
-//        OLED_ShowChar(x, y, ch++, 6);
-//        x+=6;
-//        if(x>=122){
-//            x=0;
-//            if(y++==8){
-//                y=1;
-//            }
-//        }
-//        if(ch>'~'){
-//            ch=' ';
-//        }
-
-        os_thread_mdelay(timeout);
+        int size = snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
+               , DS1307_GetYear()
+               , DS1307_GetMonth()
+               , DS1307_GetDate()
+               , DS1307_GetHour()
+               , DS1307_GetMinute()
+               , DS1307_GetSecond()
+               );
+        printf("%s\n", buf);
+//        OLED_ShowString(0, 0, buf, 12);
+        
+        os_thread_mdelay(1000);
     }
 }
 
@@ -101,37 +102,56 @@ static os_thread_t oled_draw_thread;
 
 static void oled_draw_thread_entry(void*p){
     int sleepMs = 1000;
+    int x = 0;
+    int y = 1;
+    int x2 = 118;
+    int y2 = 8;
+    char buf[32]={0};
 
+    
     while(1){
+        
+        snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
+                , DS1307_GetYear()
+                , DS1307_GetMonth()
+                , DS1307_GetDate()
+                , DS1307_GetHour()
+                , DS1307_GetMinute()
+                , DS1307_GetSecond()
+        );
+        
+        OLED_ShowString(0, 0, buf, 12);
+        
         OLED_Display_Off();
-        OLED_Clear();
-        OLED_DrawBMP(0, 0, 118, 8, IMG1);
+//        OLED_Clear();
+        OLED_DrawBMP(x, y, x2, y2, IMG1);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
-        OLED_Clear();
-        OLED_DrawBMP(0, 0, 118, 8, IMG2);
+//        OLED_Clear();
+        OLED_DrawBMP(x, y, x2, y2, IMG2);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
-        OLED_Clear();
-        OLED_DrawBMP(0, 0, 118, 8, IMG3);
+//        OLED_Clear();
+        OLED_DrawBMP(x, y, x2, y2, IMG3);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
-        OLED_Clear();
-        OLED_DrawBMP(0, 0, 118, 8, IMG4);
+//        OLED_Clear();
+        OLED_DrawBMP(x, y, x2, y2, IMG4);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
-        OLED_Clear();
-        OLED_DrawBMP(0, 0, 118, 8, IMG5);
+//        OLED_Clear();
+        OLED_DrawBMP(x, y, x2, y2, IMG5);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
+        
     }
 }
 
@@ -182,12 +202,12 @@ int main(void){
 
     dev_USART1.recv = USART1_RxHandler;
     dev_USART1.startup();
-
+    DS1307_Init(&dev_I2C2);
 
     os_idle_set_hook(idle_hook, 0);
     
-//    os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);
-//    os_thread_startup(&thread1);
+    os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);
+    os_thread_startup(&thread1);
 //
 //    os_thread_init(&thread2, "Thread2", thread_entry, (void*)50, stack2, STACK_SIZE, 20, 5);
 //    os_thread_startup(&thread2);
@@ -200,7 +220,7 @@ int main(void){
 
     os_sem_init(&rx_sem, "rx_sem", 0, OS_QUEUE_FIFO);
 
-    os_spinglock_init(&lock);
+    os_spinlock_init(&lock);
 
     os_thread_init(&lock1_thread, "lock1_thd", lock_thread_entry, 0, lock1_thread_stack, sizeof(lock1_thread_stack), 20, 10);
     os_thread_startup(&lock1_thread);
