@@ -3,6 +3,8 @@
 #include "OLED.h"
 #include "dev_i2c1.h"
 #include "dev_i2c2.h"
+#include "dev_usart2.h"
+#include "ESP01S.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <n32l40x.h>
@@ -77,8 +79,36 @@ static void thread_entry(void* p){
     int y = 0;
 //    OLED_DrawBMP(0, 0, 127, 8, MENU);
     char buf[32]={0};
+    int count = 0;
+    struct tm datetime;
+    
+    
+    printf("Connect to WIFI...\n");
+    ESP01S_ConnectWifi("PIZER_WLS", "1234567890", 5000);
+    printf("AcquireIP...\n");
+    ESP01S_AcquireIP(5000);
+    printf("NTP CONFIG...\n");
+    ESP01S_NTPCfg(8, 5000);
     
     while(1){
+       
+        if((count++ % 100)==0){
+            printf("NTP Datetime!\n");
+            datetime.tm_year = 0;
+            if(ESP01S_NTPTime(&datetime, 5000)==kESP01S_Result_OK){
+                if((datetime.tm_year+1900)>2000){
+                    DS1307_SetYear(datetime.tm_year+1900);
+                    DS1307_SetMonth(datetime.tm_mon+1);
+                    DS1307_SetDate(datetime.tm_mday);
+                    DS1307_SetDayOfWeek(datetime.tm_wday);
+                    DS1307_SetHour(datetime.tm_hour);
+                    DS1307_SetMinute(datetime.tm_min);
+                    DS1307_SetSecond(datetime.tm_sec);
+                }
+            }
+        }
+
+
         __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
         int size = snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
                , DS1307_GetYear()
@@ -89,9 +119,10 @@ static void thread_entry(void* p){
                , DS1307_GetSecond()
                );
         printf("%s\n", buf);
-//        OLED_ShowString(0, 0, buf, 12);
         
-        os_thread_mdelay(1000);
+        
+        
+        os_thread_mdelay(200);
     }
 }
 
@@ -207,8 +238,10 @@ int main(void){
 
     dev_USART1.recv = USART1_RxHandler;
     dev_USART1.startup();
+    dev_USART2.startup();
     DS1307_Init(&dev_I2C2);
-
+    ESP01S_Init(&dev_USART2);
+    
     os_idle_set_hook(idle_hook, 0);
     
     os_thread_init(&thread1, "Thread1", thread_entry, (void*)100, stack1, STACK_SIZE, 20, 5);

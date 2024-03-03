@@ -6,7 +6,7 @@
 #include <os_ringbuffer.h>
 #include <dev_usart1.h>
 #include <OLED.h>
-
+#include <dev_usart2.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -46,8 +46,13 @@ void board_init(void)
 {
     NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
-
+    
+    /* Configure the NVIC Preemption Priority Bits */
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+    
+    
     dev_USART1.init();
+    dev_USART2.init();
     dev_I2C1.init();
     dev_I2C2.init();
     OLED_Init(&dev_I2C1);
