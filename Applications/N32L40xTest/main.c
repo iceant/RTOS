@@ -100,58 +100,63 @@ __ALIGNED(OS_ALIGN_SIZE)
 static uint8_t oled_draw_thread_stack[OLED_DRAW_THREAD_STACK_SIZE];
 static os_thread_t oled_draw_thread;
 
+static void oled_show_datetime(void){
+    char buf[32]={0};
+    snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
+             ,DS1307_GetYear()
+             ,DS1307_GetMonth()
+             ,DS1307_GetDate()
+             ,DS1307_GetHour()
+             ,DS1307_GetMinute()
+             ,DS1307_GetSecond()
+             );
+    OLED_ShowString(0, 0, buf, 12);
+}
+
 static void oled_draw_thread_entry(void*p){
     int sleepMs = 1000;
     int x = 0;
     int y = 1;
     int x2 = 118;
     int y2 = 8;
-    char buf[32]={0};
-
+    
     
     while(1){
         
-        snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
-                , DS1307_GetYear()
-                , DS1307_GetMonth()
-                , DS1307_GetDate()
-                , DS1307_GetHour()
-                , DS1307_GetMinute()
-                , DS1307_GetSecond()
-        );
-        
-        OLED_ShowString(0, 0, buf, 12);
-        
         OLED_Display_Off();
 //        OLED_Clear();
+        oled_show_datetime();
         OLED_DrawBMP(x, y, x2, y2, IMG1);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
 //        OLED_Clear();
+        oled_show_datetime();
         OLED_DrawBMP(x, y, x2, y2, IMG2);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
 //        OLED_Clear();
+        oled_show_datetime();
         OLED_DrawBMP(x, y, x2, y2, IMG3);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
 //        OLED_Clear();
+        oled_show_datetime();
         OLED_DrawBMP(x, y, x2, y2, IMG4);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
 
         OLED_Display_Off();
 //        OLED_Clear();
+        oled_show_datetime();
         OLED_DrawBMP(x, y, x2, y2, IMG5);
         OLED_Display_On();
         os_thread_mdelay(sleepMs);
-        
     }
 }
 
