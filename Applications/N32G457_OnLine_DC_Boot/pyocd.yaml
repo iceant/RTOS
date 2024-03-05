@@ -1,0 +1,19 @@
+pack:
+  - ../../Packs/Nationstech.N32L40x_DFP.0.9.0.pack
+  - ../../Packs/Nationstech.N32G45x_DFP.1.0.6.pack
+
+#target:
+#  n32l406cb
+
+target_override:
+  n32g457vel7
+
+#probes:
+#  601012352:
+#    target_override: n32g457vel7
+#  29A509317F281FB6DC9254C4D064247F:
+#    target_override: n32g457vel7
+#  110136025431312034323934313038203432303497969903:
+#    target_override: n32g457vel7
+
+frequency: 5000000
