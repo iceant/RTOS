@@ -3,7 +3,7 @@
 #include <os_kernel.h>
 #include <os_ringbuffer.h>
 
-#include <dev_usart1.h>
+#include "dev_usart1.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

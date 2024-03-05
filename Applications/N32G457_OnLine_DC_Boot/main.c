@@ -58,7 +58,7 @@ static HW_USART_RecvResult USART1__Recv(os_ringbuffer_t *buffer)
 {
     if(os_ringbuffer_find_str(buffer, 0, "\r\n")!=-1)
     {
-        printf("%s\n", buffer->buffer);
+        __debug("%s\n", buffer->buffer);
         return kHW_USART_RecvResult_DONE;
     }
     return kHW_USART_RecvResult_CONTINUE;
