@@ -52,7 +52,7 @@ static void thread_entry(void* p){
     int count = 0;
     while(1){
         __debug("Thread: 0x%08x, Count:%d, Timeout:%d\n", os_thread_self(), count++, timeout);
-        os_thread_mdelay(os_tick_from_millisecond(timeout));
+        os_thread_mdelay(timeout);
     }
 }
 
@@ -84,9 +84,9 @@ static os_err_t os_native_config(void)
 ////
 int main(void){
     board_init();
+    os_kernel_init(0, os_native_config);
 
     printf("Kernel Init...\n");
-    os_kernel_init(NULL, os_native_config);
 
     os_mutex_init(&debug_mutex, "DBG", OS_QUEUE_PRIO);
 
