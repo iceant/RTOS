@@ -46,7 +46,7 @@ void board_init(void)
     SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
     
     /* Configure the NVIC Preemption Priority Bits */
-    NVIC_PriorityGroupConfig(BOARD_PRIORITY_GROUP);
+    NVIC_PriorityGroupConfig(BOARD_NVIC_PRIORITY_GROUP);
     
     dev_USART1.init();
 }
