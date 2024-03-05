@@ -28,7 +28,9 @@ void delay(unsigned long ms){
 #define STACK_SIZE 1024
 
 __ALIGNED(4) static uint8_t stack1[STACK_SIZE];
+__ALIGNED(4) static uint8_t stack2[STACK_SIZE];
 static os_thread_t thread1;
+static os_thread_t thread2;
 static os_mutex_t debug_mutex;
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -89,8 +91,11 @@ int main(void){
     os_mutex_init(&debug_mutex, "DBG", OS_QUEUE_PRIO);
 
 
-    os_thread_init(&thread1, "Thread1", thread_entry, (void*)1000, stack1, STACK_SIZE, 20, 5);
+    os_thread_init(&thread1, "Thread1", thread_entry, (void*)500, stack1, STACK_SIZE, 20, 5);
     os_thread_startup(&thread1);
+
+    os_thread_init(&thread2, "Thread2", thread_entry, (void*)1000, stack2, STACK_SIZE, 20, 5);
+    os_thread_startup(&thread2);
 
     os_kernel_startup();
     
