@@ -1,7 +1,7 @@
-#include <os_hex.h>
+#include <sdk_hex.h>
 #include <stdio.h>
 
-void os_hex_dump(const char* name, const void* data, int size) {
+void sdk_hex_dump(const char* name, const void* data, int size) {
     if(name){
         printf("-- DUMP: %s --\n", name);
     }
@@ -37,7 +37,7 @@ void os_hex_dump(const char* name, const void* data, int size) {
 ////
 #define MIN(A, B) ((A)>(B)?(B):(A))
 
-os_size_t os_hex_encode(char* buffer, uint32_t offset, os_size_t buffer_size, const uint8_t *data, os_size_t data_offset, os_size_t data_size, os_bool_t isUpperCase, os_byteorder_t byteOrder)
+os_size_t sdk_hex_encode(char* buffer, uint32_t offset, os_size_t buffer_size, const uint8_t *data, os_size_t data_offset, os_size_t data_size, os_bool_t isUpperCase, sdk_byteorder_t byteOrder)
 {
     os_size_t i;
     os_size_t index;
@@ -51,7 +51,7 @@ os_size_t os_hex_encode(char* buffer, uint32_t offset, os_size_t buffer_size, co
     const uint8_t* lookup = isUpperCase?LOOKUP_TABLE_UPPER:LOOKUP_TABLE_LOWER;
 
     for(i =0; i<size; i++){
-        index = (byteOrder==kOS_ByteOrder_BigEndian)?i:(size-i-1);
+        index = (byteOrder==kSDK_ByteOrder_BigEndian)?i:(size-i-1);
         buffer[offset + (i<<1)] = lookup[(data[data_offset + index] >> 4) & 0x0F];
         buffer[offset + (i<<1) + 1] = lookup[(data[data_offset + index] & 0x0F)];
     }
@@ -61,7 +61,7 @@ os_size_t os_hex_encode(char* buffer, uint32_t offset, os_size_t buffer_size, co
     return result_size;
 }
 
-os_size_t os_hex_decode(uint8_t *buffer, os_size_t buffer_offset, os_size_t buffer_size, const char* hex, os_size_t hex_offset, os_size_t hex_size){
+os_size_t sdk_hex_decode(uint8_t *buffer, os_size_t buffer_offset, os_size_t buffer_size, const char* hex, os_size_t hex_offset, os_size_t hex_size){
     uint8_t b1, b2;
 
     static const unsigned char TBL[] = {

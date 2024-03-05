@@ -3,7 +3,7 @@
 #include "dev_i2c2.h"
 #include <string.h>
 #include <os_kernel.h>
-#include <os_ringbuffer.h>
+#include <sdk_ringbuffer.h>
 #include <dev_usart1.h>
 #include <OLED.h>
 #include <dev_usart2.h>

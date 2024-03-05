@@ -14,6 +14,8 @@
 #include <os_mutex.h>
 #include <bmp.h>
 #include <DS1307.h>
+#include <sdk_ap.h>
+#include <sdk_mp.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -81,7 +83,7 @@ static void thread_entry(void* p){
     char buf[32]={0};
     int count = 0;
     struct tm datetime;
-    
+
     
     printf("Connect to WIFI...\n");
     ESP01S_ConnectWifi("PIZER_WLS", "1234567890", 5000);
@@ -89,9 +91,24 @@ static void thread_entry(void* p){
     ESP01S_AcquireIP(5000);
     printf("NTP CONFIG...\n");
     ESP01S_NTPCfg(8, 5000);
-    
+    sdk_fmt_register('A', sdk_ap_fmt);
+    sdk_fmt_register('D', sdk_mp_fmt);
+    sdk_mp_set(1024);
     while(1){
-       
+        sdk_mp_t mp_x;
+        sdk_mp_t mp_y;
+        sdk_mp_t mp_z;
+        sdk_mp_t mp_m;
+        sdk_mp_new(123000000, &mp_x);
+        sdk_mp_new(6250, &mp_y);
+        sdk_mp_new(0, &mp_z);
+        
+        sdk_mp_div(mp_z, mp_x, mp_y, 0);
+        sdk_fmt_print("SDK_AP: %D/%D=%D\n", mp_x, 10, mp_y, 10, mp_z, 10);
+        sdk_mp_free(&mp_x);
+        sdk_mp_free(&mp_y);
+        sdk_mp_free(&mp_z);
+        
         if((count++ % 100)==0){
             printf("NTP Datetime!\n");
             datetime.tm_year = 0;
@@ -110,13 +127,14 @@ static void thread_entry(void* p){
 
 
         __debug("Thread %s 0x%08x timeout(ms): %d\n",os_thread_self()->name, os_thread_self(), timeout);
-        int size = snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
+        int size = snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d(W%d)"
                , DS1307_GetYear()
                , DS1307_GetMonth()
                , DS1307_GetDate()
                , DS1307_GetHour()
                , DS1307_GetMinute()
                , DS1307_GetSecond()
+               , DS1307_GetDayOfWeek()
                );
         printf("%s\n", buf);
         
@@ -216,10 +234,10 @@ static void idle_hook(void* p){
 //    printf("idle\n");
 }
 
-static dev_usart_recv_result USART1_RxHandler(os_ringbuffer_t * buffer){
-    int find = os_ringbuffer_find_str(buffer, 0, "\r\n");
+static dev_usart_recv_result USART1_RxHandler(sdk_ringbuffer_t * buffer){
+    int find = sdk_ringbuffer_find_str(buffer, 0, "\r\n");
     if(find!=-1){
-        int used = os_ringbuffer_used(buffer);
+        int used = sdk_ringbuffer_used(buffer);
         OLED_ShowString(1, 1, (char*)buffer->buffer, 6);
         __debug("thread: %p, buffer_size=%d\n", (void*)os_thread_self(), used);
         __debug("%s\n", buffer->buffer);
@@ -258,16 +276,16 @@ int main(void){
 
     os_sem_init(&rx_sem, "rx_sem", 0, OS_QUEUE_FIFO);
 
-    os_spinlock_init(&lock);
+//    os_spinlock_init(&lock);
 
-    os_thread_init(&lock1_thread, "lock1_thd", lock_thread_entry, 0, lock1_thread_stack, sizeof(lock1_thread_stack), 20, 10);
-    os_thread_startup(&lock1_thread);
-
-    os_thread_init(&lock2_thread, "lock2_thd", lock_thread_entry, 0, lock2_thread_stack, sizeof(lock2_thread_stack), 20, 10);
-    os_thread_startup(&lock2_thread);
-
-    os_thread_init(&lock3_thread, "lock3_thd", lock_thread_entry, 0, lock3_thread_stack, sizeof(lock3_thread_stack), 20, 10);
-    os_thread_startup(&lock3_thread);
+//    os_thread_init(&lock1_thread, "lock1_thd", lock_thread_entry, 0, lock1_thread_stack, sizeof(lock1_thread_stack), 20, 10);
+//    os_thread_startup(&lock1_thread);
+//
+//    os_thread_init(&lock2_thread, "lock2_thd", lock_thread_entry, 0, lock2_thread_stack, sizeof(lock2_thread_stack), 20, 10);
+//    os_thread_startup(&lock2_thread);
+//
+//    os_thread_init(&lock3_thread, "lock3_thd", lock_thread_entry, 0, lock3_thread_stack, sizeof(lock3_thread_stack), 20, 10);
+//    os_thread_startup(&lock3_thread);
 
     os_thread_init(&oled_draw_thread, "oled_draw_thd", oled_draw_thread_entry, 0, oled_draw_thread_stack, sizeof(oled_draw_thread_stack), 20, 10);
     os_thread_startup(&oled_draw_thread);

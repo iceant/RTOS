@@ -1,11 +1,11 @@
-#include <os_ring.h>
+#include <sdk_ring.h>
 #include <assert.h>
 #include <string.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-void os_ring_init(os_ring_t * ring, void* array, os_size_t element_count, os_size_t element_size)
+void sdk_ring_init(sdk_ring_t * ring, void* array, os_size_t element_count, os_size_t element_size)
 {
     assert(ring);
     assert(array);
@@ -18,7 +18,7 @@ void os_ring_init(os_ring_t * ring, void* array, os_size_t element_count, os_siz
     ring->write_idx = 0;
 }
 
-os_err_t os_ring_put(os_ring_t *ring, void* object)
+os_err_t sdk_ring_put(sdk_ring_t *ring, void* object)
 {
     assert(ring);
     assert(object);
@@ -38,7 +38,7 @@ os_err_t os_ring_put(os_ring_t *ring, void* object)
     return OS_EOK;
 }
 
-os_err_t os_ring_get(os_ring_t * ring, void* object){
+os_err_t sdk_ring_get(sdk_ring_t * ring, void* object){
     assert(ring);
     assert(object);
 
@@ -57,13 +57,13 @@ os_err_t os_ring_get(os_ring_t * ring, void* object){
     return OS_EOK;
 }
 
-os_size_t os_ring_used(os_ring_t * ring){
+os_size_t sdk_ring_used(sdk_ring_t * ring){
     return (ring->write_idx > ring->read_idx) ?
            (ring->write_idx - ring->read_idx) :
            (ring->write_idx + ring->capacity - ring->read_idx);
 }
 
-os_err_t os_ring_read(os_ring_t * ring, os_size_t offset, void* object){
+os_err_t sdk_ring_read(sdk_ring_t * ring, os_size_t offset, void* object){
     os_size_t used = (ring->write_idx > ring->read_idx) ?
                      (ring->write_idx - ring->read_idx) :
                      (ring->write_idx + ring->capacity - ring->read_idx);
@@ -92,7 +92,7 @@ os_err_t os_ring_read(os_ring_t * ring, os_size_t offset, void* object){
     return OS_EOK;
 }
 
-void* os_ring_peek(os_ring_t * ring, os_size_t offset /*0<= offset <used*/){
+void* sdk_ring_peek(sdk_ring_t * ring, os_size_t offset /*0<= offset <used*/){
 
     os_size_t used = (ring->write_idx > ring->read_idx) ?
                      (ring->write_idx - ring->read_idx) :
@@ -119,7 +119,7 @@ void* os_ring_peek(os_ring_t * ring, os_size_t offset /*0<= offset <used*/){
     return (ring->array + idx * ring->object_size);
 }
 
-void* os_ring_pop(os_ring_t * ring){
+void* sdk_ring_pop(sdk_ring_t * ring){
     assert(ring);
 
     if(ring->read_idx == ring->write_idx){
@@ -139,14 +139,14 @@ void* os_ring_pop(os_ring_t * ring){
     return p;
 }
 
-void os_ring_reset(os_ring_t * ring)
+void sdk_ring_reset(sdk_ring_t * ring)
 {
     assert(ring);
     ring->read_idx = 0;
     ring->write_idx = 0;
 }
 
-void* os_ring_get_write_slot(os_ring_t* ring)
+void* sdk_ring_get_write_slot(sdk_ring_t* ring)
 {
     os_size_t next_write_idx = ring->write_idx + 1;
     if(next_write_idx==ring->capacity){

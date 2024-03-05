@@ -13,9 +13,9 @@
 #include <stddef.h>
 #endif /*INCLUDED_STDDEF_H*/
 
-#ifndef INCLUDED_OS_RINGBUFFER_H
-#include <os_ringbuffer.h>
-#endif /*INCLUDED_OS_RINGBUFFER_H*/
+#ifndef INCLUDED_SDK_RINGBUFFER_H
+#include <sdk_ringbuffer.h>
+#endif /*INCLUDED_SDK_RINGBUFFER_H*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -31,7 +31,7 @@ typedef struct dev_usart_s{
     int (*init)(void);
     int (*startup)(void);
     int (*send)(uint8_t * data, size_t size);
-    dev_usart_recv_result (*recv)(os_ringbuffer_t* buffer);
+    dev_usart_recv_result (*recv)(sdk_ringbuffer_t* buffer);
 }dev_usart_t;
 
 ////////////////////////////////////////////////////////////////////////////////

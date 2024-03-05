@@ -1,4 +1,4 @@
-#include <os_fmt.h>
+#include <sdk_fmt.h>
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
@@ -27,7 +27,7 @@ static void cvt_s(int code, va_list_box *box,
                   unsigned char flags[], int width, int precision) {
     char *str = va_arg(box->ap, char *);
     assert(str);
-    os_fmt_puts(str, strlen(str), put, cl, flags,
+    sdk_fmt_puts(str, strlen(str), put, cl, flags,
              width, precision);
 }
 static void cvt_d(int code, va_list_box *box,
@@ -48,7 +48,7 @@ static void cvt_d(int code, va_list_box *box,
     while ((m /= 10) > 0);
     if (val < 0)
         *--p = '-';
-    os_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
+    sdk_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
              width, precision);
 }
 static void cvt_u(int code, va_list_box *box,
@@ -60,7 +60,7 @@ static void cvt_u(int code, va_list_box *box,
     do
         *--p = m%10 + '0';
     while ((m /= 10) > 0);
-    os_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
+    sdk_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
              width, precision);
 }
 static void cvt_o(int code, va_list_box *box,
@@ -72,7 +72,7 @@ static void cvt_o(int code, va_list_box *box,
     do
         *--p = (m&0x7) + '0';
     while ((m>>= 3) != 0);
-    os_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
+    sdk_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
              width, precision);
 }
 static void cvt_x(int code, va_list_box *box,
@@ -84,7 +84,7 @@ static void cvt_x(int code, va_list_box *box,
     do
         *--p = "0123456789abcdef"[m&0xf];
     while ((m>>= 4) != 0);
-    os_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
+    sdk_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
              width, precision);
 }
 static void cvt_X(int code, va_list_box *box,
@@ -96,7 +96,7 @@ static void cvt_X(int code, va_list_box *box,
     do
         *--p = "0123456789ABCDEF"[m&0xf];
     while ((m>>= 4) != 0);
-    os_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
+    sdk_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
                 width, precision);
 }
 static void cvt_p(int code, va_list_box *box,
@@ -109,7 +109,7 @@ static void cvt_p(int code, va_list_box *box,
     do
         *--p = "0123456789abcdef"[m&0xf];
     while ((m>>= 4) != 0);
-    os_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
+    sdk_fmt_putd(p, (buf + sizeof buf) - p, put, cl, flags,
              width, precision);
 }
 static void cvt_c(int code, va_list_box *box,
@@ -143,11 +143,11 @@ static void cvt_f(int code, va_list_box *box,
         fmt[2] = (precision/10)%10 + '0';
         sprintf(buf, fmt, va_arg(box->ap, double));
     }
-    os_fmt_putd(buf, strlen(buf), put, cl, flags,
+    sdk_fmt_putd(buf, strlen(buf), put, cl, flags,
              width, precision);
 }
 
-static os_fmt_t cvt[256] = {
+static sdk_fmt_t cvt[256] = {
         /*   0-  7 */ 0,     0, 0,     0,     0,     0,     0,     0,
         /*   8- 15 */ 0,     0, 0,     0,     0,     0,     0,     0,
         /*  16- 23 */ 0,     0, 0,     0,     0,     0,     0,     0,
@@ -166,7 +166,7 @@ static os_fmt_t cvt[256] = {
         /* 120-127 */ cvt_x, 0, 0,     0,     0,     0,     0,     0
 };
 
-static char *os_fmt_flags = "-+ 0";
+static char *sdk_fmt_flags = "-+ 0";
 
 static int outc(int c, void *cl) {
     FILE *f = cl;
@@ -193,7 +193,7 @@ static int append(int c, void *cl) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-void os_fmt_puts(const char *str, int len,
+void sdk_fmt_puts(const char *str, int len,
               int put(int c, void *cl), void *cl,
               unsigned char flags[], int width, int precision) {
     assert(str);
@@ -219,34 +219,34 @@ void os_fmt_puts(const char *str, int len,
     if ( flags['-'])
         pad(width - len, ' ');
 }
-void os_fmt_fmt(int put(int c, void *), void *cl,
+void sdk_fmt_fmt(int put(int c, void *), void *cl,
              const char *fmt, ...) {
     va_list_box box;
     va_start(box.ap, fmt);
-    os_fmt_vfmt(put, cl, fmt, &box);
+    sdk_fmt_vfmt(put, cl, fmt, &box);
     va_end(box.ap);
 }
-void os_fmt_print(const char *fmt, ...) {
+void sdk_fmt_print(const char *fmt, ...) {
     va_list_box box;
     va_start(box.ap, fmt);
-    os_fmt_vfmt(outc, stdout, fmt, &box);
+    sdk_fmt_vfmt(outc, stdout, fmt, &box);
     va_end(box.ap);
 }
-void os_fmt_fprint(FILE *stream, const char *fmt, ...) {
+void sdk_fmt_fprint(FILE *stream, const char *fmt, ...) {
     va_list_box box;
     va_start(box.ap, fmt);
-    os_fmt_vfmt(outc, stream, fmt, &box);
+    sdk_fmt_vfmt(outc, stream, fmt, &box);
     va_end(box.ap);
 }
-int os_fmt_sfmt(char *buf, int size, const char *fmt, ...) {
+int sdk_fmt_sfmt(char *buf, int size, const char *fmt, ...) {
     int len;
     va_list_box box;
     va_start(box.ap, fmt);
-    len = os_fmt_vsfmt(buf, size, fmt, &box);
+    len = sdk_fmt_vsfmt(buf, size, fmt, &box);
     va_end(box.ap);
     return len;
 }
-int os_fmt_vsfmt(char *buf, int size, const char *fmt,
+int sdk_fmt_vsfmt(char *buf, int size, const char *fmt,
               va_list_box *box) {
     struct buf cl;
     assert(buf);
@@ -254,29 +254,29 @@ int os_fmt_vsfmt(char *buf, int size, const char *fmt,
     assert(fmt);
     cl.buf = cl.bp = buf;
     cl.size = size;
-    os_fmt_vfmt(insert, &cl, fmt, box);
+    sdk_fmt_vfmt(insert, &cl, fmt, box);
     insert(0, &cl);
     return cl.bp - cl.buf - 1;
 }
-char *os_fmt_string(const char *fmt, ...) {
+char *sdk_fmt_string(const char *fmt, ...) {
     char *str;
     va_list_box box;
     assert(fmt);
     va_start(box.ap, fmt);
-    str = os_fmt_vstring(fmt, &box);
+    str = sdk_fmt_vstring(fmt, &box);
     va_end(box.ap);
     return str;
 }
-char *os_fmt_vstring(const char *fmt, va_list_box *box) {
+char *sdk_fmt_vstring(const char *fmt, va_list_box *box) {
     struct buf cl;
     assert(fmt);
     cl.size = 256;
     cl.buf = cl.bp = OS_ALLOC(cl.size);
-    os_fmt_vfmt(append, &cl, fmt, box);
+    sdk_fmt_vfmt(append, &cl, fmt, box);
     append(0, &cl);
     return OS_RESIZE(cl.buf, cl.bp - cl.buf);
 }
-void os_fmt_vfmt(int put(int c, void *cl), void *cl,
+void sdk_fmt_vfmt(int put(int c, void *cl), void *cl,
               const char *fmt, va_list_box *box) {
     assert(put);
     assert(fmt);
@@ -288,9 +288,9 @@ void os_fmt_vfmt(int put(int c, void *cl), void *cl,
             unsigned char c, flags[256];
             int width = INT_MIN, precision = INT_MIN;
             memset(flags, '\0', sizeof flags);
-            if (os_fmt_flags) {
+            if (sdk_fmt_flags) {
                 unsigned char c = *fmt;
-                for ( ; c && strchr(os_fmt_flags, c); c = *++fmt) {
+                for ( ; c && strchr(sdk_fmt_flags, c); c = *++fmt) {
                     assert(flags[c] < 255);
                     flags[c]++;
                 }
@@ -329,8 +329,8 @@ void os_fmt_vfmt(int put(int c, void *cl), void *cl,
         }
 }
 
-os_fmt_t os_fmt_register(int code, os_fmt_t  newcvt) {
-    os_fmt_t  old;
+sdk_fmt_t sdk_fmt_register(int code, sdk_fmt_t  newcvt) {
+    sdk_fmt_t  old;
     assert(0 < code
            && code < (int)(sizeof (cvt)/sizeof (cvt[0])));
     old = cvt[code];
@@ -338,7 +338,7 @@ os_fmt_t os_fmt_register(int code, os_fmt_t  newcvt) {
     return old;
 }
 
-void os_fmt_putd(const char *str, int len,
+void sdk_fmt_putd(const char *str, int len,
               int put(int c, void *cl), void *cl,
               unsigned char flags[], int width, int precision) {
     int sign;

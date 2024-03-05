@@ -1,11 +1,11 @@
 #include <dev_usart1.h>
 #include <n32l40x.h>
 #include <os_kernel.h>
-#include <os_ringbuffer.h>
+#include <sdk_ringbuffer.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static os_ringbuffer_t USART1_RxBuffer;
+static sdk_ringbuffer_t USART1_RxBuffer;
 
 #define USART1_RX_BLOCK_SIZE 1024
 #define USART1_RX_STACK_SIZE 1024
@@ -25,11 +25,11 @@ static void USART1_RxThread_Entry(void* p){
         if(dev_USART1.recv){
             dev_usart_recv_result result = dev_USART1.recv(&USART1_RxBuffer);
             if(result==kDevUSARTRecvResult_DONE || result==kDevUSARTRecvResult_RESET){
-                os_ringbuffer_reset(&USART1_RxBuffer);
+                sdk_ringbuffer_reset(&USART1_RxBuffer);
             }
         }
-        if(os_ringbuffer_is_full(&USART1_RxBuffer)){
-            os_ringbuffer_reset(&USART1_RxBuffer);
+        if(sdk_ringbuffer_is_full(&USART1_RxBuffer)){
+            sdk_ringbuffer_reset(&USART1_RxBuffer);
         }
     }
 }
@@ -106,7 +106,7 @@ static int USART1_Send(uint8_t* bytes, size_t size)
 }
 
 static int USART1_Startup(void){
-    os_ringbuffer_init(&USART1_RxBuffer, USART1_RxBlock, USART1_RX_BLOCK_SIZE);
+    sdk_ringbuffer_init(&USART1_RxBuffer, USART1_RxBlock, USART1_RX_BLOCK_SIZE);
     os_sem_init(&USART1_RxLock, "USART1_RxLock", 0, OS_QUEUE_PRIO);
 
     os_thread_init(&USART1_RxThread, "USART1_RxThread", USART1_RxThread_Entry, 0, USART1_RxThreadStack, USART1_RX_STACK_SIZE, 20, 10);
@@ -119,7 +119,7 @@ static int USART1_Startup(void){
 void USART1_IRQHandler(void){
     os_interrupt_enter();
     if (USART_GetFlagStatus(USART1, USART_FLAG_RXDNE) != RESET){
-        os_ringbuffer_put(&USART1_RxBuffer, USART_ReceiveData(USART1));
+        sdk_ringbuffer_put(&USART1_RxBuffer, USART_ReceiveData(USART1));
         os_sem_release(&USART1_RxLock);
     }
     os_interrupt_leave();

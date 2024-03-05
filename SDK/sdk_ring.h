@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OS_RING_H
-#define INCLUDED_OS_RING_H
+#ifndef INCLUDED_SDK_RING_H
+#define INCLUDED_SDK_RING_H
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -14,39 +14,39 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-typedef struct os_ring_s{
+typedef struct sdk_ring_s{
     uint8_t *   array;          /* Memory to hold array of objects, array size = capacity * object_size */
     os_size_t   capacity;       /* How many objects */
     os_size_t   object_size;    /* Object Size */
     os_size_t   read_idx;
     os_size_t   write_idx;
-}os_ring_t;
+}sdk_ring_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-void os_ring_init(os_ring_t * ring, void* array, os_size_t element_count, os_size_t element_size);
+void sdk_ring_init(sdk_ring_t * ring, void* array, os_size_t element_count, os_size_t element_size);
 
-os_err_t os_ring_put(os_ring_t *ring, void* object);
+os_err_t sdk_ring_put(sdk_ring_t *ring, void* object);
 
-os_err_t os_ring_get(os_ring_t * ring, void* object);
+os_err_t sdk_ring_get(sdk_ring_t * ring, void* object);
 
-os_size_t os_ring_used(os_ring_t * ring);
+os_size_t sdk_ring_used(sdk_ring_t * ring);
 
-os_err_t os_ring_read(os_ring_t * ring, os_size_t offset, void* object);
+os_err_t sdk_ring_read(sdk_ring_t * ring, os_size_t offset, void* object);
 
-void os_ring_reset(os_ring_t * ring);
+void sdk_ring_reset(sdk_ring_t * ring);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Only used in one thread context
 
-void* os_ring_peek(os_ring_t * ring, os_size_t offset /*0<= offset <used*/);
+void* sdk_ring_peek(sdk_ring_t * ring, os_size_t offset /*0<= offset <used*/);
 
-void* os_ring_pop(os_ring_t * ring);
+void* sdk_ring_pop(sdk_ring_t * ring);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-void* os_ring_get_write_slot(os_ring_t* ring);
+void* sdk_ring_get_write_slot(sdk_ring_t* ring);
 
 
 
-#endif /*INCLUDED_OS_RING_H*/
+#endif /*INCLUDED_SDK_RING_H*/

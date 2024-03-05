@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "os_hex.h"
+#include "sdk_hex.h"
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct ESP01S_RequestHandler_Record{
@@ -24,13 +24,13 @@ static os_mutex_t ESP01S__mutex;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-static dev_usart_recv_result ESP01S__Recv(os_ringbuffer_t* data){
+static dev_usart_recv_result ESP01S__Recv(sdk_ringbuffer_t* data){
     if(ESP01S__RequestHandler_Record.handler){
         ESP01S_RequestHandler_Result result = ESP01S__RequestHandler_Record.handler(data, ESP01S__RequestHandler_Record.userdata);
         if(result==kESP01S_RequestHandler_Result_CONTINUE){
             return kDevUSARTRecvResult_CONTINUE;
         }else if(result==kESP01S_RequestHandler_Result_DONE){
-            os_ringbuffer_reset(data);
+            sdk_ringbuffer_reset(data);
             os_sem_release(&ESP01S__lock);
             return kDevUSARTRecvResult_DONE;
         }
@@ -113,9 +113,9 @@ ESP01S_Result ESP01S_RequestWithArgs(ESP01S_RequestHandler handler, void* ud, ui
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static ESP01S_RequestHandler_Result ESP01S__ConnectWifi_Handler(os_ringbuffer_t * buffer, void* userdata)
+static ESP01S_RequestHandler_Result ESP01S__ConnectWifi_Handler(sdk_ringbuffer_t * buffer, void* userdata)
 {
-    if(os_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
+    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
         return kESP01S_RequestHandler_Result_DONE;
     }
     return kESP01S_RequestHandler_Result_CONTINUE;
@@ -129,9 +129,9 @@ ESP01S_Result ESP01S_ConnectWifi(const char* WIFI_Name, const char* password, ui
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static ESP01S_RequestHandler_Result ESP01S__AcquireIP_Handler(os_ringbuffer_t * buffer, void* userdata)
+static ESP01S_RequestHandler_Result ESP01S__AcquireIP_Handler(sdk_ringbuffer_t * buffer, void* userdata)
 {
-    if(os_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
+    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
         return kESP01S_RequestHandler_Result_DONE;
     }
     return kESP01S_RequestHandler_Result_CONTINUE;
@@ -143,9 +143,9 @@ ESP01S_Result ESP01S_AcquireIP(uint32_t timeout_ms){
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static ESP01S_RequestHandler_Result ESP01S__NTPCfg_Handler(os_ringbuffer_t * buffer, void* userdata)
+static ESP01S_RequestHandler_Result ESP01S__NTPCfg_Handler(sdk_ringbuffer_t * buffer, void* userdata)
 {
-    if(os_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
+    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
         return kESP01S_RequestHandler_Result_DONE;
     }
     return kESP01S_RequestHandler_Result_CONTINUE;
@@ -184,66 +184,66 @@ typedef enum {
     kMonth_December = 11,
 }Month;
 
-static ESP01S_RequestHandler_Result ESP01S__NTPTime_Handler(os_ringbuffer_t * buffer, void* userdata)
+static ESP01S_RequestHandler_Result ESP01S__NTPTime_Handler(sdk_ringbuffer_t * buffer, void* userdata)
 {
     struct tm* datetime = (struct tm*)userdata;
     int err = 0;
     
-    if(os_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
-        os_hex_dump("NTP", buffer->buffer, os_ringbuffer_used(buffer));
-        os_ringbuffer_text_t text;
-        os_size_t used = os_ringbuffer_used(buffer);
-        err = os_ringbuffer_cut(&text, buffer, 0, used, "+CIPSNTPTIME:", "\r\n");
+    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
+        sdk_hex_dump("NTP", buffer->buffer, sdk_ringbuffer_used(buffer));
+        sdk_ringbuffer_text_t text;
+        os_size_t used = sdk_ringbuffer_used(buffer);
+        err = sdk_ringbuffer_cut(&text, buffer, 0, used, "+CIPSNTPTIME:", "\r\n");
         if(err==0){
-            if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Mon")==0){
+            if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Mon")==0){
                 datetime->tm_wday=kWeekDay_MONDAY;
-            }else if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Tue")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Tue")==0){
                 datetime->tm_wday=kWeekDay_TUESDAY;
-            }else if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Wed")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Wed")==0){
                 datetime->tm_wday=kWeekDay_WEDNESDAY;
-            }else if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Thu")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Thu")==0){
                 datetime->tm_wday=kWeekDay_THURSDAY;
-            }else if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Fri")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Fri")==0){
                 datetime->tm_wday=kWeekDay_FRIDAY;
-            }else if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Sat")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Sat")==0){
                 datetime->tm_wday=kWeekDay_SATURDAY;
-            }else if(os_ringbuffer_strcmp(buffer, text.start, text.start+2, "Sun")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start, text.start+2, "Sun")==0){
                 datetime->tm_wday=kWeekDay_SUNDAY;
             }
             
-            if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Jan")==0){
+            if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Jan")==0){
                 datetime->tm_mon = kMonth_January;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Feb")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Feb")==0){
                 datetime->tm_mon = kMonth_February;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Mar")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Mar")==0){
                 datetime->tm_mon = kMonth_March;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Apr")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Apr")==0){
                 datetime->tm_mon = kMonth_April;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "May")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "May")==0){
                 datetime->tm_mon = kMonth_May;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Jun")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Jun")==0){
                 datetime->tm_mon = kMonth_June;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Jul")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Jul")==0){
                 datetime->tm_mon = kMonth_July;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Aug")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Aug")==0){
                 datetime->tm_mon = kMonth_August;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Sep")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Sep")==0){
                 datetime->tm_mon = kMonth_September;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Oct")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Oct")==0){
                 datetime->tm_mon = kMonth_October;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Nov")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Nov")==0){
                 datetime->tm_mon = kMonth_November;
-            }else if(os_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Dec")==0){
+            }else if(sdk_ringbuffer_strcmp(buffer, text.start+4, text.start+6, "Dec")==0){
                 datetime->tm_mon = kMonth_December;
             }
             
-            datetime->tm_mday = os_ringbuffer_strtoul(buffer, text.start+7, 0, 10);
-            datetime->tm_hour = os_ringbuffer_strtoul(buffer, text.start+11, 0, 10);
-            datetime->tm_min = os_ringbuffer_strtoul(buffer, text.start+14, 0, 10);
-            datetime->tm_sec = os_ringbuffer_strtoul(buffer, text.start+17, 0, 10);
-            datetime->tm_year = os_ringbuffer_strtoul(buffer, text.start+20, 0, 10) - 1900;
+            datetime->tm_mday = sdk_ringbuffer_strtoul(buffer, text.start+7, 0, 10);
+            datetime->tm_hour = sdk_ringbuffer_strtoul(buffer, text.start+11, 0, 10);
+            datetime->tm_min = sdk_ringbuffer_strtoul(buffer, text.start+14, 0, 10);
+            datetime->tm_sec = sdk_ringbuffer_strtoul(buffer, text.start+17, 0, 10);
+            datetime->tm_year = sdk_ringbuffer_strtoul(buffer, text.start+20, 0, 10) - 1900;
         }
-        os_ringbuffer_reset(buffer);
+        sdk_ringbuffer_reset(buffer);
         return kESP01S_RequestHandler_Result_DONE;
     }
     return kESP01S_RequestHandler_Result_CONTINUE;

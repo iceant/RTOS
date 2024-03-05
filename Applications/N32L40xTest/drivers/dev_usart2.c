@@ -1,12 +1,12 @@
 #include <dev_usart2.h>
 #include <n32l40x.h>
 #include <os_kernel.h>
-#include <os_ringbuffer.h>
+#include <sdk_ringbuffer.h>
 #include <stdio.h>
-#include <os_hex.h>
+#include <sdk_hex.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static os_ringbuffer_t USART2_RxBuffer;
+static sdk_ringbuffer_t USART2_RxBuffer;
 
 #define USART2_RX_BLOCK_SIZE 1024
 #define USART2_RX_STACK_SIZE 1024
@@ -26,11 +26,11 @@ static void USART2_RxThread_Entry(void* p){
         if(dev_USART2.recv){
             dev_usart_recv_result result = dev_USART2.recv(&USART2_RxBuffer);
             if(result==kDevUSARTRecvResult_DONE || result==kDevUSARTRecvResult_RESET){
-                os_ringbuffer_reset(&USART2_RxBuffer);
+                sdk_ringbuffer_reset(&USART2_RxBuffer);
             }
         }
-        if(os_ringbuffer_is_full(&USART2_RxBuffer)){
-            os_ringbuffer_reset(&USART2_RxBuffer);
+        if(sdk_ringbuffer_is_full(&USART2_RxBuffer)){
+            sdk_ringbuffer_reset(&USART2_RxBuffer);
         }
     }
 }
@@ -95,7 +95,7 @@ static  int USART2_DriverInit(void){
 static int USART2_Send(uint8_t* bytes, size_t size)
 {
     int i;
-    os_ringbuffer_reset(&USART2_RxBuffer);
+    sdk_ringbuffer_reset(&USART2_RxBuffer);
     for(i=0; i<size; i++){
         USART_SendData(USART2, *bytes++);
         while (USART_GetFlagStatus(USART2, USART_FLAG_TXDE) == RESET)
@@ -106,7 +106,7 @@ static int USART2_Send(uint8_t* bytes, size_t size)
 
 static int USART2_Startup(void){
     printf("USART2_Startup...\n");
-    os_ringbuffer_init(&USART2_RxBuffer, USART2_RxBlock, USART2_RX_BLOCK_SIZE);
+    sdk_ringbuffer_init(&USART2_RxBuffer, USART2_RxBlock, USART2_RX_BLOCK_SIZE);
     os_sem_init(&USART2_RxLock, "USART2_RxLock", 0, OS_QUEUE_PRIO);
     
     os_thread_init(&USART2_RxThread, "USART2_RxThread", USART2_RxThread_Entry, 0, USART2_RxThreadStack, USART2_RX_STACK_SIZE, 20, 10);
@@ -118,7 +118,7 @@ static int USART2_Startup(void){
 void USART2_IRQHandler(void){
     os_interrupt_enter();
     if (USART_GetFlagStatus(USART2, USART_FLAG_RXDNE) != RESET){
-        os_ringbuffer_put(&USART2_RxBuffer, USART_ReceiveData(USART2));
+        sdk_ringbuffer_put(&USART2_RxBuffer, USART_ReceiveData(USART2));
         os_sem_release(&USART2_RxLock);
     }
     os_interrupt_leave();

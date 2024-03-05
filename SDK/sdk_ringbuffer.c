@@ -1,4 +1,4 @@
-#include <os_ringbuffer.h>
+#include <sdk_ringbuffer.h>
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-rb_ret_t os_ringbuffer_init(os_ringbuffer_t *buffer, uint8_t *block, os_size_t size) {
+rb_ret_t sdk_ringbuffer_init(sdk_ringbuffer_t *buffer, uint8_t *block, os_size_t size) {
     buffer->read_offset = 0;
     buffer->write_offset = 0;
     buffer->buffer_size = size;
@@ -23,13 +23,13 @@ rb_ret_t os_ringbuffer_init(os_ringbuffer_t *buffer, uint8_t *block, os_size_t s
     return kRB_RET_OK;
 }
 
-void os_ringbuffer_reset(os_ringbuffer_t *buffer) {
+void sdk_ringbuffer_reset(sdk_ringbuffer_t *buffer) {
     buffer->read_offset = 0;
     buffer->write_offset = 0;
     memset(buffer->buffer, 0, buffer->buffer_size);
 }
 
-rb_ret_t os_ringbuffer_put(os_ringbuffer_t *buffer, uint8_t data) {
+rb_ret_t sdk_ringbuffer_put(sdk_ringbuffer_t *buffer, uint8_t data) {
     os_size_t write_idx;
     write_idx = buffer->write_offset + 1;
     if (write_idx == buffer->buffer_size) {
@@ -42,7 +42,7 @@ rb_ret_t os_ringbuffer_put(os_ringbuffer_t *buffer, uint8_t data) {
     return kRB_RET_OK;
 }
 
-rb_ret_t os_ringbuffer_get(os_ringbuffer_t *buffer, uint8_t *data) {
+rb_ret_t sdk_ringbuffer_get(sdk_ringbuffer_t *buffer, uint8_t *data) {
     if (RB_ISEMPTY(buffer)) {
         return kRB_RET_EEMPTY;
     }
@@ -55,7 +55,7 @@ rb_ret_t os_ringbuffer_get(os_ringbuffer_t *buffer, uint8_t *data) {
 }
 
 
-os_size_t os_ringbuffer_write(os_ringbuffer_t *buffer, uint8_t *data, os_size_t data_size) {
+os_size_t sdk_ringbuffer_write(sdk_ringbuffer_t *buffer, uint8_t *data, os_size_t data_size) {
     if (buffer == NULL) return kRB_RET_ERROR;
     if (RB_ISFULL(buffer)) return 0;
     if(data_size==0) return 0;
@@ -82,7 +82,7 @@ os_size_t os_ringbuffer_write(os_ringbuffer_t *buffer, uint8_t *data, os_size_t 
     return write_size;
 }
 
-os_size_t os_ringbuffer_read(os_ringbuffer_t *buffer, int offset, uint8_t *buf, os_size_t buf_size) {
+os_size_t sdk_ringbuffer_read(sdk_ringbuffer_t *buffer, int offset, uint8_t *buf, os_size_t buf_size) {
 
     if (RB_ISEMPTY(buffer)) {
         return 0;
@@ -110,7 +110,7 @@ os_size_t os_ringbuffer_read(os_ringbuffer_t *buffer, int offset, uint8_t *buf, 
     return read_size;
 }
 
-//rb_ret_t os_ringbuffer_set(os_ringbuffer_t* buffer, uint32_t out_buffer_size, uint32_t* read_size){
+//rb_ret_t sdk_ringbuffer_set(sdk_ringbuffer_t* buffer, uint32_t out_buffer_size, uint32_t* read_size){
 //
 ////    uint32_t read_offset = buffer->read_offset;
 //    uint32_t total_size = buffer->buffer_size;
@@ -132,7 +132,7 @@ os_size_t os_ringbuffer_read(os_ringbuffer_t *buffer, int offset, uint8_t *buf, 
 //}
 
 
-os_size_t os_ringbuffer_try_read(os_ringbuffer_t *buffer, int offset, uint8_t *buf, os_size_t buf_size) {
+os_size_t sdk_ringbuffer_try_read(sdk_ringbuffer_t *buffer, int offset, uint8_t *buf, os_size_t buf_size) {
 
 
     if (RB_ISEMPTY(buffer)) {
@@ -158,13 +158,13 @@ os_size_t os_ringbuffer_try_read(os_ringbuffer_t *buffer, int offset, uint8_t *b
     return read_size;
 }
 
-os_size_t os_ringbuffer_used(os_ringbuffer_t *buffer) {
+os_size_t sdk_ringbuffer_used(sdk_ringbuffer_t *buffer) {
     return (buffer->write_offset > buffer->read_offset) ?
            (buffer->write_offset - buffer->read_offset) :
            (buffer->write_offset + buffer->buffer_size - buffer->read_offset);
 }
 
-uint8_t os_ringbuffer_peek(os_ringbuffer_t *buffer, int idx) {
+uint8_t sdk_ringbuffer_peek(sdk_ringbuffer_t *buffer, int idx) {
     uint32_t read_idx = buffer->read_offset;
 
     if (idx < 0) {
@@ -176,23 +176,23 @@ uint8_t os_ringbuffer_peek(os_ringbuffer_t *buffer, int idx) {
     return buffer->buffer[read_idx];
 }
 
-int os_ringbuffer_is_full(os_ringbuffer_t *buffer) {
+int sdk_ringbuffer_is_full(sdk_ringbuffer_t *buffer) {
     return RB_ISFULL(buffer);
 }
 
-int os_ringbuffer_is_empty(os_ringbuffer_t *buffer) {
+int sdk_ringbuffer_is_empty(sdk_ringbuffer_t *buffer) {
     return RB_ISEMPTY(buffer);
 }
 
-int os_ringbuffer_find(os_ringbuffer_t* buffer, int offset, uint8_t* data, os_size_t data_size){
+int sdk_ringbuffer_find(sdk_ringbuffer_t* buffer, int offset, uint8_t* data, os_size_t data_size){
     int i;
     int a = 0;
     int b = 0;
 
-    os_size_t buffer_size = os_ringbuffer_used(buffer);
+    os_size_t buffer_size = sdk_ringbuffer_used(buffer);
 
     for(i=offset; i<buffer_size; i++){
-        if(os_ringbuffer_peek(buffer, i)!=data[b]){
+        if(sdk_ringbuffer_peek(buffer, i)!=data[b]){
             continue;
         }
         /*找到了开始的数据*/
@@ -201,7 +201,7 @@ int os_ringbuffer_find(os_ringbuffer_t* buffer, int offset, uint8_t* data, os_si
             if(b==data_size){
                 return a;
             }
-            if(os_ringbuffer_peek(buffer, i++) != data[b++]){
+            if(sdk_ringbuffer_peek(buffer, i++) != data[b++]){
                 break;
             }
         }
@@ -211,11 +211,11 @@ int os_ringbuffer_find(os_ringbuffer_t* buffer, int offset, uint8_t* data, os_si
 }
 
 /* return find position, -1 otherwise*/
-int os_ringbuffer_find_str(os_ringbuffer_t* ringbuffer, int offset, const char* string){
-    return os_ringbuffer_find(ringbuffer, offset, (uint8_t*)string, strlen(string));
+int sdk_ringbuffer_find_str(sdk_ringbuffer_t* ringbuffer, int offset, const char* string){
+    return sdk_ringbuffer_find(ringbuffer, offset, (uint8_t*)string, strlen(string));
 }
 
-int os_ringbuffer_index(os_ringbuffer_t * ringbuffer, int index){
+int sdk_ringbuffer_index(sdk_ringbuffer_t * ringbuffer, int index){
 //    return (index + ringbuffer->read_offset) % ringbuffer->buffer_size;
     int offset = ringbuffer->read_offset + index;
     if(offset >= ringbuffer->buffer_size){
@@ -224,8 +224,8 @@ int os_ringbuffer_index(os_ringbuffer_t * ringbuffer, int index){
     return offset;
 }
 
-int os_ringbuffer_cut(os_ringbuffer_text_t * result,
-                      os_ringbuffer_t * buffer, int start, int end,
+int sdk_ringbuffer_cut(sdk_ringbuffer_text_t * result,
+                      sdk_ringbuffer_t * buffer, int start, int end,
                       const char* prefix, const char* postfix)
 {
     int offset = start;
@@ -233,11 +233,11 @@ int os_ringbuffer_cut(os_ringbuffer_text_t * result,
     result->end =0;
 
     size_t prefix_size = strlen(prefix);
-    int prefix_pos = os_ringbuffer_find(buffer, offset, (uint8_t *)prefix, prefix_size);
+    int prefix_pos = sdk_ringbuffer_find(buffer, offset, (uint8_t *)prefix, prefix_size);
     if(prefix_pos==-1){
         return -1;
     }
-    int postfix_pos = os_ringbuffer_find_str(buffer, prefix_size + prefix_pos,  postfix);
+    int postfix_pos = sdk_ringbuffer_find_str(buffer, prefix_size + prefix_pos,  postfix);
     if(postfix_pos==-1){
         return -2;
     }
@@ -246,14 +246,14 @@ int os_ringbuffer_cut(os_ringbuffer_text_t * result,
         return -3;
     }
 
-    result->buffer = (os_ringbuffer_t*)buffer;
-    result->start = os_ringbuffer_index(buffer, prefix_pos + prefix_size);
-    result->end = os_ringbuffer_index(buffer, postfix_pos);
+    result->buffer = (sdk_ringbuffer_t*)buffer;
+    result->start = sdk_ringbuffer_index(buffer, prefix_pos + prefix_size);
+    result->end = sdk_ringbuffer_index(buffer, postfix_pos);
 
     return 0;
 }
 
-unsigned long os_ringbuffer_strtoul(os_ringbuffer_t* buffer, int offset, int* endptr, int base)
+unsigned long sdk_ringbuffer_strtoul(sdk_ringbuffer_t* buffer, int offset, int* endptr, int base)
 {
     int nptr;
     uint8_t c;
@@ -267,18 +267,18 @@ unsigned long os_ringbuffer_strtoul(os_ringbuffer_t* buffer, int offset, int* en
     nptr = offset;
 
     do {
-        c = os_ringbuffer_peek(buffer, offset++);
+        c = sdk_ringbuffer_peek(buffer, offset++);
     } while (isspace(c));
 
     if(c=='-'){
         neg = 1;
-        c = os_ringbuffer_peek(buffer, offset++);
+        c = sdk_ringbuffer_peek(buffer, offset++);
     }else if(c=='+'){
-        c = os_ringbuffer_peek(buffer, offset++);
+        c = sdk_ringbuffer_peek(buffer, offset++);
     }
-    s = os_ringbuffer_peek(buffer, offset);
+    s = sdk_ringbuffer_peek(buffer, offset);
     if((base==0 || base==16) && c=='0' && (s =='x' || s=='X')){
-        c = os_ringbuffer_peek(buffer, offset+1);
+        c = sdk_ringbuffer_peek(buffer, offset+1);
         offset+=2;
         base = 16;
     }
@@ -288,7 +288,7 @@ unsigned long os_ringbuffer_strtoul(os_ringbuffer_t* buffer, int offset, int* en
     cutoff = (unsigned long)ULONG_MAX/(unsigned long)base;
     cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
 
-    for(acc = 0, any = 0;; c = os_ringbuffer_peek(buffer, offset++)){
+    for(acc = 0, any = 0;; c = sdk_ringbuffer_peek(buffer, offset++)){
         if(isdigit(c)){
             c-='0';
         }
@@ -319,7 +319,7 @@ unsigned long os_ringbuffer_strtoul(os_ringbuffer_t* buffer, int offset, int* en
     return (acc);
 }
 
-void os_ringbuffer_iter_init(os_ringbuffer_iter_t* iter, os_ringbuffer_text_t * text)
+void sdk_ringbuffer_iter_init(sdk_ringbuffer_iter_t* iter, sdk_ringbuffer_text_t * text)
 {
     iter->text = text;
     iter->start = text->start;
@@ -327,19 +327,19 @@ void os_ringbuffer_iter_init(os_ringbuffer_iter_t* iter, os_ringbuffer_text_t * 
 }
 
 // 0: success, -1: failed!
-int os_ringbuffer_iter(os_ringbuffer_iter_t* iter, const char* token)
+int sdk_ringbuffer_iter(sdk_ringbuffer_iter_t* iter, const char* token)
 {
     int token_size = strlen(token);
     int find_start = (iter->end==iter->text->start)?iter->end:(iter->end + token_size);
-    int find = os_ringbuffer_find_str(iter->text->buffer, find_start, token);
-    int text_end = os_ringbuffer_index(iter->text->buffer, iter->text->end);
+    int find = sdk_ringbuffer_find_str(iter->text->buffer, find_start, token);
+    int text_end = sdk_ringbuffer_index(iter->text->buffer, iter->text->end);
 
     if(find!=-1 && find<text_end){
         iter->start = find_start;
         iter->end = find;
         return 0;
     }else {
-        int end = os_ringbuffer_index(iter->text->buffer, iter->end);
+        int end = sdk_ringbuffer_index(iter->text->buffer, iter->end);
         if(end < text_end){
             /*虽然没有找到 token ，但是这时上次找到的划分区间的最后一块*/
             iter->start = iter->end+token_size;
@@ -351,16 +351,16 @@ int os_ringbuffer_iter(os_ringbuffer_iter_t* iter, const char* token)
     }
 }
 
-unsigned long os_ringbuffer_iter_strtoul(os_ringbuffer_iter_t* iter, int base){
-    return os_ringbuffer_strtoul(iter->text->buffer, iter->start, 0, base);
+unsigned long sdk_ringbuffer_iter_strtoul(sdk_ringbuffer_iter_t* iter, int base){
+    return sdk_ringbuffer_strtoul(iter->text->buffer, iter->start, 0, base);
 }
 
-int os_ringbuffer_count(os_ringbuffer_t* ringbuffer, int start, int end, const char* token)
+int sdk_ringbuffer_count(sdk_ringbuffer_t* ringbuffer, int start, int end, const char* token)
 {
     os_size_t token_size = strlen(token);
     int count = 0;
     int find = 0;
-    while((find= os_ringbuffer_find_str(ringbuffer, start, token))!=-1)
+    while((find= sdk_ringbuffer_find_str(ringbuffer, start, token))!=-1)
     {
         if(find>end){
             break;
@@ -371,28 +371,28 @@ int os_ringbuffer_count(os_ringbuffer_t* ringbuffer, int start, int end, const c
     return count;
 }
 
-os_size_t os_ringbuffer_memcpy(uint8_t * dst, os_ringbuffer_t* buffer, int offset, os_size_t size)
+os_size_t sdk_ringbuffer_memcpy(uint8_t * dst, sdk_ringbuffer_t* buffer, int offset, os_size_t size)
 {
     uint8_t c;
 //    rt_kprintf("buffer.write=%d, buffer.read=%d\n", buffer->write_offset, buffer->read_offset);
-    os_size_t buffer_size = os_ringbuffer_used(buffer);
+    os_size_t buffer_size = sdk_ringbuffer_used(buffer);
     os_size_t copy_size = buffer_size>size?size:buffer_size;
 //    rt_kprintf("buffer_size: %d, copy_size:%d\n", buffer_size, copy_size);
     int i;
     for(i=0; i<copy_size; i++){
-        c = os_ringbuffer_peek(buffer, i+offset);
+        c = sdk_ringbuffer_peek(buffer, i+offset);
         *dst++ = c;
     }
     return copy_size;
 }
 
-int os_ringbuffer_strcmp(os_ringbuffer_t* buffer, int offset, int end,  const char* str){
+int sdk_ringbuffer_strcmp(sdk_ringbuffer_t* buffer, int offset, int end,  const char* str){
     int status = 0;
     uint8_t c;
     int i;
     char* p =(char*)str;
     for(i = offset; i< end; i++){
-        c = os_ringbuffer_peek(buffer, i);
+        c = sdk_ringbuffer_peek(buffer, i);
         if(c!=*p++){
             break;
         }
@@ -401,7 +401,7 @@ int os_ringbuffer_strcmp(os_ringbuffer_t* buffer, int offset, int end,  const ch
     return status;
 }
 
-int os_ringbuffer_pos(os_ringbuffer_t *buffer, int pos){
+int sdk_ringbuffer_pos(sdk_ringbuffer_t *buffer, int pos){
     int read_idx;
 
     if (pos < 0) {
@@ -413,36 +413,36 @@ int os_ringbuffer_pos(os_ringbuffer_t *buffer, int pos){
     return read_idx;
 }
 
-void os_ringbuffer_set_read_offset(os_ringbuffer_t* buffer, int read_offset)
+void sdk_ringbuffer_set_read_offset(sdk_ringbuffer_t* buffer, int read_offset)
 {
-    buffer->read_offset = os_ringbuffer_pos(buffer, read_offset);
+    buffer->read_offset = sdk_ringbuffer_pos(buffer, read_offset);
 }
 
-void os_ringbuffer_set_write_offset(os_ringbuffer_t* buffer, int write_offset)
+void sdk_ringbuffer_set_write_offset(sdk_ringbuffer_t* buffer, int write_offset)
 {
-    buffer->write_offset = os_ringbuffer_pos(buffer, write_offset);
+    buffer->write_offset = sdk_ringbuffer_pos(buffer, write_offset);
 }
 
-uint32_t os_ringbuffer_read_uint32_be(os_ringbuffer_t* buffer)
+uint32_t sdk_ringbuffer_read_uint32_be(sdk_ringbuffer_t* buffer)
 {
     uint8_t d1;
     uint8_t d2;
     uint8_t d3;
     uint8_t d4;
 
-    rb_ret_t err = os_ringbuffer_get(buffer, &d1);
+    rb_ret_t err = sdk_ringbuffer_get(buffer, &d1);
     if(err!=kRB_RET_OK){
         return -1U;
     }
-    err = os_ringbuffer_get(buffer, &d2);
+    err = sdk_ringbuffer_get(buffer, &d2);
     if(err!=kRB_RET_OK){
         return -1U;
     }
-    err = os_ringbuffer_get(buffer, &d3);
+    err = sdk_ringbuffer_get(buffer, &d3);
     if(err!=kRB_RET_OK){
         return -1U;
     }
-    err = os_ringbuffer_get(buffer, &d4);
+    err = sdk_ringbuffer_get(buffer, &d4);
     if(err!=kRB_RET_OK){
         return -1U;
     }
@@ -451,16 +451,16 @@ uint32_t os_ringbuffer_read_uint32_be(os_ringbuffer_t* buffer)
     return (((d1 & 0xFF)<<24) | ((d2 & 0xFF) << 16) | ((d3 & 0xFF) << 8) | (d4 & 0xFF));
 }
 
-uint16_t os_ringbuffer_read_uint16_le(os_ringbuffer_t* buffer)
+uint16_t sdk_ringbuffer_read_uint16_le(sdk_ringbuffer_t* buffer)
 {
     uint8_t d1;
     uint8_t d2;
 
-    rb_ret_t err = os_ringbuffer_get(buffer, &d1);
+    rb_ret_t err = sdk_ringbuffer_get(buffer, &d1);
     if(err!=kRB_RET_OK){
         return -1U;
     }
-    err = os_ringbuffer_get(buffer, &d2);
+    err = sdk_ringbuffer_get(buffer, &d2);
     if(err!=kRB_RET_OK){
         return -1U;
     }
@@ -469,16 +469,16 @@ uint16_t os_ringbuffer_read_uint16_le(os_ringbuffer_t* buffer)
 
 }
 
-uint16_t os_ringbuffer_read_uint16_be(os_ringbuffer_t* buffer)
+uint16_t sdk_ringbuffer_read_uint16_be(sdk_ringbuffer_t* buffer)
 {
     uint8_t d1;
     uint8_t d2;
 
-    rb_ret_t err = os_ringbuffer_get(buffer, &d1);
+    rb_ret_t err = sdk_ringbuffer_get(buffer, &d1);
     if(err!=kRB_RET_OK){
         return -1U;
     }
-    err = os_ringbuffer_get(buffer, &d2);
+    err = sdk_ringbuffer_get(buffer, &d2);
     if(err!=kRB_RET_OK){
         return -1U;
     }

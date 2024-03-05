@@ -7,9 +7,9 @@
 #include <drv_usart.h>
 #endif /*INCLUDED_DRV_USART_H*/
 
-#ifndef INCLUDED_OS_RINGBUFFER_H
-#include <os_ringbuffer.h>
-#endif /*INCLUDED_OS_RINGBUFFER_H*/
+#ifndef INCLUDED_SDK_RINGBUFFER_H
+#include <sdk_ringbuffer.h>
+#endif /*INCLUDED_SDK_RINGBUFFER_H*/
 
 #ifndef INCLUDED_TIME_H
 #define INCLUDED_TIME_H
@@ -33,7 +33,7 @@ typedef enum ESP01S_RequestHandler_Result{
     kESP01S_RequestHandler_Result_CONTINUE = 1,
 }ESP01S_RequestHandler_Result;
 
-typedef ESP01S_RequestHandler_Result (*ESP01S_RequestHandler)(os_ringbuffer_t * rx_data, void* userdata);
+typedef ESP01S_RequestHandler_Result (*ESP01S_RequestHandler)(sdk_ringbuffer_t * rx_data, void* userdata);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
