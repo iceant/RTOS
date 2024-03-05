@@ -15,13 +15,13 @@ typedef void (*cpu_tick_handler)(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-void** cpu__stack_next_p = 0;
-void** cpu__stack_curr_p = 0;
-cpu_uint8_t cpu__stack_switch_flag = CPU_STACK_SWITCH_FLAG_OFF;
+volatile void** cpu__stack_next_p = 0;
+volatile void** cpu__stack_curr_p = 0;
+volatile cpu_uint8_t cpu__stack_switch_flag = CPU_STACK_SWITCH_FLAG_OFF;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static cpu_tick_handler cpu_port__tick_handler=0;
+static volatile cpu_tick_handler cpu_port__tick_handler=0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
