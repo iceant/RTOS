@@ -427,3 +427,7 @@ void sdk_ap_fmt(int code, va_list_box *box,
              width, precision);
     OS_FREE(buf);
 }
+
+int sdk_ap_object_size(void){
+    return sizeof(struct sdk_ap_s);
+}

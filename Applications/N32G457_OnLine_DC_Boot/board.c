@@ -1,10 +1,12 @@
 #include "board.h"
 
 #include <os_kernel.h>
-#include <os_ringbuffer.h>
+#include <sdk_ringbuffer.h>
 
 #include "dev_usart1.h"
-
+#include <hw_time.h>
+#include <hw_gpio.h>
+#include <stdlib.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -36,6 +38,15 @@ GETCHAR_PROTOTYPE
     return USART_ReceiveData(USART1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////
+static uint32_t time_us;
+static void board_TIM4_irq_handler(void){
+    hw_gpio_high(GPIOE, GPIO_PIN_2);
+    time_us++;
+    srand(time_us);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -47,8 +58,12 @@ void board_init(void)
     
     /* Configure the NVIC Preemption Priority Bits */
     NVIC_PriorityGroupConfig(BOARD_NVIC_PRIORITY_GROUP);
-    
+
     dev_USART1.init();
+
+    time_us = 0;
+    hw_gpio_init(GPIOE, GPIO_PIN_2);
+    hw_time_init(TIM4, 999, 0, board_TIM4_irq_handler);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

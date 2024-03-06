@@ -12,6 +12,7 @@ option(USE_TLSF "Use TLSF Memory Allocator" ON)
 
 add_definitions(
         -DCPU_TICKS_PER_SECOND=100
+        -DTLSF_MEMORY_POOL_SIZE=20480
         -DOS_IDLE_THREAD_TIME_SLICE
         -D__FPU_PRESENT=1
         -DSYSCLK_SRC=SYSCLK_USE_HSE_PLL
@@ -58,15 +59,22 @@ foreach (item IN LISTS DEVICES_SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
 endforeach ()
 
+file(GLOB A7670C_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/drivers/A7670C/*.c)
+foreach (item IN LISTS A7670C_SOURCES)
+    message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
+endforeach ()
+
 add_executable(${PROJECT_NAME} "")
 target_sources(${PROJECT_NAME}
         PUBLIC ${SOURCES}
         PUBLIC ${HARDWARE_SOURCES}
         PUBLIC ${DEVICES_SOURCES}
+        PUBLIC ${A7670C_SOURCES}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/hardware)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/devices)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/drivers/A7670C)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC N32G45x
         PUBLIC RTOS-Kernel

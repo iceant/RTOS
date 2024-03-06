@@ -1,5 +1,5 @@
 #include "dev_usart1.h"
-#include <os_ringbuffer.h>
+#include <sdk_ringbuffer.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #ifndef USART1_RX_BLOCK_SIZE
@@ -27,7 +27,7 @@ static uint8_t USART1_RxBlock[USART1_RX_BLOCK_SIZE];
 __ALIGNED(OS_ALIGN_SIZE)
 static uint8_t USART1_RxThreadStack[USART1_RX_STACK_SIZE];
 
-static os_ringbuffer_t USART1_RxBuffer;
+static sdk_ringbuffer_t USART1_RxBuffer;
 static os_sem_t USART1_RxSem;
 static os_thread_t USART1_RxThread;
 static uint8_t USART1_StartFlag=0;
@@ -42,11 +42,11 @@ static void USART1_RxThreadEntry(void* p){
         if(dev_USART1.recv){
             HW_USART_RecvResult result = dev_USART1.recv(&USART1_RxBuffer);
             if(result==kHW_USART_RecvResult_DONE || result==kHW_USART_RecvResult_SKIP){
-                os_ringbuffer_reset(&USART1_RxBuffer);
+                sdk_ringbuffer_reset(&USART1_RxBuffer);
             }
         }
-        if(os_ringbuffer_is_full(&USART1_RxBuffer)){
-            os_ringbuffer_reset(&USART1_RxBuffer);
+        if(sdk_ringbuffer_is_full(&USART1_RxBuffer)){
+            sdk_ringbuffer_reset(&USART1_RxBuffer);
         }
     }
 }
@@ -110,14 +110,14 @@ static int USART1_Send(uint8_t * data, os_size_t data_size){
     return i;
 }
 
-static HW_USART_RecvResult USART1_Recv(os_ringbuffer_t * buffer){
+static HW_USART_RecvResult USART1_Recv(sdk_ringbuffer_t * buffer){
     return kHW_USART_RecvResult_CONTINUE;
 }
 
 static void USART1_Startup(void)
 {
     if(USART1_StartFlag==0){
-        os_ringbuffer_init(&USART1_RxBuffer, USART1_RxBlock, sizeof(USART1_RxBlock));
+        sdk_ringbuffer_init(&USART1_RxBuffer, USART1_RxBlock, sizeof(USART1_RxBlock));
         os_sem_init(&USART1_RxSem, "USART1_RxSem", 0, OS_QUEUE_FIFO);
 
         os_thread_init(&USART1_RxThread, "USART1_RxThread"
@@ -150,7 +150,7 @@ void USART1_IRQHandler(void){
     if (USART_GetIntStatus(USART1, USART_INT_RXDNE) != RESET)
     {
         /* Read one byte from the receive data register */
-        os_ringbuffer_put(&USART1_RxBuffer, USART_ReceiveData(USART1));
+        sdk_ringbuffer_put(&USART1_RxBuffer, USART_ReceiveData(USART1));
         os_sem_release(&USART1_RxSem);
     }
 }

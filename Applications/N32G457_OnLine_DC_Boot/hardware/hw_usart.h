@@ -13,10 +13,9 @@
 #include <os_kernel.h>
 #endif /*INCLUDED_OS_KERNEL_H*/
 
-#ifndef INCLUDED_OS_RINGBUFFER_H
-#include <os_ringbuffer.h>
-#endif /*INCLUDED_OS_RINGBUFFER_H*/
-
+#ifndef INCLUDED_SDK_RINGBUFFER_H
+#include <sdk_ringbuffer.h>
+#endif /*INCLUDED_SDK_RINGBUFFER_H*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +32,7 @@ typedef struct hw_usart_s{
     void (*startup)(void);
     void (*stop)(void);
     int  (*send)(uint8_t * data, os_size_t data_size);
-    HW_USART_RecvResult  (*recv)(os_ringbuffer_t *buffer);
+    HW_USART_RecvResult  (*recv)(sdk_ringbuffer_t *buffer);
 }hw_usart_t;
 
 #endif /*INCLUDED_HW_USART_H*/

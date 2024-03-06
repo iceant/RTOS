@@ -1,0 +1,4 @@
+#ifndef INCLUDED_A7670C_H
+#define INCLUDED_A7670C_H
+
+#endif /*INCLUDED_A7670C_H*/

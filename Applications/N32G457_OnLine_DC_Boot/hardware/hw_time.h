@@ -1,0 +1,22 @@
+#ifndef INCLUDED_HW_TIME_H
+#define INCLUDED_HW_TIME_H
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#ifndef INCLUDED_N32G45X_H
+#define INCLUDED_N32G45X_H
+#include <n32g45x.h>
+#endif /*INCLUDED_N32G45X_H*/
+
+////////////////////////////////////////////////////////////////////////////////
+////
+typedef void (*hw_time_irq_handler)(void);
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
+void hw_time_init(TIM_Module * TIMx, uint16_t arr, uint16_t psc, hw_time_irq_handler irq_handler);
+
+
+
+#endif /*INCLUDED_HW_TIME_H*/

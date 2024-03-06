@@ -18,7 +18,7 @@ typedef struct sdk_ap_s * sdk_ap_t;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-sdk_ap_t sdk_ap_new    (long int n);
+sdk_ap_t sdk_ap_new(long int n);
 void sdk_ap_free(sdk_ap_t *z);
 
 sdk_ap_t sdk_ap_fromstr(const char *str, int base, char **end);
@@ -49,5 +49,7 @@ sdk_ap_t sdk_ap_rshift(sdk_ap_t x, int s);
 
 int sdk_ap_cmp (sdk_ap_t x, sdk_ap_t y);
 int sdk_ap_cmpi(sdk_ap_t x, long int y);
+
+int sdk_ap_object_size(void);
 
 #endif /* INCLUDED_SDK_AP_H */
