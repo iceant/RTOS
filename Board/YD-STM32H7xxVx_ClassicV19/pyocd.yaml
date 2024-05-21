@@ -1,0 +1,12 @@
+pack:
+  - ../../Pack/Keil.STM32H7xx_DFP.3.1.1.pack
+
+target_override: stm32h743vitx
+
+probes:
+  0001A0000001:
+    target_override: stm32h743vitx
+    frequency: 1000000         #烧录速率
+  601012352:
+
+
