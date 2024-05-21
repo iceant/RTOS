@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <bsp_led4.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define USARTx                           USART1
@@ -279,6 +280,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 }
 #endif
 
+static char printf_buffer[1204];
 
 int BSP_USART1_Printf(const char* format, ...)
 {
@@ -286,17 +288,28 @@ int BSP_USART1_Printf(const char* format, ...)
     va_start(args, format);
     int len = vsnprintf(NULL, 0, format, args);
     va_end(args);
-    
-    char* buffer = (char*)malloc(len + 1);
-    va_start(args, format);
-    vsnprintf(buffer, len + 1, format, args);
-    va_end(args);
-
-    //HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t*)buffer, len, 0x100);
-    for(int i=0; i<len; i++){
-        BSP_USART1_SendByte(buffer[i]);
+    if(len > OS_ARRAY_SIZE(printf_buffer)){
+        LED_YELLOW_Toggle();
+        char* buffer = (char*)malloc(len + 1);
+        va_start(args, format);
+        len = vsnprintf(buffer, len + 1, format, args);
+        va_end(args);
+        buffer[len]='\0';
+        
+        for(int i=0; i<len; i++){
+            BSP_USART1_SendByte(buffer[i]);
+        }
+        free(buffer);
+    }else{
+        va_start(args, format);
+        len = vsnprintf(printf_buffer, len + 1, format, args);
+        va_end(args);
+        printf_buffer[len]='\0';
+        for(int i=0; i<len; i++){
+            BSP_USART1_SendByte(printf_buffer[i]);
+        }
     }
-    free(buffer);
+    
     
     return len;
 }

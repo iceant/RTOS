@@ -277,10 +277,10 @@ void Board_Init(void)
     
     BSP_TIMDelay_Init();
     
-//    BSP_LED2_Init();
-//    BSP_LED3_Init();
-    BSP_LED4_Init();
-    BSP_LED5_Init();
+//    BSP_LED2_Init();/*RED*/
+//    BSP_LED3_Init(); /*GREEN*/
+    BSP_LED4_Init();/*YELLOW*/
+    BSP_LED5_Init();/*BLUE*/
 }
 
 

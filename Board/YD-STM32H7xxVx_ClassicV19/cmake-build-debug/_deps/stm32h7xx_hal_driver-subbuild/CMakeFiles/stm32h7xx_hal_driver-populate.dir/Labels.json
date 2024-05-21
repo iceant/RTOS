@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/CMakeFiles/stm32h7xx_hal_driver-populate"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/CMakeFiles/stm32h7xx_hal_driver-populate.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/CMakeFiles/stm32h7xx_hal_driver-populate-complete.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-build.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-configure.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-download.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-install.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-mkdir.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-patch.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-test.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/stm32h7xx_hal_driver-subbuild/stm32h7xx_hal_driver-populate-prefix/src/stm32h7xx_hal_driver-populate-stamp/stm32h7xx_hal_driver-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"stm32h7xx_hal_driver-populate"
+		],
+		"name" : "stm32h7xx_hal_driver-populate"
+	}
+}

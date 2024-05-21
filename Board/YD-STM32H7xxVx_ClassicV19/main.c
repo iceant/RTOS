@@ -59,7 +59,7 @@ static void BootThreadEntry(void* p){
     int nCount = 0;
     while(1){
         printf("[Boot] count=%d tick:%"OS_PRIu"\r\n", nCount++, os_scheduler_get_current_tick());
-        LED_YELLOW_Toggle();
+//        LED_YELLOW_Toggle();
 //        for(int i=0; i<0x3ffffff; i++){
 //
 //        }

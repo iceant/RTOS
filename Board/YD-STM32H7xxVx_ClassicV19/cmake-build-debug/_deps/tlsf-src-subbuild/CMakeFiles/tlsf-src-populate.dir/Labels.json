@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/CMakeFiles/tlsf-src-populate"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/CMakeFiles/tlsf-src-populate.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/CMakeFiles/tlsf-src-populate-complete.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-build.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-configure.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-download.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-install.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-mkdir.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-patch.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-test.rule"
+		},
+		{
+			"file" : "D:/RTOS/Board/YD-STM32H7xxVx_ClassicV19/cmake-build-debug/_deps/tlsf-src-subbuild/tlsf-src-populate-prefix/src/tlsf-src-populate-stamp/tlsf-src-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"tlsf-src-populate"
+		],
+		"name" : "tlsf-src-populate"
+	}
+}
