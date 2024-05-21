@@ -18,18 +18,18 @@ static void worker_thread_entry(void* p){
     int id = (int)p;
     os_size_t nCount = 0;
     while(1){
-        switch(id){
-            case 1:{
-                LED_GREEN_Toggle();
-                break;
-            }
-            case 2:{
-                LED_BLUE_Toggle();
-                break;
-            }
-            default:
-                break;
-        }
+//        switch(id){
+//            case 1:{
+//                LED_YELLOW_Toggle();
+//                break;
+//            }
+//            case 2:{
+//                LED_BLUE_Toggle();
+//                break;
+//            }
+//            default:
+//                break;
+//        }
         printf("[%s] %ld remain:%ld, tick:%ld\r\n", os_thread_self()->name, nCount++, os_thread_self()->remain_ticks, os_scheduler_get_current_tick());
 
         os_thread_yield();
