@@ -31,6 +31,8 @@ typedef struct os_semaphore_s{
     os_list_t wait_list;
 }os_semaphore_t;
 
+typedef os_semaphore_t os_sem_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -43,5 +45,16 @@ os_err_t os_semaphore_init(os_semaphore_t* semaphore, const char* name, int valu
 
 os_err_t os_semaphore_release(os_semaphore_t * semaphore);
 os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks);
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define os_sem_init os_semaphore_init
+#define os_sem_take os_semaphore_take
+#define os_sem_release os_semaphore_release
+
+#define OS_QUEUE_FIFO OS_SEMAPHORE_FLAG_FIFO
+#define OS_QUEUE_PRIO OS_SEMAPHORE_FLAG_PRIO
+
+
 
 #endif /*INCLUDED_OS_SEMAPHORE_H*/

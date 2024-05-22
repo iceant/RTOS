@@ -19,3 +19,8 @@ endforeach ()
 
 add_library(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${tlsf-src_SOURCE_DIR}/src)
+
+if(CMAKE_C_COMPILER_ID MATCHES ARMCC)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+endif ()
+

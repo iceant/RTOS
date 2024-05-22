@@ -28,6 +28,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
 typedef struct os_timer_s os_timer_t;
 
 typedef void (*os_timer_timeout_t)(os_timer_t* timer, void* userdata);

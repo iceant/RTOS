@@ -9,6 +9,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_thread__exit(os_thread_t * thread){
+    thread->state = OS_THREAD_STATE_EXIT;
+    thread->remain_ticks = 0;
+    thread->curr_priority = OS_PRIORITY_MAX-1;
     OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_REMOVE(&thread->wait_node);
     OS_LIST_REMOVE(&thread->timer_node.wait_node);
@@ -26,7 +29,7 @@ os_err_t os_thread_init(os_thread_t* thread, const char* name
     if(name){
         os_size_t name_size = strlen(name);
         name_size = OS_MIN(name_size, OS_NAME_SIZE-1);
-        printf("name_size:%d\r\n", name_size);
+//        printf("name_size:%d\r\n", name_size);
         memcpy(thread->name, name, name_size);
         thread->name[name_size]='\0';
     }
@@ -82,6 +85,7 @@ os_thread_t* os_thread_self(void){
 }
 
 os_err_t os_thread_exit(void){
+    os_scheduler_exit(os_thread_self());
     return OS_EOK;
 }
 

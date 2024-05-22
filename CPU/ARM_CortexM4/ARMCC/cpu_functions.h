@@ -405,20 +405,26 @@ C__STATIC_FORCEINLINE int cpu_in_privilege(void){
     else return 0;
 }
 
+void __svc(1) cpu__reboot_svc(void);
 
 C__STATIC_FORCEINLINE void cpu_reboot(void)
 {
-    cpu_DSB();                                                          /* Ensure all outstanding memory accesses included
+    if(cpu_in_privilege()){
+        cpu_DSB();                                                          /* Ensure all outstanding memory accesses included
                                                                        buffered write are completed before reset */
-    CPU_REG(SCB_AIRCR)  = (uint32_t)((0x5FAUL << SCB_AIRCR_VECTKEY_Pos)    |
-                                     (CPU_REG(SCB_AIRCR) & SCB_AIRCR_PRIGROUP_Msk) |
-                                     SCB_AIRCR_SYSRESETREQ_Msk    );         /* Keep priority group unchanged */
-    cpu_DSB();                                                          /* Ensure completion of memory access */
+        CPU_REG(SCB_AIRCR)  = (uint32_t)((0x5FAUL << SCB_AIRCR_VECTKEY_Pos)    |
+                                         (CPU_REG(SCB_AIRCR) & SCB_AIRCR_PRIGROUP_Msk) |
+                                         SCB_AIRCR_SYSRESETREQ_Msk    );         /* Keep priority group unchanged */
+        cpu_DSB();                                                          /* Ensure completion of memory access */
 
-    for(;;)                                                           /* wait until reset */
-    {
-        cpu_NOP();
+        for(;;)                                                           /* wait until reset */
+        {
+            cpu_NOP();
+        }
+    }else{
+        cpu__reboot_svc();
     }
+
 }
 
 

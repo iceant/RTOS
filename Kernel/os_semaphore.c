@@ -8,6 +8,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+//#define OS_SEM_DEBUG_ENABLE
+
 #define OS_SEMAPHORE_LOCK(s) cpu_lock_lock(&(s)->lock)
 #define OS_SEMAPHORE_UNLOCK(s) cpu_lock_unlock(&(s)->lock)
 
@@ -80,6 +82,9 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
     while(1){
         OS_SEMAPHORE_LOCK(semaphore);
         if(semaphore->value>0){
+#if defined(OS_SEM_DEBUG_ENABLE)
+            printf("[sem-tk] %s value > 0!\n", semaphore->name);
+#endif
             semaphore->value--;
             OS_SEMAPHORE_UNLOCK(semaphore);
             return OS_EOK;
@@ -94,6 +99,9 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
             current_thread->state = OS_THREAD_STATE_WAIT;
             os_semaphore__insert(semaphore, current_thread);
             OS_SEMAPHORE_UNLOCK(semaphore);
+#if defined(OS_SEM_DEBUG_ENABLE)
+            printf("[sem-tk] %s ivk schd %s\n", semaphore->name, current_thread->name);
+#endif
             OS_SCHEDULER_SCHEDULE_YIELD_BACK();
         }else{
             /*等待特定时间*/
@@ -103,6 +111,9 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
             current_thread->error = OS_THREAD_ERROR_OK;
             OS_SCHEDULER_SCHEDULE_YIELD_BACK();
             if(current_thread->error == OS_THREAD_ERROR_TIMEOUT){
+#if defined(OS_SEM_DEBUG_ENABLE)
+                printf("[sem-tk] %s thd %s timeout\n", semaphore->name, current_thread->name);
+#endif
                 return OS_ETIMEOUT;
             }
         }
@@ -111,27 +122,50 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
 
 os_err_t os_semaphore_release(os_semaphore_t * semaphore){
 
-    volatile os_list_node_t * head;
+    volatile os_list_node_t * head = 0;
+    os_thread_t* curr_thread = 0;
+    os_thread_t* thread = 0;
+    os_list_node_t * node = 0;
+
     OS_SEMAPHORE_LOCK(semaphore);
     semaphore->value++;
 
     head = &semaphore->wait_list;
     if(!OS_LIST_IS_EMPTY(head)){
-        os_list_node_t * node = OS_LIST_NEXT(head);
+#if defined(OS_SEM_DEBUG_ENABLE)
+        printf("[sem-dbg] %s not empty!\n", semaphore->name);
+#endif
+        node = OS_LIST_NEXT(head);
         OS_LIST_REMOVE(node);
-        os_thread_t* thread = OS_CONTAINER_OF(node, os_thread_t, wait_node);
-//        os_thread_t* curr_thread = os_scheduler_current_thread();
-//        if(os_priority_cmp(thread->curr_priority, curr_thread->curr_priority)==OS_PRIORITY_CMP_HIGH)
-//        {
-////            printf("[sem] %s high > %s\n", thread->name, curr_thread->name);
-//            /*优先级比现在运行的优先级高，强制切换*/
-//            os_scheduler_yield(curr_thread);
-//            os_scheduler_push_front(thread); /*加到队列前面，优先执行*/
-//        }else{
-//            os_scheduler_push(thread);
-//        }
-        os_scheduler_push(thread);
+        thread = OS_CONTAINER_OF(node, os_thread_t, wait_node);
+        curr_thread = os_scheduler_current_thread();
+        if(thread){
+            if(curr_thread){
+                if(os_priority_cmp(thread->curr_priority, curr_thread->curr_priority)==OS_PRIORITY_CMP_HIGH)
+                {
+#if defined(OS_SEM_DEBUG_ENABLE)
+                    printf("[sem-dbg] %s high > %s\n", thread->name, curr_thread->name);
+#endif
+                    /*优先级比现在运行的优先级高，强制切换*/
+                    os_scheduler_yield(curr_thread);
+                    os_scheduler_push_front(thread); /*加到队列前面，优先执行*/
+                }else{
+#if defined(OS_SEM_DEBUG_ENABLE)
+                    printf("[sem-dbg] push %s\n", thread->name);
+#endif
+                    os_scheduler_push(thread);
+                }
+            }else{
+#if defined(OS_SEM_DEBUG_ENABLE)
+                printf("[sem-dbg] push2 %s\n", thread->name);
+#endif
+                os_scheduler_push(thread);
+            }
+        }
     }
     OS_SEMAPHORE_UNLOCK(semaphore);
+#if defined(OS_SEM_DEBUG_ENABLE)
+    printf("[sem-dbg] schedule\n");
+#endif
     return OS_SCHEDULER_SCHEDULE_YIELD_FRONT();
 }

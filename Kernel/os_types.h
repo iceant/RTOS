@@ -118,6 +118,10 @@ typedef os_uint_t os_size_t;
 #include <os_definitions.h>
 #endif /*INCLUDED_OS_DEFINITIONS_H*/
 
+////////////////////////////////////////////////////////////////////////////////
+////
+typedef os_uint_t os_time_t;
+
 
 
 #endif /*INCLUDED_OS_TYPES_H*/

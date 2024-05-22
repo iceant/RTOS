@@ -39,11 +39,13 @@ void os_memory_free(void* memory, const char* file, os_size_t line);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define malloc      OS_ALLOC
-#define calloc      OS_CALLOC
-#define realloc     OS_REALLOC
-#define free        OS_FREE
 
+#if defined(RTOS_KERNEL_USE_TLSF)
+#define malloc      tlsf_malloc
+#define calloc      tlsf_calloc
+#define realloc     tlsf_realloc
+#define free        tlsf_free
+#endif
 
 
 

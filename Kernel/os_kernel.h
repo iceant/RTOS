@@ -58,6 +58,10 @@
 #include <os_idle.h>
 #endif /*INCLUDED_OS_IDLE_H*/
 
+#ifndef INCLUDED_OS_MUTEX_H
+#include <os_mutex.h>
+#endif /*INCLUDED_OS_MUTEX_H*/
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,12 @@
 #include <cpu_stack.h>
 #include <os_interrupt.h>
 #include <stdio.h>
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+//#define OS_SCHEDULER_DEBUG_ENABLE
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -18,7 +24,7 @@ static cpu_lock_t os_scheduler__lock={0};
 static os_thread_t * os_scheduler__current_thread=0;
 static os_uint_t os_scheduler__current_tick=0;
 static os_uint_t os_scheduler__skipped = 0;
-
+static os_bool_t os_scheduler__disable_status = OS_FALSE;
 #define OS_SCHEDULER_LOCK() cpu_lock_lock(&os_scheduler__lock)
 #define OS_SCHEDULER_UNLOCK() cpu_lock_unlock(&os_scheduler__lock)
 
@@ -52,7 +58,9 @@ C__STATIC_FORCEINLINE os_thread_t * os_scheduler__pop_highest(void){
 C__STATIC_FORCEINLINE void os_scheduler__pending_list_push_back(os_thread_t * thread){
     if(thread==0)return;
     if(thread->sp < thread->stack_addr || thread->sp>=(thread->stack_addr + thread->stack_size)){
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
         printf("[sch] invalid thread!\n");
+#endif
         return;
     }
     OS_LIST_REMOVE(&thread->ready_node);
@@ -115,6 +123,14 @@ os_err_t os_scheduler_init(void){
     return OS_SCHEDULER_EOK;
 }
 
+os_err_t os_scheduler_exit(os_thread_t * thread)
+{
+    if(thread){
+        thread->exit_function(thread);
+    }
+    return OS_SCHEDULER_EOK;
+}
+
 int os_scheduler_state(void)
 {
     return os_scheduler__state;
@@ -144,6 +160,10 @@ void os_scheduler_on_systick(void){
     register os_thread_t * curr_thread;
     register os_bool_t curr_thread_need_schedule = OS_FALSE;
     register os_bool_t timer_need_schedule = OS_FALSE;
+
+    if(os_scheduler__disable_status==OS_TRUE){
+        return;
+    }
 
     OS_SCHEDULER_LOCK();
     os_scheduler__current_tick++;
@@ -221,11 +241,24 @@ os_err_t os_scheduler_schedule(int policy)
     register os_list_node_t * node;
     register os_list_t * head;
 
+    if(os_scheduler__disable_status==OS_TRUE){
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+        printf("[schd-dbg] disabled!!!\n");
+#endif
+        return OS_SCHEDULER_ESTOP;
+    }
+
     if(os_scheduler__state!=OS_SCHEDULER_STATE_STARTED){
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+        printf("[schd-dbg] not start!!!\n");
+#endif
         return OS_SCHEDULER_ERROR;
     }
 
     if(os_interrupt_nest()!=0U){
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+        printf("[schd-dbg] irq nest skip!!!\n");
+#endif
         os_scheduler_mark_skipped();
         return OS_SCHEDULER_ERROR;
     }
@@ -239,11 +272,15 @@ os_err_t os_scheduler_schedule(int policy)
         if(curr_thread->state==OS_THREAD_STATE_RUNNING && curr_thread->remain_ticks!=0){
             int cmp = os_priority_cmp(next_thread->curr_priority, curr_thread->curr_priority);
             if(cmp==OS_PRIORITY_CMP_HIGH){
-//                printf("[sch] %s take over %s\n", next_thread->name, curr_thread->name);
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+                printf("[schd-dbg] %s take over %s\n", next_thread->name, curr_thread->name);
+#endif
                 os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_FRONT); /*放到最前面，同优先级情况下第一个调用*/
             }else{
                 /*不运行*/
-//                printf("[sch] skip %s\n",next_thread->name);
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+                printf("[schd] skip %s\n",next_thread->name);
+#endif
                 os_scheduler__ready_list_push(next_thread, kOsSchedulerPushType_FRONT);
                 /* 继续运行 */
                 OS_SCHEDULER_UNLOCK();
@@ -254,8 +291,14 @@ os_err_t os_scheduler_schedule(int policy)
         if(curr_thread->state!=OS_THREAD_STATE_RUNNING){
             if(curr_thread->state==OS_THREAD_STATE_YIELD){
                 if(policy==OS_SCHEDULER_POLICY_PUSH_YIELD_BACK){
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+                    printf("[schd] back rdy %s\n",curr_thread->name);
+#endif
                     os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_BACK);
                 }else{
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+                    printf("[schd] front rdy %s\n",curr_thread->name);
+#endif
                     os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_FRONT);
                 }
             }
@@ -272,6 +315,9 @@ os_err_t os_scheduler_schedule(int policy)
             os_thread_t * thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
             node = OS_LIST_NEXT(node);
             OS_LIST_REMOVE(&thread->ready_node);
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+            printf("[schd-dbg] pend to back rdy %s\n",thread->name);
+#endif
             os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);
         }
     }
@@ -283,6 +329,9 @@ os_err_t os_scheduler_schedule(int policy)
             os_thread_t * thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
             node = OS_LIST_NEXT(node);
             OS_LIST_REMOVE(&thread->ready_node);
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+            printf("[schd-dbg] yield to back rdy %s\n",thread->name);
+#endif
             os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);
         }
     }
@@ -292,7 +341,9 @@ os_err_t os_scheduler_schedule(int policy)
     }
 
     if(next_thread==0){
-        printf("no next_thread!!!\n");
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+        printf("[schd-dbg] no next_thread!!!\n");
+#endif
         OS_SCHEDULER_UNLOCK();
         return OS_SCHEDULER_ERROR;
     }
@@ -310,8 +361,14 @@ os_err_t os_scheduler_schedule(int policy)
 //    printf("switch from %s to %s\n", (curr_thread?curr_thread->name:"N/A"), next_thread->name);
     if(cpu_stack_is_switch_in_progress()){
         /* 上次的调度还没有完成 */
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+        printf("[schd-dbg] switch in process %s to rdy\n",next_thread->name);
+#endif
         os_scheduler__ready_list_push(next_thread, kOsSchedulerPushType_FRONT);
     }else{
+#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+        printf("[schd-dbg] switch %s \n",next_thread->name);
+#endif
         cpu_stack_switch((curr_thread==0)?0:&curr_thread->sp, &next_thread->sp);
     }
 
@@ -392,3 +449,16 @@ os_uint_t os_scheduler_get_current_tick(void)
     return os_scheduler__current_tick;
 }
 
+void os_scheduler_disable(void)
+{
+    os_scheduler__disable_status = OS_TRUE;
+}
+
+void os_scheduler_enable(void){
+    os_scheduler__disable_status = OS_FALSE;
+}
+
+os_bool_t os_scheduler_is_disable(void)
+{
+    return os_scheduler__disable_status;
+}

@@ -1,0 +1,114 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.38.0.0
+Copyright (C) 2022 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Peng Chen, UB, LIC=32B1Q-N9ZNJ-301NC-7HLZH-H6EJS-7ZQYU
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Plus  Version: 5.38.0.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 7 (build 960)
+Assembler:       Armasm.exe V5.06 update 7 (build 960)
+Linker/Locator:  ArmLink.exe V5.06 update 7 (build 960)
+Library Manager: ArmAr.exe V5.06 update 7 (build 960)
+Hex Converter:   FromElf.exe V5.06 update 7 (build 960)
+CPU DLL:         SARMCM3.DLL V5.38.0.0
+Dialog DLL:      DCM.DLL V1.17.5.0
+Target DLL:      CMSIS_AGDI.dll V1.33.15.0
+Dialog DLL:      TCM.DLL V1.56.4.0
+ 
+<h2>Project:</h2>
+D:\Workspace\RTOS\Board\UB_GD32F470VGT6\MDK-ARM\UB_GD32F470VGT6.uvprojx
+Project File Date:  05/22/2024
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'UB_GD32F470VGT6'
+Note: source file '..\Application\system_gd32f4xx.c' - object file renamed from '.\Objects\system_gd32f4xx.o' to '.\Objects\system_gd32f4xx_1.o'.
+compiling gd32f4xx_it.c...
+..\Devices\DS1307\DS1307.h(90): warning:  #815-D: type qualifier on return type is meaningless
+  volatile uint16_t DS1307_GetMS(void);
+..\Application\gd32f4xx_it.c: 1 warning, 0 errors
+compiling main.c...
+..\Devices\DS1307\DS1307.h(90): warning:  #815-D: type qualifier on return type is meaningless
+  volatile uint16_t DS1307_GetMS(void);
+..\Application\main.c: 1 warning, 0 errors
+compiling task_timesync.c...
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(432): warning:  #47-D: incompatible redefinition of macro "SCB_ICSR_PENDSVSET_Msk"  (declared at line 17 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_ICSR_PENDSVSET_Msk             (1UL << SCB_ICSR_PENDSVSET_Pos)                /*!< SCB ICSR: PENDSVSET Mask */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(463): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_VECTKEY_Pos"  (declared at line 33 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_VECTKEY_Pos              16                                             /*!< SCB AIRCR: VECTKEY Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(472): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_PRIGROUP_Pos"  (declared at line 37 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_PRIGROUP_Pos              8                                             /*!< SCB AIRCR: PRIGROUP Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(475): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_SYSRESETREQ_Pos"  (declared at line 45 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_SYSRESETREQ_Pos           2                                             /*!< SCB AIRCR: SYSRESETREQ Position */
+..\Devices\DS1307\DS1307.h(90): warning:  #815-D: type qualifier on return type is meaningless
+  volatile uint16_t DS1307_GetMS(void);
+..\Application\task_timesync.c(24): warning:  #550-D: variable "result"  was set but never used
+      A7670C_Result result;
+..\Application\task_timesync.c: 6 warnings, 0 errors
+compiling board.c...
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(432): warning:  #47-D: incompatible redefinition of macro "SCB_ICSR_PENDSVSET_Msk"  (declared at line 17 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_ICSR_PENDSVSET_Msk             (1UL << SCB_ICSR_PENDSVSET_Pos)                /*!< SCB ICSR: PENDSVSET Mask */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(463): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_VECTKEY_Pos"  (declared at line 33 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_VECTKEY_Pos              16                                             /*!< SCB AIRCR: VECTKEY Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(472): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_PRIGROUP_Pos"  (declared at line 37 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_PRIGROUP_Pos              8                                             /*!< SCB AIRCR: PRIGROUP Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(475): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_SYSRESETREQ_Pos"  (declared at line 45 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_SYSRESETREQ_Pos           2                                             /*!< SCB AIRCR: SYSRESETREQ Position */
+..\Devices\DS1307\DS1307.h(90): warning:  #815-D: type qualifier on return type is meaningless
+  volatile uint16_t DS1307_GetMS(void);
+..\Board\board.c(197): warning:  #177-D: variable "W25QFLASH_IO"  was declared but never referenced
+  static sFLASH_IO_T W25QFLASH_IO={.Init = BSP_SPI0_Init, .DeInit=BSP_SPI0_DeInit
+..\Board\board.c: 6 warnings, 0 errors
+compiling use_usart0.c...
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(432): warning:  #47-D: incompatible redefinition of macro "SCB_ICSR_PENDSVSET_Msk"  (declared at line 17 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_ICSR_PENDSVSET_Msk             (1UL << SCB_ICSR_PENDSVSET_Pos)                /*!< SCB ICSR: PENDSVSET Mask */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(463): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_VECTKEY_Pos"  (declared at line 33 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_VECTKEY_Pos              16                                             /*!< SCB AIRCR: VECTKEY Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(472): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_PRIGROUP_Pos"  (declared at line 37 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_PRIGROUP_Pos              8                                             /*!< SCB AIRCR: PRIGROUP Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(475): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_SYSRESETREQ_Pos"  (declared at line 45 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_SYSRESETREQ_Pos           2                                             /*!< SCB AIRCR: SYSRESETREQ Position */
+..\Devices\DS1307\DS1307.h(90): warning:  #815-D: type qualifier on return type is meaningless
+  volatile uint16_t DS1307_GetMS(void);
+..\Application\use_usart0.c: 5 warnings, 0 errors
+compiling A7670C.c...
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(432): warning:  #47-D: incompatible redefinition of macro "SCB_ICSR_PENDSVSET_Msk"  (declared at line 17 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_ICSR_PENDSVSET_Msk             (1UL << SCB_ICSR_PENDSVSET_Pos)                /*!< SCB ICSR: PENDSVSET Mask */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(463): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_VECTKEY_Pos"  (declared at line 33 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_VECTKEY_Pos              16                                             /*!< SCB AIRCR: VECTKEY Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(472): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_PRIGROUP_Pos"  (declared at line 37 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_PRIGROUP_Pos              8                                             /*!< SCB AIRCR: PRIGROUP Position */
+..\cmake-build-debug\_deps\gd32f4xx_firmware_library-src\Firmware\CMSIS\core_cm4.h(475): warning:  #47-D: incompatible redefinition of macro "SCB_AIRCR_SYSRESETREQ_Pos"  (declared at line 45 of "..\..\..\CPU\ARM_CortexM4\cpu_registers.h")
+  #define SCB_AIRCR_SYSRESETREQ_Pos           2                                             /*!< SCB AIRCR: SYSRESETREQ Position */
+..\Devices\DS1307\DS1307.h(90): warning:  #815-D: type qualifier on return type is meaningless
+  volatile uint16_t DS1307_GetMS(void);
+..\Devices\A7670C\A7670C.c(149): warning:  #167-D: argument of type "A7670C_CEREG_Read_Response *" is incompatible with parameter of type "A7670C_CGREG_Read_Response *"
+              result = A7670C_CGREG_Read(&CEREG_Read_Response, 12000);
+..\Devices\A7670C\A7670C.c(125): warning:  #550-D: variable "A7670C_PS_Flag"  was set but never used
+      int  A7670C_PS_Flag = 0;
+..\Devices\A7670C\A7670C.c: 7 warnings, 0 errors
+linking...
+Program Size: Code=20664 RO-data=1484 RW-data=1200 ZI-data=16976  
+FromELF: creating hex file...
+".\Objects\UB_GD32F470VGT6.axf" - 0 Error(s), 26 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: GigaDevice
+                https://gd32mcu.com/data/documents/pack/GigaDevice.GD32F4xx_DFP.3.2.0.pack
+                GigaDevice.GD32F4xx_DFP.3.2.0
+                GigaDevice GD32F4xx Series Device Support and Examples
+
+<h2>Collection of Component include folders:</h2>
+  C:/Users/pengc/AppData/Local/Arm/Packs/GigaDevice/GD32F4xx_DFP/3.2.0/Device/F4XX/Include
+
+<h2>Collection of Component Files used:</h2>
+Build Time Elapsed:  00:00:03
+</pre>
+</body>
+</html>

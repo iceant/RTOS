@@ -36,7 +36,7 @@ __asm void PendSV_Handler(void)
 
         LDR R2, =cpu_stack__curr_p
         LDR R3, [R2]
-        STR R0, [R3] /* Save Current SP to cpu__stack_curr_p->sp */
+        STR R0, [R3] /* cpu__stack_curr_p->sp = PSP */
 
 __PendSV_SwitchTo
         LDR R0, =cpu_stack__next_p
@@ -46,17 +46,19 @@ __PendSV_SwitchTo
         LDMIA R0!, {R2-R11}
         MOV LR, R2
         MSR CONTROL, R3
-        ISB
+        dmb
+        isb
 #ifdef __FPU_PRESENT
         TST LR, #0x10
         IT EQ
         VLDMIAEQ R0!, {S16-S31}
 #endif
         MSR PSP, R0
+        dmb
+        isb
 
 __PendSV_Exit
         MSR PRIMASK, R1
-        DMB
         ISB
         BX LR
 
