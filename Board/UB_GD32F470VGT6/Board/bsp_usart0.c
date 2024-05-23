@@ -51,7 +51,7 @@ void BSP_USART0_Init(void)
 
     /* USART configure */
     usart_deinit(USARTx);
-    usart_baudrate_set(USARTx, 921600U);
+    usart_baudrate_set(USARTx, 115200U);
     usart_word_length_set(USARTx, USART_WL_8BIT);
     usart_stop_bit_set(USARTx, USART_STB_1BIT);
     usart_parity_config(USARTx, USART_PM_NONE);

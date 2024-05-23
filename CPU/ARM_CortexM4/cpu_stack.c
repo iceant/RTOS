@@ -5,7 +5,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define ALIGN_DOWN(size, align) ((size) & ~((align) - 1))
+#define ALIGN_DOWN(x, a)     ((x)&~((a) - 1))
+#define ALIGN_UP(x, a)       (((x) + (a) - 1)&~((a) - 1))
 
 #ifndef CPU_REG
 #define CPU_REG(ADDRESS)  (*((volatile cpu_uint_t *)(ADDRESS)))
@@ -46,9 +47,9 @@ static cpu_lock_t cpu_stack__lock = {0};
 
 int cpu_stack_init(void* thread_entry, void* parameter, uint8_t * stack_addr, int stack_size, void** return_sp)
 {
-    if (stack_size < 18 * 4) return -1;
+    if (stack_size < CPU_STACK_INIT_REGISTER_SIZE) return -1;
 
-    cpu_uint_t sp = ((cpu_uint_t) stack_addr + stack_size - 18 * 4);
+    cpu_uint_t sp = ((cpu_uint_t) stack_addr + stack_size - CPU_STACK_INIT_REGISTER_SIZE);
 
     CPU_REG(sp + (17 << 2)) = (cpu_uint_t) 0x01000000; /*xPSR*/
     CPU_REG(sp + (16 << 2)) = (cpu_uint_t) thread_entry; /*PC*/

@@ -18,11 +18,14 @@
 #include <cpu_types.h>
 #endif /*INCLUDED_CPU_TYPES_H*/
 
+#ifndef INCLUDED_CPU_REGISTERS_H
+#include <cpu_registers.h>
+#endif /*INCLUDED_CPU_REGISTERS_H*/
+
+
 #ifndef INCLUDED_CPU_FUNCTIONS_H
 #include <cpu_functions.h>
 #endif /*INCLUDED_CPU_FUNCTIONS_H*/
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
