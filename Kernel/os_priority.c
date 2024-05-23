@@ -1,15 +1,11 @@
 #include <os_priority.h>
 #include <cpu.h>
 #include <stdio.h>
-////////////////////////////////////////////////////////////////////////////////
-//// CONSTANTS
-#define OS_UINTPTR_BITS (8*sizeof(os_uint_t))
-#define OS_PRIORITY_TABLE_SIZE (((OS_PRIORITY_MAX-1)/OS_UINTPTR_BITS)+1)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// STATIC VARIABLES
 
-static os_uint_t os_priority__table[OS_PRIORITY_TABLE_SIZE];
+os_uint_t os_priority__table[OS_PRIORITY_TABLE_SIZE];
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -44,49 +40,45 @@ os_priority_t os_priority_get_highest(void){
     return (priority==OS_PRIORITY_MAX)?OS_PRIORITY_INVALID:(priority);
 }
 
-void os_priority_mark(os_priority_t priority)
-{
+//void os_priority_mark(os_priority_t priority)
+//{
+//
+//    //assert(priority>=0 && priority<OS_PRIORITY_MAX);
+//#if 0
+//    os_uintptr_t bit;
+//    os_uintptr_t bit_nbr;
+//    os_size_t ix;
+//
+//    ix = priority/OS_UINTPTR_BITS;
+//    bit_nbr = priority & (OS_UINTPTR_BITS - 1u);
+//    bit = 1;
+//    bit <<= (OS_UINTPTR_BITS -1u) - bit_nbr;
+//    os_priority__table[ix] |= bit;
+//#endif
+//    ((uint8_t *)os_priority__table)[priority/8]|=(1<<(priority % 8));
+//}
+//
+//void os_priority_unmark(os_priority_t priority)
+//{
+//#if 0
+//    os_uintptr_t bit;
+//    os_uintptr_t bit_nbr;
+//    os_size_t ix;
+//
+//    ix = priority/OS_UINTPTR_BITS;
+//    bit_nbr = priority & (OS_UINTPTR_BITS - 1u);
+//    bit = 1u;
+//    bit <<=(OS_UINTPTR_BITS -1u) - bit_nbr;
+//    os_priority__table[ix] &=~bit;
+//#endif
+//    ((uint8_t *)os_priority__table)[priority/8] &= ~(1<<(priority % 8));
+//}
 
-    //assert(priority>=0 && priority<OS_PRIORITY_MAX);
-#if 0
-    os_uintptr_t bit;
-    os_uintptr_t bit_nbr;
-    os_size_t ix;
+//bool os_priority_is_marked(os_priority_t priority){
+//    //assert(priority>=0 && priority<OS_PRIORITY_MAX);
+//    return ((((uint8_t*)os_priority__table)[priority/8] >> (priority%8))&1);
+//}
 
-    ix = priority/OS_UINTPTR_BITS;
-    bit_nbr = priority & (OS_UINTPTR_BITS - 1u);
-    bit = 1;
-    bit <<= (OS_UINTPTR_BITS -1u) - bit_nbr;
-    os_priority__table[ix] |= bit;
-#endif
-    ((uint8_t *)os_priority__table)[priority/8]|=(1<<(priority % 8));
-}
-
-void os_priority_unmark(os_priority_t priority)
-{
-#if 0
-    os_uintptr_t bit;
-    os_uintptr_t bit_nbr;
-    os_size_t ix;
-
-    ix = priority/OS_UINTPTR_BITS;
-    bit_nbr = priority & (OS_UINTPTR_BITS - 1u);
-    bit = 1u;
-    bit <<=(OS_UINTPTR_BITS -1u) - bit_nbr;
-    os_priority__table[ix] &=~bit;
-#endif
-    ((uint8_t *)os_priority__table)[priority/8] &= ~(1<<(priority % 8));
-}
-
-bool os_priority_is_marked(os_priority_t priority){
-    //assert(priority>=0 && priority<OS_PRIORITY_MAX);
-    return ((((uint8_t*)os_priority__table)[priority/8] >> (priority%8))&1);
-}
-
-int os_priority_cmp(os_priority_t a, os_priority_t b)
-{
-    return (a==b)?OS_PRIORITY_CMP_EQUAL:((a)<(b)?OS_PRIORITY_CMP_HIGH:OS_PRIORITY_CMP_LOW);
-}
 
 void os_priority_swap(os_priority_t a, os_priority_t b){
     os_priority_t tmp;

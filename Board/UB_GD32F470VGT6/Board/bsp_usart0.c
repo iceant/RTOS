@@ -115,7 +115,7 @@ void BSP_USART0_DMATx(uint8_t* txBuffer, uint32_t size)
 
 void USART0_IRQHandler(void)
 {
-//    os_interrupt_enter();
+    os_interrupt_enter();
     if((RESET != usart_interrupt_flag_get(USARTx, USART_INT_FLAG_RBNE)) &&
        (RESET != usart_flag_get(USARTx, USART_FLAG_RBNE)))
     {
@@ -136,7 +136,7 @@ void USART0_IRQHandler(void)
         usart_data_receive(USARTx);
     }
 #endif
-//    os_interrupt_exit();
+    os_interrupt_exit();
 }
 
 
@@ -186,5 +186,48 @@ int BSP_USART0_Printf(const char* format, ...)
 
     return len;
 }
+
+
+static char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
+
+int os_printf_putc(int ch, void* ud){
+    usart_data_transmit(USARTx, (uint8_t)ch);
+    while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
+    return ch;
+}
+
+int os_printf(const char* fmt, ...){
+    int len;
+    int i;
+    va_list arg;
+    char* buffer = os_printf__buffer;
+
+    va_start(arg, fmt);
+    len = vsnprintf(0, OS_PRINTF_BUFFER_SIZE, fmt, arg);
+    va_end(arg);
+
+    if(len >= OS_PRINTF_BUFFER_SIZE){
+        buffer = OS_ALLOC(len);
+        va_start(arg, fmt);
+        len = vsnprintf(buffer, len, fmt, arg);
+//        for(i=0; i<len; i++){
+//            os_printf_putc(buffer[i], 0);
+//        }
+        BSP_USART0_DMATx(buffer, len-1);
+        va_end(arg);
+        OS_FREE(buffer);
+    }else{
+        va_start(arg, fmt);
+        len = vsnprintf(buffer, OS_PRINTF_BUFFER_SIZE, fmt, arg);
+//        for(i=0; i<len; i++){
+//            os_printf_putc(buffer[i], 0);
+//        }
+        BSP_USART0_DMATx(buffer, len);
+        va_end(arg);
+    }
+
+    return len;
+}
+
 
 

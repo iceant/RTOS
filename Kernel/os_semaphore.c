@@ -112,7 +112,7 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
             OS_SCHEDULER_SCHEDULE_YIELD_BACK();
             if(current_thread->error == OS_THREAD_ERROR_TIMEOUT){
 #if defined(OS_SEM_DEBUG_ENABLE)
-                printf("[sem-tk] %s thd %s timeout\n", semaphore->name, current_thread->name);
+                os_printf("[sem-tk] %s thd %s timeout\n", semaphore->name, current_thread->name);
 #endif
                 return OS_ETIMEOUT;
             }
@@ -133,7 +133,7 @@ os_err_t os_semaphore_release(os_semaphore_t * semaphore){
     head = &semaphore->wait_list;
     if(!OS_LIST_IS_EMPTY(head)){
 #if defined(OS_SEM_DEBUG_ENABLE)
-        printf("[sem-dbg] %s not empty!\n", semaphore->name);
+        os_printf("[sem-dbg] %s not empty!\n", semaphore->name);
 #endif
         node = OS_LIST_NEXT(head);
         OS_LIST_REMOVE(node);
@@ -144,20 +144,20 @@ os_err_t os_semaphore_release(os_semaphore_t * semaphore){
                 if(os_priority_cmp(thread->curr_priority, curr_thread->curr_priority)==OS_PRIORITY_CMP_HIGH)
                 {
 #if defined(OS_SEM_DEBUG_ENABLE)
-                    printf("[sem-dbg] %s high > %s\n", thread->name, curr_thread->name);
+                    os_printf("[sem-dbg] %s high > %s\n", thread->name, curr_thread->name);
 #endif
                     /*优先级比现在运行的优先级高，强制切换*/
                     os_scheduler_yield(curr_thread);
                     os_scheduler_push_front(thread); /*加到队列前面，优先执行*/
                 }else{
 #if defined(OS_SEM_DEBUG_ENABLE)
-                    printf("[sem-dbg] push %s\n", thread->name);
+                    os_printf("[sem-dbg] push %s\n", thread->name);
 #endif
                     os_scheduler_push(thread);
                 }
             }else{
 #if defined(OS_SEM_DEBUG_ENABLE)
-                printf("[sem-dbg] push2 %s\n", thread->name);
+                os_printf("[sem-dbg] push2 %s\n", thread->name);
 #endif
                 os_scheduler_push(thread);
             }
@@ -165,7 +165,7 @@ os_err_t os_semaphore_release(os_semaphore_t * semaphore){
     }
     OS_SEMAPHORE_UNLOCK(semaphore);
 #if defined(OS_SEM_DEBUG_ENABLE)
-    printf("[sem-dbg] schedule\n");
+    os_printf("[sem-dbg] schedule\n");
 #endif
     return OS_SCHEDULER_SCHEDULE_YIELD_FRONT();
 }

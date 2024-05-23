@@ -105,6 +105,11 @@ endforeach ()
 ########################################################################################################################
 ## Application
 
+file(GLOB ARMCC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/startup_gd32f450_470.s)
+foreach (item IN LISTS ARMCC_SOURCES)
+    message(STATUS "[${PROJECT_NAME}::ARMCC] SOURCE: ${item}")
+endforeach ()
+
 file(GLOB APPLICATION_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/Application/*.c)
 foreach (item IN LISTS APPLICATION_SOURCES)
     message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
@@ -116,12 +121,14 @@ foreach (item IN LISTS BOARD_SOURCES)
 endforeach ()
 
 add_executable(${PROJECT_NAME} ${APPLICATION_SOURCES}
+        ${ARMCC_SOURCES}
         ${BOARD_SOURCES}
         ${A7670C_SOURCES}
         ${DS1307_SOURCES}
         ${OLED_SOURCES}
         ${SDCARD_SOURCES}
         ${SPIFLASH_SOURCES}
+
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC RTOS_Kernel)
 target_link_libraries(${PROJECT_NAME} PUBLIC GD32F4xx)

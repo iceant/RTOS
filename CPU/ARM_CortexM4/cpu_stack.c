@@ -17,7 +17,7 @@
 volatile uint8_t cpu_stack__switch_flag = CPU_STACK_SWITCH_FLAG_OFF;
 void** cpu_stack__curr_p=0;
 void** cpu_stack__next_p=0;
-static cpu_lock_t cpu_stack__lock = 0;
+static cpu_lock_t cpu_stack__lock = {0};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -73,10 +73,18 @@ void __svc( 0 ) cpu_stack_switch_in_privilege( void ) ;
 int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
 {
     if(cpu_stack__switch_flag==CPU_STACK_SWITCH_FLAG_ON){
-        printf("cpu_stack__switch_flag is on!!!\n");
         return -1;
     }
-    
+
+    if(to_stack_p==0 || *to_stack_p==0){
+        return -2;
+    }
+    if(from_stack_p!=0){
+        if(*from_stack_p==0){
+            return -3;
+        }
+    }
+
     cpu_lock_lock(&cpu_stack__lock);
     cpu_stack__switch_flag = CPU_STACK_SWITCH_FLAG_ON;
     cpu_stack__curr_p = from_stack_p;
@@ -84,11 +92,9 @@ int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
     cpu_lock_unlock(&cpu_stack__lock);
 
     if(cpu_in_privilege()){
-//        printf("switch in privilege!\n");
         /*设置中断需要特权，已在特权模式，直接设置*/
         CPU_REG(SCB_ICSR) |= SCB_ICSR_PENDSVSET_Msk;
     }else{
-//        printf("switch use svc!\n");
         cpu_stack_switch_in_privilege();
     }
 }

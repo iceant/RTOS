@@ -25,7 +25,7 @@ static void USART0__RxHandler(uint16_t ch, void* userdata){
 
 static void USART0_RxThread_Entry(void* p)
 {
-    printf("USART0_RxThread_Entry startup\n");
+    os_printf("USART0_RxThread_Entry startup\n");
     BSP_USART0_SetRxHandler(USART0__RxHandler, 0);
     while(1){
         os_sem_take(&USART0_RxSem, OS_WAIT_INFINITY);
@@ -37,7 +37,6 @@ static void USART0_RxThread_Entry(void* p)
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "\n")!=-1){
 //            printf("[USART0] %s\n", USART0_RxBuffer.buffer, sdk_ringbuffer_used(&USART0_RxBuffer));
             sdk_hex_dump("USART0", USART0_RxBuffer.buffer,  sdk_ringbuffer_used(&USART0_RxBuffer));
-            cpu_DMB();
             sdk_ringbuffer_reset(&USART0_RxBuffer);
         }
 

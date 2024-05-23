@@ -21,14 +21,16 @@
 #define OS_SCHEDULER_ERROR      OS_ERROR
 #define OS_SCHEDULER_EINWORK    (0x1001)
 #define OS_SCHEDULER_ESTOP      (0x1002)
+#define OS_SCHEDULER_ENOTASK    (0x1003)
 
 #define OS_SCHEDULER_STATE_UNINITIALIZED    (0)
 #define OS_SCHEDULER_STATE_INITIALIZED      (1)
 #define OS_SCHEDULER_STATE_STARTED          (2)
 #define OS_SCHEDULER_STATE_TERMINATED       (-1)
 
-#define OS_SCHEDULER_POLICY_PUSH_YIELD_FRONT (1)
-#define OS_SCHEDULER_POLICY_PUSH_YIELD_BACK  (2)
+#define OS_SCHEDULER_POLICY_YIELD_PUSHFRONT (1)
+#define OS_SCHEDULER_POLICY_YIELD_PUSHBACK  (2)
+#define OS_SCHEDULER_POLICY_YIELD_NOACTION  (3)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 os_err_t os_scheduler_init(void);
@@ -53,6 +55,8 @@ os_err_t os_scheduler_resume(os_thread_t * thread);
 
 os_err_t os_scheduler_yield(os_thread_t * thread);
 
+os_err_t os_scheduler_yield_then_schedule(os_thread_t * thread);
+
 os_err_t os_scheduler_exit(os_thread_t * thread);
 
 void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t ticks);
@@ -70,8 +74,9 @@ void os_scheduler_enable(void);
 os_bool_t os_scheduler_is_disable(void);
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define OS_SCHEDULER_SCHEDULE_YIELD_BACK() os_scheduler_schedule(OS_SCHEDULER_POLICY_PUSH_YIELD_BACK)
-#define OS_SCHEDULER_SCHEDULE_YIELD_FRONT() os_scheduler_schedule(OS_SCHEDULER_POLICY_PUSH_YIELD_FRONT)
+#define OS_SCHEDULER_SCHEDULE_YIELD_BACK() os_scheduler_schedule(OS_SCHEDULER_POLICY_YIELD_PUSHBACK)
+#define OS_SCHEDULER_SCHEDULE_YIELD_FRONT() os_scheduler_schedule(OS_SCHEDULER_POLICY_YIELD_PUSHFRONT)
+#define OS_SCHEDULER_SCHEDULE() os_scheduler_schedule(OS_SCHEDULER_POLICY_YIELD_NOACTION)
 
 
 #endif /*INCLUDED_OS_SCHEDULER_H*/

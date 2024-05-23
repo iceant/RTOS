@@ -291,6 +291,8 @@ C__STATIC_INLINE void cpu_set_FPSCR(cpu_uint_t fpscr)
                    __schedule_barrier();\
                 } while (0U)
 
+
+
 #define cpu_RBIT                          __rbit
 
 
@@ -426,6 +428,5 @@ C__STATIC_FORCEINLINE void cpu_reboot(void)
     }
 
 }
-
 
 #endif /*INCLUDED_CPU_FUNCTIONS_H*/

@@ -51,6 +51,11 @@ OF SUCH DAMAGE.
 #include <task_timesync.h>
 #endif /*INCLUDED_TASK_TIMESYNC_H*/
 
+#ifndef INCLUDED_TEST_PRINTF_H
+#include <test_printf.h>
+#endif /*INCLUDED_TEST_PRINTF_H*/
+
+
 
 
 

@@ -49,7 +49,7 @@ static void BootThread_Entry(void* p){
 
 #if defined(ENABLE_SPI_FLASH)
     uint32_t FlashID = sFLASH_ReadID();
-    printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
+    os_printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
 #endif
 
 #if defined(ENABLE_4G)
@@ -63,7 +63,7 @@ static void BootThread_Entry(void* p){
 #endif
 
     while(1){
-        printf("%04d-%02d-%02d %02d:%02d:%02d\n"
+        os_printf("%04d-%02d-%02d %02d:%02d:%02d\n"
             , DS1307_GetYear()
             , DS1307_GetMonth()
             , DS1307_GetDate()
@@ -96,20 +96,20 @@ int main(void)
     /* startup */
     Board_Init();
     
-    printf("__HXTAL: %ld\n", HXTAL_VALUE);
-    printf("SystemCoreClock: %ld\n", SystemCoreClock);
-    printf("CK_SYS: %ld\n", rcu_clock_freq_get(CK_SYS));
-    printf("CK_AHB: %ld\n", rcu_clock_freq_get(CK_AHB));
-    printf("CK_APB1: %ld\n", rcu_clock_freq_get(CK_APB1));
-    printf("CK_APB2: %ld\n", rcu_clock_freq_get(CK_APB2));
+    os_printf("__HXTAL: %ld\n", HXTAL_VALUE);
+    os_printf("SystemCoreClock: %ld\n", SystemCoreClock);
+    os_printf("CK_SYS: %ld\n", rcu_clock_freq_get(CK_SYS));
+    os_printf("CK_AHB: %ld\n", rcu_clock_freq_get(CK_AHB));
+    os_printf("CK_APB1: %ld\n", rcu_clock_freq_get(CK_APB1));
+    os_printf("CK_APB2: %ld\n", rcu_clock_freq_get(CK_APB2));
 
     USE_USART0_Init();
 
-
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0
-                   , BootThread_Stack, sizeof(BootThread_Stack), 20,
-                   os_tick_from_millisecond(100));
+                   , BootThread_Stack, sizeof(BootThread_Stack), 30,10);
     os_thread_startup(&BootThread);
+
+    Test_Printf_Init();
 
     os_kernel_startup();
 
@@ -120,7 +120,7 @@ int main(void)
         if(sdk_ringbuffer_used(usart0_rx_buf)>0){
             sdk_hex_dump("USART0", usart0_rx_buf->buffer, sdk_ringbuffer_used(usart0_rx_buf));            
         }
-        printf("[main] ERROR count=%d\n", nCount++);
+        os_printf("[main] ERROR count=%d\n", nCount++);
         for(int i=0; i<0x3FffFFf; i++){}
     }
 }

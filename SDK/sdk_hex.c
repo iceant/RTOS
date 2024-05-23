@@ -1,34 +1,33 @@
 #include <sdk_hex.h>
-
-extern int printf(const char* fmt, ...);
+#include <os_kernel.h>
 
 void sdk_hex_dump(const char* name, const void* data, int size) {
     if(name){
-        printf("-- DUMP: %s --\n", name);
+        os_printf("-- DUMP: %s --\n", name);
     }
     char ascii[17];
     size_t i, j;
     ascii[16] = '\0';
     for (i = 0; i < size; ++i) {
-        printf("%02X ", ((unsigned char*)data)[i]);
+        os_printf("%02X ", ((unsigned char*)data)[i]);
         if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
             ascii[i % 16] = ((unsigned char*)data)[i];
         } else {
             ascii[i % 16] = '.';
         }
         if ((i+1) % 8 == 0 || i+1 == size) {
-            printf(" ");
+            os_printf(" ");
             if ((i+1) % 16 == 0) {
-                printf("|  %s \n", ascii);
+                os_printf("|  %s \n", ascii);
             } else if (i+1 == size) {
                 ascii[(i+1) % 16] = '\0';
                 if ((i+1) % 16 <= 8) {
-                    printf(" ");
+                    os_printf(" ");
                 }
                 for (j = (i+1) % 16; j < 16; ++j) {
-                    printf("   ");
+                    os_printf("   ");
                 }
-                printf("|  %s \n", ascii);
+                os_printf("|  %s \n", ascii);
             }
         }
     }

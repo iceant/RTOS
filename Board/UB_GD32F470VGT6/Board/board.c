@@ -226,6 +226,8 @@ void Board_Init(void){
 
     os_kernel_init();
 
+    SystemCoreClock = 240000000U;
+
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */

@@ -29,7 +29,7 @@ os_err_t os_thread_init(os_thread_t* thread, const char* name
     if(name){
         os_size_t name_size = strlen(name);
         name_size = OS_MIN(name_size, OS_NAME_SIZE-1);
-//        printf("name_size:%d\r\n", name_size);
+//        os_printf("name_size:%d\r\n", name_size);
         memcpy(thread->name, name, name_size);
         thread->name[name_size]='\0';
     }
@@ -57,18 +57,18 @@ os_err_t os_thread_init(os_thread_t* thread, const char* name
 
 os_err_t os_thread_startup(os_thread_t * thread){
     os_scheduler_push_back(thread);
-    return os_scheduler_schedule(OS_SCHEDULER_POLICY_PUSH_YIELD_BACK);
+    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
 }
 
 os_err_t os_thread_suspend(os_thread_t * thread){
     os_scheduler_suspend(thread);
-    return os_scheduler_schedule(OS_SCHEDULER_POLICY_PUSH_YIELD_BACK);
+    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
 }
 
 os_err_t os_thread_resume(os_thread_t * thread)
 {
     os_scheduler_resume(thread);
-    return os_scheduler_schedule(OS_SCHEDULER_POLICY_PUSH_YIELD_BACK);
+    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
 }
 
 os_err_t os_thread_join(os_thread_t * thread){
@@ -76,8 +76,7 @@ os_err_t os_thread_join(os_thread_t * thread){
 }
 
 os_err_t os_thread_yield(void){
-    os_scheduler_yield(os_thread_self());
-    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
+    return os_scheduler_yield_then_schedule(os_thread_self());
 }
 
 os_thread_t* os_thread_self(void){
@@ -92,7 +91,7 @@ os_err_t os_thread_exit(void){
 os_err_t os_thread_delay(os_tick_t ticks){
     os_thread_t* curr_thread = os_scheduler_current_thread();
     os_scheduler_timed_wait(curr_thread, ticks);
-    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
+    return OS_SCHEDULER_SCHEDULE();
 }
 
 os_err_t os_thread_mdelay(uint32_t milliseconds){

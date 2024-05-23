@@ -28,11 +28,12 @@ static int Task_TimeSync_Sync(void){
         // 1. 设置 NTP 服务其
         A7670C_CNTP_Write_Response CNTP_Write_Response;
         result = A7670C_CNTP_Write(&CNTP_Write_Response, "ntp.aliyun.com", 32, 24000);
-        if (CNTP_Write_Response.code != kA7670C_Response_Code_OK) {
-            printf("[TASK_NTC] CNTP Write Failed! Code=%d\r\n", CNTP_Write_Response.code);
-            if(!nRetry) {
-                return -1;
-            }
+        if (CNTP_Write_Response.code == kA7670C_Response_Code_OK) {
+            break;
+        }
+        printf("[TASK_NTC] CNTP Write Failed! Code=%d\r\n", CNTP_Write_Response.code);
+        if(!nRetry) {
+            return -1;
         }
         A7670C_NopDelay(TIME_DELAY);
     }while(nRetry--);
@@ -49,6 +50,8 @@ static int Task_TimeSync_Sync(void){
                 return -2;
             }
             A7670C_NopDelay(TIME_DELAY);
+        }else{
+            break;
         }
     } while (nRetry--);
 
@@ -64,6 +67,8 @@ static int Task_TimeSync_Sync(void){
                 return -3;
             }
             A7670C_NopDelay(TIME_DELAY);
+        }else{
+            break;
         }
     } while (nRetry--);
 

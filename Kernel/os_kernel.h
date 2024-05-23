@@ -62,6 +62,10 @@
 #include <os_mutex.h>
 #endif /*INCLUDED_OS_MUTEX_H*/
 
+#ifndef INCLUDED_OS_PRINTF_H
+#include <os_printf.h>
+#endif /*INCLUDED_OS_PRINTF_H*/
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,12 +14,23 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+extern volatile cpu_uint_t os_interrupt__nest;
 
-void os_interrupt_enter(void);
+C__STATIC_FORCEINLINE void os_interrupt_init(void){
+    os_interrupt__nest = 0;
+}
 
-void os_interrupt_exit(void);
+C__STATIC_FORCEINLINE void os_interrupt_enter(void){
+    cpu_atomic_add_return((cpu_atomic_t*)&os_interrupt__nest, 1);
+}
 
-os_uint_t os_interrupt_nest(void);
+C__STATIC_FORCEINLINE void os_interrupt_exit(void){
+    cpu_atomic_sub_return((cpu_atomic_t*)&os_interrupt__nest, 1);
+}
+
+C__STATIC_FORCEINLINE os_uint_t os_interrupt_nest(void){
+    return os_interrupt__nest;
+}
 
 
 
