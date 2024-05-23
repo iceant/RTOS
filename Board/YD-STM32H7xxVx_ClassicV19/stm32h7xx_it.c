@@ -47,7 +47,9 @@
   */
 void NMI_Handler(void)
 {
-    printf("NMI_Handler\r\n");
+    os_interrupt_enter();
+    os_printf("NMI_Handler\r\n");
+    os_interrupt_exit();
 }
 
 /**
@@ -70,8 +72,12 @@ void NMI_Handler(void)
   */
 void MemManage_Handler(void)
 {
-    printf("MemManage_Handler\r\n");
+    os_interrupt_enter();
+    os_printf("MemManage_Handler\r\n");
+    os_interrupt_exit();
+    
     HardFault_Handler();
+    
   /* Go to infinite loop when Memory Manage exception occurs */
   while (1)
   {
@@ -85,7 +91,9 @@ void MemManage_Handler(void)
   */
 void BusFault_Handler(void)
 {
-    printf("BusFault_Handler\r\n");
+    os_interrupt_enter();
+    os_printf("BusFault_Handler\r\n");
+    os_interrupt_exit();
   /* Go to infinite loop when Bus Fault exception occurs */
   while (1)
   {
@@ -99,7 +107,9 @@ void BusFault_Handler(void)
   */
 void UsageFault_Handler(void)
 {
-    printf("UsageFault_Handler\r\n");
+    os_interrupt_enter();
+    os_printf("UsageFault_Handler\r\n");
+    os_interrupt_exit();
   /* Go to infinite loop when Usage Fault exception occurs */
   while (1)
   {
@@ -122,7 +132,9 @@ void UsageFault_Handler(void)
   */
 void DebugMon_Handler(void)
 {
-    printf("DebugMon_Handler\r\n");
+    os_interrupt_enter();
+    os_printf("DebugMon_Handler\r\n");
+    os_interrupt_exit();
 }
 
 /**

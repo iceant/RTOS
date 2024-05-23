@@ -11,7 +11,7 @@ option(RTOS_KERNEL_USE_TLSF "Use TLSF Memory Pool" ON)
 #### Dependencies
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../Compiler ${CMAKE_CURRENT_BINARY_DIR}/Compiler)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../CPU ${CMAKE_CURRENT_BINARY_DIR}/CPU)
-
+target_include_directories(RTOS_CPU PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 ########################################################################################################################
 ####
 if (DEFINED RTOS_KERNEL_USE_TLSF)
@@ -34,4 +34,5 @@ target_link_libraries(${PROJECT_NAME}
         PUBLIC TLSF
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 

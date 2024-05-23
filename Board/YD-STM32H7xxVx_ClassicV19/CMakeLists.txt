@@ -11,6 +11,8 @@ set(CMAKE_C_STANDARD 11)
 set(PROJECT_VERSION B1)
 set(CPU_MODEL ARM_CortexM4)
 
+add_definitions(-DNDEBUG)
+
 if (CMAKE_C_COMPILER_ID MATCHES GNU)
     add_compile_options(
             -save-temps
@@ -21,6 +23,7 @@ if (CMAKE_C_COMPILER_ID MATCHES GNU)
             -ffunction-sections
             -fdata-sections
             -fno-exceptions
+            -fstack-protector-all
     )
     add_link_options(
             -mcpu=cortex-m7
@@ -43,7 +46,7 @@ message(STATUS "APPLICATION:: STM32H7XX_CMSIS_INCLUDE_DIR: ${STM32H7XX_CMSIS_INC
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Kernel ${CMAKE_CURRENT_BINARY_DIR}/Kernel)
 target_include_directories(RTOS_Kernel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
+target_include_directories(RTOS_CPU PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 ########################################################################################################################
 ## PROJECT
 add_executable(${PROJECT_NAME} "")

@@ -5,23 +5,23 @@
 ////
 
 /*
-//设置某个区域的MPU保护
-//baseaddr:MPU保护区域的基址(首地址)
-//size:MPU保护区域的大小(必须是32的倍数,单位为字节),可设置的值参考:CORTEX_MPU_Region_Size
-//rnum:MPU保护区编号,范围:0~7,最大支持8个保护区域,可设置的值参考：CORTEX_MPU_Region_Number
-//ap:访问权限,访问关系如下:可设置的值参考：CORTEX_MPU_Region_Permission_Attributes
-//0,无访问（特权&用户都不可访问）
-//1,仅支持特权读写访问
-//2,禁止用户写访问（特权可读写访问）
-//3,全访问（特权&用户都可访问）
-//4,无法预测(禁止设置为4!!!)
-//5,仅支持特权读访问
-//6,只读（特权&用户都不可以写）
-//详见:STM32F7 Series Cortex-M7 processor programming manual.pdf,4.6节,Table 89.
-//sen:是否允许共用;0,不允许;1,允许
-//cen:是否允许cache;0,不允许;1,允许
-//返回值;0,成功.
-//    其他,错误.
+设置某个区域的MPU保护
+baseaddr:MPU保护区域的基址(首地址)
+size:MPU保护区域的大小(必须是32的倍数,单位为字节),可设置的值参考:CORTEX_MPU_Region_Size
+rnum:MPU保护区编号,范围:0~7,最大支持8个保护区域,可设置的值参考：CORTEX_MPU_Region_Number
+ap:访问权限,访问关系如下:可设置的值参考：CORTEX_MPU_Region_Permission_Attributes
+0,无访问（特权&用户都不可访问）
+1,仅支持特权读写访问
+2,禁止用户写访问（特权可读写访问）
+3,全访问（特权&用户都可访问）
+4,无法预测(禁止设置为4!!!)
+5,仅支持特权读访问
+6,只读（特权&用户都不可以写）
+详见:STM32F7 Series Cortex-M7 processor programming manual.pdf,4.6节,Table 89.
+sen:是否允许共用;0,不允许;1,允许
+cen:是否允许cache;0,不允许;1,允许
+返回值;0,成功.
+    其他,错误.
 */
 uint8_t MPU_Set_Protection(uint32_t baseaddr,uint32_t size,uint32_t rnum, uint32_t ap,uint8_t ien, uint8_t sen,uint8_t cen,uint8_t ben,uint8_t Tex)
 {
@@ -50,12 +50,12 @@ uint8_t MPU_Set_Protection(uint32_t baseaddr,uint32_t size,uint32_t rnum, uint32
 void MPU_Config0(void)   //特意把SRAM4设置为不允许cache，使用DMA的变量可以放在这里。但要注意相应DMA能否访问SRAM4
 {
     MPU_Set_Protection(0x20000000,MPU_REGION_SIZE_128KB,MPU_REGION_NUMBER1,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个DTCM,共128K字节,禁止共用,允许cache,允许缓冲
-    MPU_Set_Protection(0x24000000,MPU_REGION_SIZE_512KB,MPU_REGION_NUMBER2,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个内部SRAM,包括SRAM1,SRAM2和DTCM,共512K字节
+    MPU_Set_Protection(0x24000000,MPU_REGION_SIZE_512KB,MPU_REGION_NUMBER2,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//保护整个内部SRAM,包括SRAM1,SRAM2和DTCM,共512K字节
     MPU_Set_Protection(0x30000000,MPU_REGION_SIZE_512KB,MPU_REGION_NUMBER3,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM1~SRAM3,共288K字节,禁止共用,允许cache,允许缓冲
     MPU_Set_Protection(0x38000000,MPU_REGION_SIZE_64KB ,MPU_REGION_NUMBER4,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM4,共64K字节,禁止共用,不允许cache,允许缓冲
-//    MPU_Set_Protection(0x00000000,MPU_REGION_SIZE_64KB ,MPU_REGION_NUMBR5,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM4,共64K字节,禁止共用,不允许cache,允许缓冲
-//    MPU_Set_Protection(0x60000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER6,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//保护MCU LCD屏所在的FMC区域,,共64M字节,禁止共用,禁止cache,禁止缓冲
-//    MPU_Set_Protection(0xC0000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER7,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护SDRAM区域,共32M字节,禁止共用,允许cache,允许缓冲
+    MPU_Set_Protection(0x00000000,MPU_REGION_SIZE_64KB ,MPU_REGION_NUMBER5,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM4,共64K字节,禁止共用,不允许cache,允许缓冲
+    MPU_Set_Protection(0x60000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER6,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//保护MCU LCD屏所在的FMC区域,,共64M字节,禁止共用,禁止cache,禁止缓冲
+    MPU_Set_Protection(0xC0000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER7,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护SDRAM区域,共32M字节,禁止共用,允许cache,允许缓冲
 }
 
 void MPU_Config(void)
@@ -188,26 +188,26 @@ static void SystemClock_Config(void)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #ifdef __GNUC__
-/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+/* With GCC/RAISONANCE, small os_printf (option LD Linker->Libraries->Small os_printf
    set to 'Yes') calls __io_putchar() */
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #else
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
-#pragma import(__use_no_semihosting)
-struct __FILE
-{
-    int handle;
-};
-FILE __stdout;
-_sys_exit(int x)
-{
-    x = x;
-}
+//#pragma import(__use_no_semihosting)
+//struct __FILE
+//{
+//    int handle;
+//};
+//FILE __stdout;
+//_sys_exit(int x)
+//{
+//    x = x;
+//}
 
 /**
-  * @brief  Retargets the C library printf function to the USART.
+  * @brief  Retargets the C library os_printf function to the USART.
   * @param  None
   * @retval None
   */
@@ -215,9 +215,7 @@ PUTCHAR_PROTOTYPE
 {
     /* Place your implementation of fputc here */
     /* e.g. write a character to the USART1 and Loop until the end of transmission */
-    cpu_uint_t level = cpu_interrupt_disable();
     HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t *)&ch, 1, 0x100);
-    cpu_interrupt_enable(level);
 //    BSP_USART1_SendByte(ch);
 //    BSP_USART1_DMATx((uint8_t*)&ch, 1);
     return ch;
@@ -246,7 +244,8 @@ void Board_Init(void)
     __HAL_RCC_SYSCFG_CLK_ENABLE();
     
     /* Configure the MPU attributes */
-    MPU_Config();
+//    MPU_Config();
+    MPU_Config0();
     
     /* Enable the CPU Cache */
     CPU_CACHE_Enable();
@@ -273,7 +272,7 @@ void Board_Init(void)
     
     BSP_USART1_Init();
     BSP_USART1_EnableDMATx();
-    
+    BSP_USART1_EnableRxIRQ();
     
     BSP_TIMDelay_Init();
     

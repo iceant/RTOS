@@ -28,10 +28,11 @@
 
 #define USARTx_BAUDRATE                 921600U
 
-#define DMA_CLOCK_ENABLE                __HAL_RCC_DMA1_CLK_ENABLE
-#define USARTx_TX_DMA_STREAM            DMA1_Stream0
+#define DMA_CLOCK_ENABLE()              __HAL_RCC_DMA1_CLK_ENABLE()
+#define USARTx_TX_DMA_STREAM            DMA1_Stream7
 #define USARTx_TX_DMA_CHANNEL           DMA_REQUEST_USART1_TX
-
+#define USARTx_DMA_TX_IRQn              DMA1_Stream7_IRQn
+#define USARTx_DMA_TX_IRQHandler        DMA1_Stream7_IRQHandler
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -141,7 +142,7 @@ int BSP_USART1_Init(void){
     BSP_USART1_Handle.Init.Parity     = UART_PARITY_NONE;
     BSP_USART1_Handle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
     BSP_USART1_Handle.Init.Mode       = UART_MODE_TX_RX;
-    BSP_USART1_Handle.Init.OverSampling = UART_OVERSAMPLING_8;
+    BSP_USART1_Handle.Init.OverSampling = UART_OVERSAMPLING_16;
     
     if(HAL_UART_Init(&BSP_USART1_Handle) != HAL_OK)
     {
@@ -159,10 +160,19 @@ void BSP_USART1_DeInit(void)
 
 void BSP_USART1_SendByte(uint8_t ch)
 {
-    HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t *)&ch, 1, 0x10);
-    while (HAL_UART_GetState(&BSP_USART1_Handle) != HAL_UART_STATE_READY);
+//    cpu_spinlock_lock(&tx_lock);
+    HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t *)&ch, 1, 0xFFFF);
+    int nTimeout = 0x1000;
+    while ((HAL_UART_GetState(&BSP_USART1_Handle) != HAL_UART_STATE_READY) && nTimeout--);
+//    cpu_spinlock_unlock(&tx_lock);
+
 }
 
+C__STATIC_FORCEINLINE void SendByte(uint8_t ch){
+    HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t *)&ch, 1, 0x100);
+    int nTimeout = 0x1000;
+    while ((HAL_UART_GetState(&BSP_USART1_Handle) != HAL_UART_STATE_READY) && nTimeout--);
+}
 
 void BSP_USART1_EnableDMATx(void)
 {
@@ -183,29 +193,35 @@ void BSP_USART1_EnableDMATx(void)
     BSP_USART1_DMATxHandle.Init.Priority            = DMA_PRIORITY_HIGH;
     BSP_USART1_DMATxHandle.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
     BSP_USART1_DMATxHandle.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-    BSP_USART1_DMATxHandle.Init.MemBurst            = DMA_MBURST_INC4;
-    BSP_USART1_DMATxHandle.Init.PeriphBurst         = DMA_PBURST_INC4;
-    
+    BSP_USART1_DMATxHandle.Init.MemBurst            = DMA_MBURST_SINGLE;
+    BSP_USART1_DMATxHandle.Init.PeriphBurst         = DMA_PBURST_SINGLE;
+
     HAL_DMA_Init(&BSP_USART1_DMATxHandle);
-    
+
     /* Associate the initialized DMA handle to the UART handle */
     __HAL_LINKDMA(&BSP_USART1_Handle, hdmatx, BSP_USART1_DMATxHandle);
+    
+    /*##-4- Configure the NVIC for DMA #########################################*/
+    /* NVIC configuration for DMA transfer complete interrupt (USARTx_TX) */
+    HAL_NVIC_SetPriority(USARTx_DMA_TX_IRQn, 0, 1);
+    HAL_NVIC_EnableIRQ(USARTx_DMA_TX_IRQn);
 }
 
 int BSP_USART1_DMATxString(const char* message){
     return BSP_USART1_DMATx((uint8_t*)message, strlen(message));
 }
 
+C__STATIC_FORCEINLINE int BSP_USART1__DMATx(uint8_t* data, size_t size){
+    int timeout = 0xFFFF;
+    HAL_UART_Transmit_DMA(&BSP_USART1_Handle, (uint8_t*)data, size);
+    while (HAL_UART_GetState(&BSP_USART1_Handle) != HAL_UART_STATE_READY && (timeout--));
+    return timeout==0?-1:0;
+}
+
 int BSP_USART1_DMATx(uint8_t* data, size_t size)
 {
-    
-    int timeout = 0x1000;
-    HAL_UART_Transmit_DMA(&BSP_USART1_Handle, (uint8_t*)data, size);
-    while (HAL_UART_GetState(&BSP_USART1_Handle) != HAL_UART_STATE_READY && (timeout--))
-    {}
-    
-    if(timeout==0) return -1;
-    
+    return BSP_USART1__DMATx(data, size);
+
 }
 
 static BSP_USART1_RxHandler BSP_USART1__RxHandler = 0;
@@ -217,6 +233,13 @@ void BSP_USART1_SetRxHandler(BSP_USART1_RxHandler rxHandler, void* userdata){
     BSP_USART1__RxHandlerUserdata = userdata;
 }
 
+void BSP_USART1_EnableRxIRQ()
+{
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+    HAL_NVIC_SetPriority(USART1_IRQn, 0x10, 0);
+    __HAL_UART_ENABLE_IT(&BSP_USART1_Handle, UART_IT_RXNE);
+    __HAL_UART_ENABLE_IT(&BSP_USART1_Handle, UART_IT_ORE);
+}
 
 void USARTx_IRQHandler(void)
 {
@@ -280,37 +303,58 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 }
 #endif
 
-static char printf_buffer[1204];
-
-int BSP_USART1_Printf(const char* format, ...)
+int os_printf_putc(int ch, void* ud)
 {
+//    BSP_USART1_SendByte((uint8_t)ch);
+    HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t *)&ch, 1, 0xFFFF);
+    return ch;
+}
+
+C__ALIGNED(OS_ALIGN_SIZE)
+static char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
+static os_mutex_t os_printf__mutex={0};
+
+//#define OS_PRINTF_USE_DMA
+
+int os_printf(const char* format, ...){
+    os_mutex_lock(&os_printf__mutex);
     va_list args;
     va_start(args, format);
-    int len = vsnprintf(NULL, 0, format, args);
+    int len = vsnprintf(os_printf__buffer, OS_PRINTF_BUFFER_SIZE, format, args);
     va_end(args);
-    if(len > OS_ARRAY_SIZE(printf_buffer)){
-        LED_YELLOW_Toggle();
-        char* buffer = (char*)malloc(len + 1);
-        va_start(args, format);
-        len = vsnprintf(buffer, len + 1, format, args);
-        va_end(args);
-        buffer[len]='\0';
-        
-        for(int i=0; i<len; i++){
-            BSP_USART1_SendByte(buffer[i]);
+    if(len >= OS_ARRAY_SIZE(os_printf__buffer)){
+        char* buffer = (char*)OS_ALLOC(len + 1);
+        LED_YELLOW_On();
+        if(buffer){
+            va_start(args, format);
+            len = vsnprintf(buffer, len, format, args);
+            va_end(args);
+            #if defined(OS_PRINTF_USE_DMA)
+            BSP_USART1__DMATx((uint8_t*)buffer, len);
+            #else
+            for(int i=0; i<len; i++){
+                os_printf_putc(buffer[i], 0);
+            }
+            #endif
+            OS_FREE(buffer);
         }
-        free(buffer);
     }else{
-        va_start(args, format);
-        len = vsnprintf(printf_buffer, len + 1, format, args);
-        va_end(args);
-        printf_buffer[len]='\0';
+        #if defined(OS_PRINTF_USE_DMA)
+        BSP_USART1__DMATx((uint8_t *)os_printf__buffer, len);
+        #else
         for(int i=0; i<len; i++){
-            BSP_USART1_SendByte(printf_buffer[i]);
+            os_printf_putc(os_printf__buffer[i], 0);
         }
+        #endif
+
     }
-    
-    
+    os_mutex_unlock(&os_printf__mutex);
     return len;
 }
 
+void USARTx_DMA_TX_IRQHandler(void)
+{
+    os_interrupt_enter();
+    HAL_DMA_IRQHandler(BSP_USART1_Handle.hdmatx);
+    os_interrupt_exit();
+}
