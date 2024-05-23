@@ -56,6 +56,7 @@ void MPU_Config0(void)   //特意把SRAM4设置为不允许cache，使用DMA的�
     MPU_Set_Protection(0x00000000,MPU_REGION_SIZE_64KB ,MPU_REGION_NUMBER5,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM4,共64K字节,禁止共用,不允许cache,允许缓冲
     MPU_Set_Protection(0x60000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER6,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//保护MCU LCD屏所在的FMC区域,,共64M字节,禁止共用,禁止cache,禁止缓冲
     MPU_Set_Protection(0xC0000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER7,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护SDRAM区域,共32M字节,禁止共用,允许cache,允许缓冲
+    MPU_Set_Protection(0x80000000,MPU_REGION_SIZE_1MB ,MPU_REGION_NUMBER8,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//
 }
 
 void MPU_Config(void)
@@ -77,14 +78,14 @@ void MPU_Config(void)
     MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
     MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
     MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-    MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
+    MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
     
     HAL_MPU_ConfigRegion(&MPU_InitStruct);
     
 //    MPU_Config0();
     
     /* Enables the MPU */
-    HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+    HAL_MPU_Enable(MPU_HFNMI_PRIVDEF);
     
 }
 
