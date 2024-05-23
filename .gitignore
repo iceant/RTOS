@@ -54,3 +54,7 @@ dkms.conf
 cmake-build-*/
 .idea/
 Pack/
+
+*.crf
+*.lst
+*.map
