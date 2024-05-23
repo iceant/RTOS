@@ -440,12 +440,14 @@ os_err_t os_scheduler_suspend(os_thread_t * thread){
 }
 
 os_err_t os_scheduler_resume(os_thread_t * thread){
+    if(thread==0) return OS_EINVAL;
     return os_scheduler_push_back(thread);
 }
 
 os_err_t os_scheduler_yield(os_thread_t * thread)
 {
     if(thread==0) return OS_EINVAL;
+
     OS_SCHEDULER_LOCK();
     thread->state = OS_THREAD_STATE_YIELD;
     OS_LIST_REMOVE(&thread->ready_node);
@@ -455,12 +457,13 @@ os_err_t os_scheduler_yield(os_thread_t * thread)
 }
 
 os_err_t os_scheduler_yield_then_schedule(os_thread_t * thread){
-    if(thread==0) return OS_EINVAL;
-    OS_SCHEDULER_LOCK();
-    thread->state = OS_THREAD_STATE_YIELD;
-    OS_LIST_REMOVE(&thread->ready_node);
-    OS_LIST_INSERT_BEFORE(&os_scheduler__yield_list, &thread->ready_node);
-    OS_SCHEDULER_UNLOCK();
+    if(thread!=0){
+        OS_SCHEDULER_LOCK();
+        thread->state = OS_THREAD_STATE_YIELD;
+        OS_LIST_REMOVE(&thread->ready_node);
+        OS_LIST_INSERT_BEFORE(&os_scheduler__yield_list, &thread->ready_node);
+        OS_SCHEDULER_UNLOCK();
+    }
     return OS_SCHEDULER_SCHEDULE();
 }
 

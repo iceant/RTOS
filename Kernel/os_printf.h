@@ -9,9 +9,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-int os_printf_putc(int ch, void* ud);
+extern int os_printf_putc(int ch, void* ud);
 
-int os_printf(const char* fmt, ...);
+extern int os_printf(const char* fmt, ...);
 
 #define printf os_printf
 

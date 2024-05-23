@@ -33,7 +33,8 @@ static cpu_lock_t os_timer__lock;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_timer__add(os_timer_t * timer){
-    os_list_t * head;
+    if(timer==0) return;
+    register os_list_t * head;
     if(timer->expire_tick <= TVR_MAX){
         head = &os_timer__tvroot;
     }else if(timer->expire_tick <= TV0_MAX){
@@ -74,6 +75,8 @@ os_err_t os_timer_init(void)
 
 os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * userdata, os_tick_t ticks, int flags)
 {
+    if(timer==0) return OS_EINVAL;
+
     OS_TIMER_LOCK();
     
     timer->timeout = timeout;
@@ -91,6 +94,7 @@ os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * use
 
 os_err_t os_timer_remove(os_timer_t * timer)
 {
+    if(!timer) return OS_EINVAL;
     OS_TIMER_LOCK();
     OS_LIST_REMOVE(&timer->wait_node);
     OS_TIMER_UNLOCK();
@@ -99,13 +103,14 @@ os_err_t os_timer_remove(os_timer_t * timer)
 }
 
 os_bool_t os_timer_tick(void){
-    OS_TIMER_LOCK();
 
     register os_bool_t nee_schedule = OS_FALSE;
     register os_tick_t current_tick=0;
     register os_list_t * head=0;
     register os_list_node_t * node=0;
     register os_timer_t * timer=0;
+
+    OS_TIMER_LOCK();
 
     os_timer__current_tick++;
     
@@ -154,6 +159,8 @@ os_bool_t os_timer_tick(void){
 
 os_err_t os_timer_node_init(os_timer_t * timer)
 {
+    if(!timer) return OS_EINVAL;
+
     OS_LIST_INIT(&timer->wait_node);
     timer->expire_tick = 0;
     timer->ticks = 0;

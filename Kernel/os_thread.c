@@ -9,6 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_thread__exit(os_thread_t * thread){
+    if(!thread) return;
     thread->state = OS_THREAD_STATE_EXIT;
     thread->remain_ticks = 0;
     thread->curr_priority = OS_PRIORITY_MAX-1;
@@ -26,6 +27,7 @@ os_err_t os_thread_init(os_thread_t* thread, const char* name
         , os_priority_t init_priority
         , os_tick_t init_ticks)
 {
+    if(!thread) return OS_EINVAL;
     if(name){
         os_size_t name_size = strlen(name);
         name_size = OS_MIN(name_size, OS_NAME_SIZE-1);
@@ -56,22 +58,26 @@ os_err_t os_thread_init(os_thread_t* thread, const char* name
 }
 
 os_err_t os_thread_startup(os_thread_t * thread){
+    if(!thread) return OS_EINVAL;
     os_scheduler_push_back(thread);
     return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
 }
 
 os_err_t os_thread_suspend(os_thread_t * thread){
+    if(!thread) return OS_EINVAL;
     os_scheduler_suspend(thread);
     return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
 }
 
 os_err_t os_thread_resume(os_thread_t * thread)
 {
+    if(!thread) return OS_EINVAL;
     os_scheduler_resume(thread);
     return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
 }
 
 os_err_t os_thread_join(os_thread_t * thread){
+    if(!thread) return OS_EINVAL;
     return OS_EOK;
 }
 

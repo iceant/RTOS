@@ -16,21 +16,30 @@
 ////
 typedef struct os_mutex_s{
     cpu_spinlock_t lock;
-    char name[OS_NAME_SIZE];
 }os_mutex_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-os_err_t os_mutex_init(os_mutex_t * mutex);
 
-os_err_t os_mutex_lock(os_mutex_t * mutex);
+C__STATIC_FORCEINLINE os_err_t os_mutex_init(os_mutex_t * mutex){
+    if(!mutex) return OS_EINVAL;
+    cpu_spinlock_init(&mutex->lock);
+    return OS_EOK;
+}
 
-os_err_t os_mutex_unlock(os_mutex_t * mutex);
+C__STATIC_FORCEINLINE os_err_t os_mutex_lock(os_mutex_t * mutex){
+    if(!mutex) return OS_EINVAL;
+    cpu_spinlock_lock(&mutex->lock);
+    return OS_EOK;
+}
 
-
-
-
+C__STATIC_FORCEINLINE os_err_t os_mutex_unlock(os_mutex_t * mutex)
+{
+    if(!mutex) return OS_EINVAL;
+    cpu_spinlock_unlock(&mutex->lock);
+    return OS_EOK;
+}
 
 
 
