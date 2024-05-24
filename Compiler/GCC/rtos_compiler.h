@@ -26,6 +26,8 @@
 #define C__ALIGNED(x)                           __attribute__((aligned(x)))
 #endif
 
-
+#ifndef   C__SECTION
+#define C__SECTION(x)                           __attribute__((section (#x)))
+#endif
 
 #endif /*INCLUDED_RTOS_COMPILER_H*/

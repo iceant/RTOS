@@ -310,8 +310,11 @@ int os_printf_putc(int ch, void* ud)
     return ch;
 }
 
-C__ALIGNED(OS_ALIGN_SIZE)
-static char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
+
+
+static C__SECTION(._D2_Area.os_printf__buffer)
+char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
+
 static os_mutex_t os_printf__mutex={0};
 
 //#define OS_PRINTF_USE_DMA
@@ -324,7 +327,6 @@ int os_printf(const char* format, ...){
     va_end(args);
     if(len >= OS_ARRAY_SIZE(os_printf__buffer)){
         char* buffer = (char*)OS_ALLOC(len + 1);
-        LED_YELLOW_On();
         if(buffer){
             va_start(args, format);
             len = vsnprintf(buffer, len, format, args);
@@ -348,6 +350,8 @@ int os_printf(const char* format, ...){
         #endif
 
     }
+    LED_YELLOW_Toggle();
+    
     os_mutex_unlock(&os_printf__mutex);
     return len;
 }

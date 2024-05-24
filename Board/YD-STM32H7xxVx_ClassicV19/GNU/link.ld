@@ -162,9 +162,10 @@ SECTIONS
     . = ALIGN(8);
   } >RAM_D1
 
-  ._D2_Area :
+  ._D2_Area (NOLOAD) :
   {
     . = ALIGN(4);
+    *(._D2_Area*)
     . = ALIGN(4);
   } >RAM_D2
 

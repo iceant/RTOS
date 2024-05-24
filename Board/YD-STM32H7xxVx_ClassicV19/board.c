@@ -4,60 +4,59 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-/*
-设置某个区域的MPU保护
-baseaddr:MPU保护区域的基址(首地址)
-size:MPU保护区域的大小(必须是32的倍数,单位为字节),可设置的值参考:CORTEX_MPU_Region_Size
-rnum:MPU保护区编号,范围:0~7,最大支持8个保护区域,可设置的值参考：CORTEX_MPU_Region_Number
-ap:访问权限,访问关系如下:可设置的值参考：CORTEX_MPU_Region_Permission_Attributes
-0,无访问（特权&用户都不可访问）
-1,仅支持特权读写访问
-2,禁止用户写访问（特权可读写访问）
-3,全访问（特权&用户都可访问）
-4,无法预测(禁止设置为4!!!)
-5,仅支持特权读访问
-6,只读（特权&用户都不可以写）
-详见:STM32F7 Series Cortex-M7 processor programming manual.pdf,4.6节,Table 89.
-sen:是否允许共用;0,不允许;1,允许
-cen:是否允许cache;0,不允许;1,允许
-返回值;0,成功.
-    其他,错误.
-*/
-uint8_t MPU_Set_Protection(uint32_t baseaddr,uint32_t size,uint32_t rnum, uint32_t ap,uint8_t ien, uint8_t sen,uint8_t cen,uint8_t ben,uint8_t Tex)
+//Set MPU protection for a certain area
+//baseaddr: base address of MPU protected area (first address)
+//size: The size of the MPU protection area (must be a multiple of 32, the unit is byte), the settable value reference: CORTEX_MPU_Region_Size
+//rnum: MPU protection area number, range: 0~7, maximum support 8 protection areas, settable value reference: CORTEX_MPU_Region_Number
+//ap: access permission, access relationship is as follows: settable value reference: CORTEX_MPU_Region_Permission_Attributes
+//0, no access (privileges & users are not accessible)
+//1, only supports privileged read and write access
+//2, prohibit user write access (privileged read-write access)
+//3, full access (privileged & users can access)
+//4, unpredictable (prohibited to set to 4!!!)
+//5, only supports privileged read access
+//6, read only (privileges & users can not write)
+//See: STM32F7 Series Cortex-M7 processor programming manual.pdf, section 4.6, Table 89.
+//sen: whether to allow sharing; 0, not allowed; 1, allowed
+//cen: whether to allow catch; 0, not allowed; 1, allowed
+//Return value; 0, success.
+// Other, error.
+uint8_t MPU_Set_Protection(uint32_t baseaddr,uint32_t size,uint32_t rnum,uint32_t ap,uint8_t sen,uint8_t cen,uint8_t ben,uint8_t Tex)
 {
     MPU_Region_InitTypeDef MPU_Initure;
-    HAL_MPU_Disable();								        //配置MPU之前先关闭MPU,配置完成以后在使能MPU
+    HAL_MPU_Disable(); //Close MPU before configuring MPU, and enable MPU after configuration
     
-    MPU_Initure.Enable=MPU_REGION_ENABLE;			        //使能该保护区域
-    MPU_Initure.Number=rnum;			                    //设置保护区域
-    MPU_Initure.BaseAddress=baseaddr;	                    //设置基址
-    MPU_Initure.Size=size;				                    //设置保护区域大小
-    MPU_Initure.SubRegionDisable=0X00;                      //禁止子区域
-    MPU_Initure.TypeExtField=Tex;                           //设置类型扩展域
-    MPU_Initure.AccessPermission=(uint8_t)ap;		        //设置访问权限,
-    MPU_Initure.DisableExec=ien;	                        //允许指令访问(允许读取指令)
-    MPU_Initure.IsShareable=sen;                            //是否允许共用
-    MPU_Initure.IsCacheable=cen;                            //是否允许cache
-    MPU_Initure.IsBufferable=ben;                           //是否允许缓冲
-    HAL_MPU_ConfigRegion(&MPU_Initure);                     //配置MPU
-    HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);			        //开启MPU
+    MPU_Initure.Enable=MPU_REGION_ENABLE; //Enable the protection area
+    MPU_Initure.Number=rnum; //Set the protection area
+    MPU_Initure.BaseAddress=baseaddr; //Set the base address
+    MPU_Initure.Size=size; //Set the protection area size
+    MPU_Initure.SubRegionDisable=0X00; //Disable subregion
+    MPU_Initure.TypeExtField=Tex; //Set type extension field
+    MPU_Initure.AccessPermission=(uint8_t)ap; //Set access permission,
+    MPU_Initure.DisableExec=MPU_INSTRUCTION_ACCESS_ENABLE; //Allow instruction access (allow instruction reading)
+    MPU_Initure.IsShareable=sen; //Whether sharing is allowed
+    MPU_Initure.IsCacheable=cen; //Whether to allow cache
+    MPU_Initure.IsBufferable=ben; //Whether to allow buffering
+    HAL_MPU_ConfigRegion(&MPU_Initure); //Configure MPU
+    HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT); //Turn on MPU
     return 0;
 }
 
-//设置需要保护的存储块
-//必须对部分存储区域进行MPU保护,否则可能导致程序运行异常
-//比如MCU屏不显示,摄像头采集数据出错等等问题...
-void MPU_Config0(void)   //特意把SRAM4设置为不允许cache，使用DMA的变量可以放在这里。但要注意相应DMA能否访问SRAM4
+//Set the storage block to be protected
+//Partial storage area must be protected by MPU, otherwise the program may run abnormally
+//For example, the MCU screen is not displayed, the camera collects data error, etc...
+void MPU_Memory_Protection(void) //Specially set SRAM4 to not allow cache, variables using DMA can be placed here. But pay attention to whether the corresponding DMA can access SRAM4
 {
-    MPU_Set_Protection(0x20000000,MPU_REGION_SIZE_128KB,MPU_REGION_NUMBER1,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个DTCM,共128K字节,禁止共用,允许cache,允许缓冲
-    MPU_Set_Protection(0x24000000,MPU_REGION_SIZE_512KB,MPU_REGION_NUMBER2,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//保护整个内部SRAM,包括SRAM1,SRAM2和DTCM,共512K字节
-    MPU_Set_Protection(0x30000000,MPU_REGION_SIZE_512KB,MPU_REGION_NUMBER3,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM1~SRAM3,共288K字节,禁止共用,允许cache,允许缓冲
-    MPU_Set_Protection(0x38000000,MPU_REGION_SIZE_64KB ,MPU_REGION_NUMBER4,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM4,共64K字节,禁止共用,不允许cache,允许缓冲
-    MPU_Set_Protection(0x00000000,MPU_REGION_SIZE_64KB ,MPU_REGION_NUMBER5,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护整个SRAM4,共64K字节,禁止共用,不允许cache,允许缓冲
-    MPU_Set_Protection(0x60000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER6,MPU_REGION_FULL_ACCESS,1,0/*share*/,0/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//保护MCU LCD屏所在的FMC区域,,共64M字节,禁止共用,禁止cache,禁止缓冲
-    MPU_Set_Protection(0xC0000000,MPU_REGION_SIZE_64MB ,MPU_REGION_NUMBER7,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,1/*buffer*/,MPU_TEX_LEVEL0);	//保护SDRAM区域,共32M字节,禁止共用,允许cache,允许缓冲
-    MPU_Set_Protection(0x80000000,MPU_REGION_SIZE_1MB ,MPU_REGION_NUMBER8,MPU_REGION_FULL_ACCESS,1,0/*share*/,1/*cache*/,0/*buffer*/,MPU_TEX_LEVEL0);	//
+    MPU_Set_Protection(0x20000000, MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER1, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 1/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire DTCM, a total of 128K bytes, prohibit sharing, allow cache, allow buffering
+    MPU_Set_Protection(0x24000000, MPU_REGION_SIZE_512KB, MPU_REGION_NUMBER2, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire internal SRAM, including SRAM1, SRAM2 and DTCM, a total of 512K bytes
+    MPU_Set_Protection(0x30000000, ARM_MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER3, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire SRAM1~SRAM3, a total of 288K bytes, prohibit sharing, allow cache, allow buffering
+    MPU_Set_Protection(0x30020000, ARM_MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER4, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire SRAM1~SRAM3, a total of 288K bytes, prohibit sharing, allow cache, allow buffering
+    MPU_Set_Protection(0x30040000, ARM_MPU_REGION_SIZE_32KB, MPU_REGION_NUMBER5, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire SRAM1~SRAM3, a total of 288K bytes, prohibit sharing, allow cache, allow buffering
+    MPU_Set_Protection(0x38000000, MPU_REGION_SIZE_64KB, MPU_REGION_NUMBER6, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire SRAM4, a total of 64K bytes, sharing is prohibited, cache is not allowed, buffering is allowed
+    MPU_Set_Protection(0x60000000, MPU_REGION_SIZE_64KB, MPU_REGION_NUMBER7, MPU_REGION_FULL_ACCESS, 0/*share*/, 0/*cache*/, 1/*buffer*/, MPU_TEX_LEVEL0); //Protect the FMC area where the MCU LCD screen is located, total 64M bytes, sharing is prohibited, cache is prohibited, buffering is prohibited
+//    MPU_Set_Protection(0xC0000000, MPU_REGION_SIZE_64MB, MPU_REGION_NUMBER8, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 1/*buffer*/, MPU_TEX_LEVEL0); //Protect the SDRAM area, a total of 32M bytes, prohibit sharing, allow cache, allow buffering
 }
+
 
 void MPU_Config(void)
 {
@@ -246,7 +245,7 @@ void Board_Init(void)
     
     /* Configure the MPU attributes */
 //    MPU_Config();
-    MPU_Config0();
+    MPU_Memory_Protection();
     
     /* Enable the CPU Cache */
     CPU_CACHE_Enable();
