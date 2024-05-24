@@ -14,7 +14,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-extern volatile cpu_uint_t os_interrupt__nest;
+extern cpu_atomic_t os_interrupt__nest;
 
 C__STATIC_FORCEINLINE void os_interrupt_init(void){
     os_interrupt__nest = 0;

@@ -66,6 +66,9 @@
 #include <os_printf.h>
 #endif /*INCLUDED_OS_PRINTF_H*/
 
+#ifndef INCLUDED_OS_CRITICAL_H
+#include <os_critical.h>
+#endif /*INCLUDED_OS_CRITICAL_H*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

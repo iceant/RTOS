@@ -19,9 +19,11 @@
 ////
 #define OS_SCHEDULER_EOK        OS_EOK
 #define OS_SCHEDULER_ERROR      OS_ERROR
+#define OS_SCHEDULER_ENSTART    (0x1000)
 #define OS_SCHEDULER_EINWORK    (0x1001)
-#define OS_SCHEDULER_ESTOP      (0x1002)
+#define OS_SCHEDULER_ECRITICAL  (0x1002)
 #define OS_SCHEDULER_ENOTASK    (0x1003)
+#define OS_SCHEDULER_EINIRQ     (0x1004)
 
 #define OS_SCHEDULER_STATE_UNINITIALIZED    (0)
 #define OS_SCHEDULER_STATE_INITIALIZED      (1)
@@ -69,9 +71,12 @@ os_uint_t os_scheduler_skipped(void);
 
 os_uint_t os_scheduler_get_current_tick(void);
 
-void os_scheduler_disable(void);
-void os_scheduler_enable(void);
-os_bool_t os_scheduler_is_disable(void);
+os_uint_t os_scheduler_nest_increase(void);
+
+os_uint_t os_scheduler_nest_decrease(void);
+
+os_uint_t os_scheduler_nest_get(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define OS_SCHEDULER_SCHEDULE_YIELD_BACK() os_scheduler_schedule(OS_SCHEDULER_POLICY_YIELD_PUSHBACK)

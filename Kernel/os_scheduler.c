@@ -22,13 +22,12 @@ static os_list_t os_scheduler__ready_list[OS_PRIORITY_MAX]={0};
 static os_list_t os_scheduler__yield_list={0};
 static os_list_t os_scheduler__pending_list={0};
 static int os_scheduler__state={0};
-static os_uint_t os_scheduler__schedule_nest={0};
 static cpu_lock_t os_scheduler__lock={0};
 static os_thread_t * os_scheduler__current_thread=0;
 static os_uint_t os_scheduler__current_tick=0;
 static os_uint_t os_scheduler__skipped = 0;
-static os_bool_t os_scheduler__disable_status = OS_FALSE;
-
+//static os_bool_t os_scheduler__disable_status = OS_FALSE;
+static cpu_atomic_t os_scheduler__nest={0};
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -122,7 +121,7 @@ os_err_t os_scheduler_init(void){
 
     os_scheduler__current_tick = 0;
     os_scheduler__current_thread = 0;
-    os_scheduler__schedule_nest = 0;
+    
     cpu_lock_init(&os_scheduler__lock);
     os_scheduler__state = OS_SCHEDULER_STATE_INITIALIZED;
 
@@ -170,7 +169,7 @@ void os_scheduler_on_systick(void){
     register os_bool_t curr_thread_need_schedule = OS_FALSE;
     register os_bool_t timer_need_schedule = OS_FALSE;
 
-    if(os_scheduler__disable_status==OS_TRUE){
+    if(os_scheduler__nest!=0){
         return;
     }
 
@@ -226,9 +225,6 @@ void os_scheduler_on_systick(void){
     OS_SCHEDULER_UNLOCK();
 }
 
-os_uint_t os_scheduler_nest(){
-    return os_scheduler__schedule_nest;
-}
 
 os_err_t os_scheduler_startup(void){
 
@@ -255,28 +251,24 @@ os_err_t os_scheduler_schedule(int policy)
     register os_list_node_t * node=0;
     register os_list_t * head=0;
 
-    if(os_scheduler__disable_status==OS_TRUE){
-#if defined(OS_SCHEDULER_DEBUG_ENABLE)
-        os_printf("[schd-dbg] disabled!!!\n");
-#endif
-        return OS_SCHEDULER_ESTOP;
-    }
 
     if(os_scheduler__state!=OS_SCHEDULER_STATE_STARTED){
-#if defined(OS_SCHEDULER_DEBUG_ENABLE)
-        os_printf("[schd-dbg] not start!!!\n");
-#endif
-        return OS_SCHEDULER_ERROR;
+        return OS_SCHEDULER_ENSTART;
     }
 
     if(os_interrupt_nest()!=0U){
-#if defined(OS_SCHEDULER_DEBUG_ENABLE)
-        os_printf("[schd-dbg] irq nest skip!!!\n");
-#endif
+        /* 在中断嵌套中，不调度 */
         os_scheduler_mark_skipped();
-        return OS_SCHEDULER_ERROR;
+        return OS_SCHEDULER_EINIRQ;
     }
-
+    
+    
+    if(os_scheduler__nest!=0){
+        /* 有进入关键区的请求，不调度 */
+        os_scheduler_mark_skipped();
+        return OS_SCHEDULER_ECRITICAL;
+    }
+    
     OS_SCHEDULER_LOCK();
 
     next_thread = os_scheduler__pop_highest();
@@ -493,16 +485,18 @@ os_uint_t os_scheduler_get_current_tick(void)
     return os_scheduler__current_tick;
 }
 
-void os_scheduler_disable(void)
+os_uint_t os_scheduler_nest_increase(void)
 {
-    os_scheduler__disable_status = OS_TRUE;
+    return cpu_atomic_add_return(&os_scheduler__nest, 1);
 }
 
-void os_scheduler_enable(void){
-    os_scheduler__disable_status = OS_FALSE;
+os_uint_t os_scheduler_nest_decrease(void)
+{
+    return cpu_atomic_sub_return(&os_scheduler__nest, 1);
 }
 
-os_bool_t os_scheduler_is_disable(void)
+os_uint_t os_scheduler_nest_get(void)
 {
-    return os_scheduler__disable_status;
+    return os_scheduler__nest;
 }
+
