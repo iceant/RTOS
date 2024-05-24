@@ -25,9 +25,8 @@ static int os_scheduler__state={0};
 static cpu_lock_t os_scheduler__lock={0};
 static os_thread_t * os_scheduler__current_thread=0;
 static os_uint_t os_scheduler__current_tick=0;
-static os_uint_t os_scheduler__skipped = 0;
-//static os_bool_t os_scheduler__disable_status = OS_FALSE;
-static cpu_atomic_t os_scheduler__nest={0};
+static os_uint_t os_scheduler__skipped = 0;                         /* 当有其它事件影响了调度，造成调度无法及时运行，进行计数 */
+static cpu_atomic_t os_scheduler__stop_nest={0};                    /* 进入关键区域时需要停止调度，该标记表示请求停止调度的层次 */
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -179,34 +178,39 @@ void os_scheduler_on_systick(void){
     register os_bool_t curr_thread_need_schedule = OS_FALSE;
     register os_bool_t timer_need_schedule = OS_FALSE;
 
-    if(os_scheduler__nest!=0){
-        return;
-    }
+//    if(os_scheduler__stop_nest!=0){
+//        return;
+//    }
 
     OS_SCHEDULER_LOCK();
     os_scheduler__current_tick++;
     curr_thread = os_scheduler__current_thread;
-
-    if(curr_thread!=0){
-        if(curr_thread->state==OS_THREAD_STATE_RUNNING){
-            curr_thread->remain_ticks--;
-            if(curr_thread->remain_ticks == 0){
-                os_scheduler__yield_list_push_back(curr_thread);
-                curr_thread_need_schedule = OS_TRUE;
+    
+    if(os_scheduler__stop_nest==0) {
+        /* 当前没有停止调度的请求 */
+        if (curr_thread != 0) {
+            if (curr_thread->state == OS_THREAD_STATE_RUNNING) {
+                curr_thread->remain_ticks--;
+                if (curr_thread->remain_ticks == 0) {
+                    os_scheduler__yield_list_push_back(curr_thread);
+                    curr_thread_need_schedule = OS_TRUE;
+                }
             }
         }
     }
-
+    
+    /* 停止调度请求不影响时钟的计时 */
     timer_need_schedule = os_timer_tick();
 
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* 确认完当前任务和计时器的调度需求后，查看有没有被延迟调度的任务需要处理 */
     if(os_scheduler_skipped()>0U /* 有在等待调度的任务 */ && os_interrupt_nest()==0U /*不在中断嵌套中*/){
-        /*需要紧急调度*/
+        /*需要紧急调度,抢占当前任务的资源*/
         if(curr_thread!=0 && curr_thread->state==OS_THREAD_STATE_RUNNING){
-//            curr_thread->state = OS_THREAD_STATE_YIELD;
             os_scheduler__yield_list_push_back(curr_thread);
         }
         OS_SCHEDULER_UNLOCK();
-        OS_SCHEDULER_SCHEDULE_YIELD_FRONT(); /* 当前线程被抢占了，放到队列最前面，调度时最先恢复 */
+        OS_SCHEDULER_SCHEDULE_YIELD_FRONT(); /* 当前线程被抢占了，放到队列最前面，调度任务完成后最先恢复 */
         return;
     }
 
@@ -274,7 +278,7 @@ os_err_t os_scheduler_schedule(int policy)
     }
     
     
-    if(os_scheduler__nest!=0){
+    if(os_scheduler__stop_nest != 0){
         /* 有进入关键区的请求，不调度 */
         os_scheduler_mark_skipped();
         return OS_SCHEDULER_ECRITICAL;
@@ -481,11 +485,9 @@ void os_scheduler_push(os_thread_t * thread)
 
     OS_SCHEDULER_LOCK();
     if(os_interrupt_nest()>0U){
-        os_scheduler_mark_skipped();
-//        os_printf("[sch] pending %s\n", thread->name);
+//        os_scheduler_mark_skipped();
         os_scheduler__pending_list_push_back(thread);
     }else{
-//        os_printf("[sch] ready %s\n", thread->name);
         os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);
     }
     OS_SCHEDULER_UNLOCK();
@@ -498,16 +500,16 @@ os_uint_t os_scheduler_get_current_tick(void)
 
 os_uint_t os_scheduler_nest_increase(void)
 {
-    return cpu_atomic_add_return(&os_scheduler__nest, 1);
+    return cpu_atomic_add_return(&os_scheduler__stop_nest, 1);
 }
 
 os_uint_t os_scheduler_nest_decrease(void)
 {
-    return cpu_atomic_sub_return(&os_scheduler__nest, 1);
+    return cpu_atomic_sub_return(&os_scheduler__stop_nest, 1);
 }
 
 os_uint_t os_scheduler_nest_get(void)
 {
-    return os_scheduler__nest;
+    return os_scheduler__stop_nest;
 }
 

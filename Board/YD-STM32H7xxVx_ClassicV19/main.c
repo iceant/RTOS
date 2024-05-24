@@ -31,8 +31,8 @@ static void worker_thread_entry(void* p){
 //            default:
 //                break;
 //        }
-        os_printf("[%s] %ld remain:%ld, tick:%ld\r\n", os_thread_self()->name, nCount++, os_thread_self()->remain_ticks, os_scheduler_get_current_tick());
-
+        os_printf("[%s] %ld remain:%ld, tick:%ld, sp=%p\r\n", os_thread_self()->name, nCount++, os_thread_self()->remain_ticks, os_scheduler_get_current_tick(), os_thread_self()->sp);
+        
         os_thread_yield();
 //        os_thread_mdelay(id * 1000);
     }

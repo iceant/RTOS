@@ -305,22 +305,25 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 
 int os_printf_putc(int ch, void* ud)
 {
-//    BSP_USART1_SendByte((uint8_t)ch);
+    ((void)ud);
+    int nTimeout = 0xffff;
+    os_critical_enter();
     HAL_UART_Transmit(&BSP_USART1_Handle, (uint8_t *)&ch, 1, 0xFFFF);
+    while (HAL_UART_GetState(&BSP_USART1_Handle) != HAL_UART_STATE_READY && (nTimeout--));
+    os_critical_leave();
     return ch;
 }
 
 
-
-static C__SECTION(._D2_Area.os_printf__buffer)
-char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
-
-static os_mutex_t os_printf__mutex={0};
-
-//#define OS_PRINTF_USE_DMA
+static
+//C__SECTION(._D2_Area.os_printf__buffer)
+char os_printf__buffer[OS_PRINTF_BUFFER_SIZE]={0};
+static os_mutex_t os_printf__lock={0};
 
 int os_printf(const char* format, ...){
-    os_mutex_lock(&os_printf__mutex);
+    LED_YELLOW_Toggle();
+    
+    os_critical_enter();
     va_list args;
     va_start(args, format);
     int len = vsnprintf(os_printf__buffer, OS_PRINTF_BUFFER_SIZE, format, args);
@@ -331,7 +334,7 @@ int os_printf(const char* format, ...){
             va_start(args, format);
             len = vsnprintf(buffer, len, format, args);
             va_end(args);
-            #if defined(OS_PRINTF_USE_DMA)
+            #if (OS_PRINTF_USE_DMA)
             BSP_USART1__DMATx((uint8_t*)buffer, len);
             #else
             for(int i=0; i<len; i++){
@@ -341,7 +344,7 @@ int os_printf(const char* format, ...){
             OS_FREE(buffer);
         }
     }else{
-        #if defined(OS_PRINTF_USE_DMA)
+        #if (OS_PRINTF_USE_DMA)
         BSP_USART1__DMATx((uint8_t *)os_printf__buffer, len);
         #else
         for(int i=0; i<len; i++){
@@ -350,9 +353,7 @@ int os_printf(const char* format, ...){
         #endif
 
     }
-    LED_YELLOW_Toggle();
-    
-    os_mutex_unlock(&os_printf__mutex);
+    os_critical_leave();
     return len;
 }
 
