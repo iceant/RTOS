@@ -387,19 +387,22 @@ os_err_t os_scheduler_schedule(int policy)
         os_scheduler__current_thread = next_thread;
         os_scheduler__skipped = 0;
 
-        OS_SCHEDULER_UNLOCK();
+//        OS_SCHEDULER_UNLOCK();
 
         if(cpu_stack_switch((curr_thread==0)?0:&curr_thread->sp, &next_thread->sp)!=0){
             /*没有调度*/
-            
-            if(next_thread!=0 && next_thread->sp){
+            if(next_thread!=0
+                && (next_thread->sp>=next_thread->stack_addr)
+                && (next_thread->sp<(next_thread->stack_addr+next_thread->stack_size))){
+                
                 os_scheduler__ready_list_push(next_thread, kOsSchedulerPushType_FRONT);
+                
             }
-            
+            OS_SCHEDULER_UNLOCK();
             return OS_SCHEDULER_ERROR;
         }
     }
-
+    OS_SCHEDULER_UNLOCK();
     return OS_SCHEDULER_EOK;
 }
 
