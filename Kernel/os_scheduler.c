@@ -59,14 +59,21 @@ C__STATIC_FORCEINLINE os_thread_t * os_scheduler__pop_highest(void){
     return thread;
 }
 
+C__STATIC_FORCEINLINE void os_scheduler__yield_list_push_back(os_thread_t * thread){
+    if(thread==0)return;
+    thread->state = OS_THREAD_STATE_YIELD;
+    OS_LIST_REMOVE(&thread->ready_node);
+    OS_LIST_INSERT_BEFORE(&os_scheduler__yield_list, &thread->ready_node);
+}
+
 C__STATIC_FORCEINLINE void os_scheduler__pending_list_push_back(os_thread_t * thread){
     if(thread==0)return;
-    if(thread->sp < thread->stack_addr || thread->sp>=(thread->stack_addr + thread->stack_size)){
-#if defined(OS_SCHEDULER_DEBUG_ENABLE)
-        os_printf("[sch] invalid thread!\n");
-#endif
-        return;
-    }
+//    if(thread->sp < thread->stack_addr || thread->sp>=(thread->stack_addr + thread->stack_size)){
+//#if defined(OS_SCHEDULER_DEBUG_ENABLE)
+//        os_printf("[sch] invalid thread!\n");
+//#endif
+//        return;
+//    }
     OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_INSERT_BEFORE(&os_scheduler__pending_list, &thread->ready_node);
 }
@@ -76,6 +83,10 @@ C__STATIC_FORCEINLINE void os_scheduler__ready_list_push(os_thread_t * thread, o
     register os_priority_t priority = thread->curr_priority;
     register os_list_t * head = &os_scheduler__ready_list[priority];
     register os_list_node_t * node = 0;
+    
+    thread->state = OS_THREAD_STATE_READY;
+    
+    /* 检查是否已经存在列表中 */
     for(node = OS_LIST_NEXT(head); node!=head;){
         os_thread_t* p = OS_CONTAINER_OF(node, os_thread_t, ready_node);
         if(p==thread){
@@ -84,7 +95,6 @@ C__STATIC_FORCEINLINE void os_scheduler__ready_list_push(os_thread_t * thread, o
         node = OS_LIST_NEXT(node);
     }
     OS_LIST_REMOVE(&thread->ready_node);
-    thread->state = OS_THREAD_STATE_READY;
     if(pushType==kOsSchedulerPushType_BACK){
         OS_LIST_INSERT_BEFORE(head, &thread->ready_node);
     }else{
@@ -165,7 +175,7 @@ C__STATIC_FORCEINLINE void os_scheduler_mark_skipped(void)
 
 
 void os_scheduler_on_systick(void){
-    register os_thread_t * curr_thread;
+    register os_thread_t * curr_thread=0;
     register os_bool_t curr_thread_need_schedule = OS_FALSE;
     register os_bool_t timer_need_schedule = OS_FALSE;
 
@@ -181,7 +191,7 @@ void os_scheduler_on_systick(void){
         if(curr_thread->state==OS_THREAD_STATE_RUNNING){
             curr_thread->remain_ticks--;
             if(curr_thread->remain_ticks == 0){
-                curr_thread->state = OS_THREAD_STATE_YIELD;
+                os_scheduler__yield_list_push_back(curr_thread);
                 curr_thread_need_schedule = OS_TRUE;
             }
         }
@@ -192,7 +202,8 @@ void os_scheduler_on_systick(void){
     if(os_scheduler_skipped()>0U /* 有在等待调度的任务 */ && os_interrupt_nest()==0U /*不在中断嵌套中*/){
         /*需要紧急调度*/
         if(curr_thread!=0 && curr_thread->state==OS_THREAD_STATE_RUNNING){
-            curr_thread->state = OS_THREAD_STATE_YIELD;
+//            curr_thread->state = OS_THREAD_STATE_YIELD;
+            os_scheduler__yield_list_push_back(curr_thread);
         }
         OS_SCHEDULER_UNLOCK();
         OS_SCHEDULER_SCHEDULE_YIELD_FRONT(); /* 当前线程被抢占了，放到队列最前面，调度时最先恢复 */
@@ -300,26 +311,17 @@ os_err_t os_scheduler_schedule(int policy)
             }
         }
 
-
-        if(curr_thread->state!=OS_THREAD_STATE_RUNNING){
-            if(curr_thread->state==OS_THREAD_STATE_YIELD){
-                if(policy==OS_SCHEDULER_POLICY_YIELD_PUSHBACK){
-                    #if defined(OS_SCHEDULER_DEBUG_ENABLE)
-                    os_printf("[schd] back rdy %s\n",curr_thread->name);
-                    #endif
-
-                    os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_BACK);
-                }else if(policy==OS_SCHEDULER_POLICY_YIELD_PUSHFRONT){
-
-                    #if defined(OS_SCHEDULER_DEBUG_ENABLE)
-                    os_printf("[schd] front rdy %s\n",curr_thread->name);
-                    #endif
-
-                    os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_FRONT);
-                }
-            }
-            os_scheduler__current_thread = 0;
-        }
+/* yield 通过加入队列实现，这里不再处理 */
+//        if(curr_thread->state!=OS_THREAD_STATE_RUNNING){
+//            if(curr_thread->state==OS_THREAD_STATE_YIELD){
+//                if(policy==OS_SCHEDULER_POLICY_YIELD_PUSHBACK){
+//                    os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_BACK);
+//                }else if(policy==OS_SCHEDULER_POLICY_YIELD_PUSHFRONT){
+//                    os_scheduler__ready_list_push(curr_thread, kOsSchedulerPushType_FRONT);
+//                }
+//            }
+//            os_scheduler__current_thread = 0;
+//        }
     }
 
 
@@ -331,9 +333,6 @@ os_err_t os_scheduler_schedule(int policy)
             register os_thread_t * thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
             node = OS_LIST_NEXT(node);
             OS_LIST_REMOVE(&thread->ready_node);
-            #if defined(OS_SCHEDULER_DEBUG_ENABLE)
-            os_printf("[schd-dbg] pend to back rdy %s\n",thread->name);
-            #endif
             os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);
         }
     }
@@ -345,10 +344,11 @@ os_err_t os_scheduler_schedule(int policy)
             register os_thread_t * thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
             node = OS_LIST_NEXT(node);
             OS_LIST_REMOVE(&thread->ready_node);
-            #if defined(OS_SCHEDULER_DEBUG_ENABLE)
-            os_printf("[schd-dbg] yield to back rdy %s\n",thread->name);
-            #endif
-            os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);
+            if(policy==OS_SCHEDULER_POLICY_YIELD_PUSHFRONT){
+                os_scheduler__ready_list_push(thread, kOsSchedulerPushType_FRONT);
+            }else{
+                os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);
+            }
         }
     }
 

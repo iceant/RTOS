@@ -13,8 +13,8 @@ typedef volatile cpu_uint_t cpu_atomic_t;
 
 C__STATIC_FORCEINLINE cpu_uint_t cpu_atomic_add_return(cpu_atomic_t* v, cpu_uint_t i)
 {
-    cpu_uint_t tmp;
-    cpu_uint_t result;
+    cpu_uint_t tmp=0;
+    cpu_uint_t result=0;
     cpu_DMB();
     do{
         result = cpu_LDREXW(v);
@@ -27,9 +27,9 @@ C__STATIC_FORCEINLINE cpu_uint_t cpu_atomic_add_return(cpu_atomic_t* v, cpu_uint
 
 
 C__STATIC_FORCEINLINE cpu_uint_t cpu_atomic_sub_return(cpu_atomic_t * v, cpu_uint_t i){
+    cpu_uint_t tmp=0;
+    cpu_uint_t result=0;
     cpu_DMB();
-    cpu_uint_t tmp;
-    cpu_uint_t result;
     do{
         result = cpu_LDREXW(v);
         result = result - i;
@@ -40,8 +40,8 @@ C__STATIC_FORCEINLINE cpu_uint_t cpu_atomic_sub_return(cpu_atomic_t * v, cpu_uin
 }
 
 C__STATIC_FORCEINLINE cpu_uint_t cpu_atomic_cmpxchg(cpu_atomic_t * v, cpu_uint_t old_value, cpu_uint_t new_value){
-    cpu_uint_t old_v;
-    cpu_uint_t res;
+    cpu_uint_t old_v=0;
+    cpu_uint_t res=0;
     cpu_DMB();
     do{
         old_v = cpu_LDREXW(v);
