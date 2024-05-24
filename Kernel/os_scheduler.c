@@ -389,7 +389,15 @@ os_err_t os_scheduler_schedule(int policy)
 
         OS_SCHEDULER_UNLOCK();
 
-        cpu_stack_switch((curr_thread==0)?0:&curr_thread->sp, &next_thread->sp);
+        if(cpu_stack_switch((curr_thread==0)?0:&curr_thread->sp, &next_thread->sp)!=0){
+            /*没有调度*/
+            
+            if(next_thread!=0 && next_thread->sp){
+                os_scheduler__ready_list_push(next_thread, kOsSchedulerPushType_FRONT);
+            }
+            
+            return OS_SCHEDULER_ERROR;
+        }
     }
 
     return OS_SCHEDULER_EOK;
