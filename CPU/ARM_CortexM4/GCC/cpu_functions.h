@@ -18,7 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-
+#define __has_builtin(x) 0
 
 /**
   \brief   Enable IRQ Interrupts
@@ -521,11 +521,11 @@ C__STATIC_FORCEINLINE int cpu_in_privilege(void){
 
 C__STATIC_FORCEINLINE void cpu_reboot(void)
 {
-    cpu_DSB();                                                          /* Ensure all outstanding memory accesses included
+    cpu_DSB();                                                      /* Ensure all outstanding memory accesses included
                                                                        buffered write are completed before reset */
     CPU_REG(SCB_AIRCR)  = (uint32_t)((0x5FAUL << SCB_AIRCR_VECTKEY_Pos)    |
                                      (CPU_REG(SCB_AIRCR) & SCB_AIRCR_PRIGROUP_Msk) |
-                                     SCB_AIRCR_SYSRESETREQ_Msk    );         /* Keep priority group unchanged */
+                                     SCB_AIRCR_SYSRESETREQ_Msk    );    /* Keep priority group unchanged */
     cpu_DSB();                                                          /* Ensure completion of memory access */
     
     for(;;)                                                           /* wait until reset */

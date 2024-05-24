@@ -17,7 +17,11 @@ typedef uint32_t cpu_uint_t;
 typedef cpu_uint_t cpu_size_t;
 
 #ifndef __FPU_PRESENT
-#define __FPU_PRESENT 1
+    #define __FPU_PRESENT 1
+#endif
+
+#ifndef __FPU_USED
+#define __FPU_USED 1
 #endif
 
 #endif /*INCLUDED_CPU_TYPES_H*/
