@@ -7,10 +7,11 @@
 #endif
 
 #if defined(RTOS_KERNEL_USE_TLSF)
+C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t os_memory__blocks[RTOS_KERNEL_TLSF_POOL_SIZE];
 os_err_t os_memory_init(void)
 {
-    os_size_t size = init_memory_pool(sizeof(os_memory__blocks)*sizeof(uint8_t), os_memory__blocks);
+    os_size_t size = init_memory_pool(RTOS_KERNEL_TLSF_POOL_SIZE, os_memory__blocks);
     if(size>0){
         return OS_EOK;
     }

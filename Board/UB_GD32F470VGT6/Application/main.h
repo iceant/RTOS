@@ -55,6 +55,10 @@ OF SUCH DAMAGE.
 #include <test_printf.h>
 #endif /*INCLUDED_TEST_PRINTF_H*/
 
+#ifndef INCLUDED_USE_CAN0_H
+#include <use_can0.h>
+#endif /*INCLUDED_USE_CAN0_H*/
+
 
 
 

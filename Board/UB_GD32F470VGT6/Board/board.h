@@ -95,13 +95,18 @@
 #include <OLED.h>
 #endif /*INCLUDED_OLED_H*/
 
+#ifndef INCLUDED_BSP_TIM6_H
+#include <bsp_tim6.h>
+#endif /*INCLUDED_BSP_TIM6_H*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ENABLE_4G
 //#define ENABLE_LED
 #define ENABLE_USART0
 #define ENABLE_I2C0
-//#define ENABLE_CAN0
+#define ENABLE_CAN0
 //#define ENABLE_SPI_FLASH
 #define ENABLE_DS1307
 

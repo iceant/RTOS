@@ -234,6 +234,7 @@ void Board_Init(void){
     NVIC_SetPriority(SysTick_IRQn, 0xFE);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
 
+    BSP_TIM6_Init();
    
     /* ------------------------------------------------------------------------------------------ */
     /* ---- LED ----*/

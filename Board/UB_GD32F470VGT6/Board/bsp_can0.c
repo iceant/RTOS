@@ -157,6 +157,7 @@ int BSP_CAN0_Send(can_trasnmit_message_struct* txMsg){
 void CAN0_RX0_IRQHandler(void)
 {
     can_receive_message_struct rx_message;
+
     os_interrupt_enter();
     can_message_receive(CANx, CANx_FIFOn, &rx_message);
     if(BSP_CAN0__RxHandler){

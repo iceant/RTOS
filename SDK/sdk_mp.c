@@ -12,42 +12,34 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define BASE (1<<8)
-
 #define sign(x) ((x)[nbytes-1]>>shift)
-
 #define ones(n) (~(~0UL<<(((n)-1)%8+1)))
-
 #define iszero(x) (sdk_xp_length(nbytes,(x))==1 && (x)[0]==0)
-
+#define BASE (1<<8)
 #define bitop(op) \
 	int i; assert(z); assert(x); assert(y); \
 	for (i = 0; i < nbytes; i++) z[i] = x[i] op y[i]; \
 	if(result){*result=z;}                  \
     return SDK_MP_EOK
-    
+
 #define bitopi(op) assert(z); assert(x); \
 	applyu(op, z, x, y); \
 	return z
-
 #define shft(fill, op) \
 	assert(x); assert(z); assert(s >= 0); \
 	if (s >= nbits) memset(z, fill, nbytes); \
 	else op(nbytes, z, nbytes, x, s, fill); \
 	z[nbytes-1] &= msb; \
 	return z
-    
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static int nbits  =  32;
+static int nbits  = SDK_MP_NBITS;
 static int nbytes = (32-1)/8 + 1;
 static int shift  = (32-1)%8;
 static unsigned char msb = 0xFF;
 static unsigned char temp[16 + 16 + 16 + 2*16+2];
 static sdk_mp_t tmp[] = {temp, temp+1*16, temp+2*16, temp+3*16};
-
-////////////////////////////////////////////////////////////////////////////////
-////
 
 static int applyu(int op(sdk_mp_t, sdk_mp_t, sdk_mp_t, sdk_mp_t *), sdk_mp_t z, sdk_mp_t x,
                   unsigned long u) {
@@ -102,13 +94,8 @@ int sdk_mp_set(int n) {
     return prev;
 }
 
-sdk_mp_t sdk_mp_new(unsigned long u){
-    sdk_mp_t mp = OS_ALLOC(nbytes);
-    if(!mp){
-        return 0;
-    }
-    sdk_mp_fromintu(mp, u, 0);
-    return mp;
+int sdk_mp_new(unsigned long u, sdk_mp_t* result) {
+    return sdk_mp_fromintu(OS_ALLOC(nbytes), u, result);
 }
 
 void sdk_mp_free(sdk_mp_t *mp){
@@ -188,8 +175,10 @@ int sdk_mp_cvt (int m, sdk_mp_t z, sdk_mp_t x, sdk_mp_t* result) {
 }
 
 unsigned long sdk_mp_tointu(sdk_mp_t x) {
+    if(!x){
+        return 0;
+    }
     unsigned char d[sizeof (unsigned long)];
-    assert(x);
     sdk_mp_cvtu(8*sizeof d, d, x, 0);
     return sdk_xp_toint(sizeof d, d);
 }
@@ -248,8 +237,7 @@ int sdk_mp_subu(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t* result){
     return SDK_MP_EOK;
 }
 
-sdk_mp_t sdk_mp_mul2u(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y)
-{
+sdk_mp_t sdk_mp_mul2u(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y) {
     assert(x); assert(y); assert(z);
     memset(tmp[3], '\0', 2*nbytes);
     sdk_xp_mul(tmp[3], nbytes, x, nbytes, y);
@@ -268,7 +256,7 @@ int sdk_mp_mulu(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t * result) {
         if (tmp[3][nbytes-1]&~msb){
             return SDK_MP_EOVERFLOW;
         }
-        
+
         for (i = 0; i < nbytes; i++){
             if (tmp[3][i+nbytes] != 0){
                 return SDK_MP_EOVERFLOW;
@@ -411,7 +399,7 @@ int sdk_mp_mul(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t * result) {
         if (tmp[3][nbytes-1]&~msb){
             return SDK_MP_EOVERFLOW;
         }
-        
+
         for (i = 0; i < nbytes; i++){
             if (tmp[3][i+nbytes] != 0){
                 return SDK_MP_EOVERFLOW;
@@ -421,7 +409,7 @@ int sdk_mp_mul(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t * result) {
     if (sx == sy && sign(z)){
         return SDK_MP_EOVERFLOW;
     }
-    
+
     if(result){
         *result = z;
     }
@@ -449,7 +437,7 @@ int sdk_mp_div(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t * result) {
     if (!sdk_xp_div(nbytes, z, x, nbytes, y, tmp[2], tmp[3])){
         return SDK_MP_EDIVZERO;
     }
-    
+
     if (sx != sy) {
         sdk_xp_neg(nbytes, z, z, 1);
         if (!iszero(tmp[2]))
@@ -458,7 +446,7 @@ int sdk_mp_div(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t * result) {
     } else if (sx && sign(z)){
         return SDK_MP_EOVERFLOW;
     }
-    
+
     if(result){
         *result = z;
     }
@@ -486,14 +474,14 @@ int sdk_mp_mod(sdk_mp_t z, sdk_mp_t x, sdk_mp_t y, sdk_mp_t *result) {
     if (!sdk_xp_div(nbytes, tmp[2], x, nbytes, y, z, tmp[3])){
         return SDK_MP_EDIVZERO;
     }
-    
+
     if (sx != sy) {
         if (!iszero(z))
             sdk_xp_sub(nbytes, z, y, z, 0);
     } else if (sx && sign(tmp[2])){
         return SDK_MP_EOVERFLOW;
     }
-    
+
     if(result){
         *result = z;
     }
@@ -747,7 +735,7 @@ int sdk_mp_modi(sdk_mp_t x, long y, long* result) {
             *result = r;
         }
         return SDK_MP_EOK;
-        
+
     } else if (apply(sdk_mp_mod, tmp[2], x, y)){
         return SDK_MP_EOVERFLOW;
     }
@@ -864,8 +852,8 @@ char *sdk_mp_tostr(char *str, int size, int base, sdk_mp_t x) {
 }
 
 void sdk_mp_fmtu(int code, va_list_box *box,
-             int put(int c, void *cl), void *cl,
-             unsigned char flags[], int width, int precision) {
+                 int put(int c, void *cl), void *cl,
+                 unsigned char flags[], int width, int precision) {
     sdk_mp_t x;
     char *buf;
     assert(box && flags);
@@ -873,13 +861,13 @@ void sdk_mp_fmtu(int code, va_list_box *box,
     assert(x);
     buf = sdk_mp_tostr(NULL, 0, va_arg(box->ap, int), x);
     sdk_fmt_putd(buf, strlen(buf), put, cl, flags,
-             width, precision);
+                 width, precision);
     OS_FREE(buf);
 }
 
 void sdk_mp_fmt(int code, va_list_box *box,
-            int put(int c, void *cl), void *cl,
-            unsigned char flags[], int width, int precision) {
+                int put(int c, void *cl), void *cl,
+                unsigned char flags[], int width, int precision) {
     sdk_mp_t x;
     int base, size, sx;
     char *buf;
@@ -907,8 +895,6 @@ void sdk_mp_fmt(int code, va_list_box *box,
     } else
         sdk_mp_tostr(buf, size + 1, base, x);
     sdk_fmt_putd(buf, strlen(buf), put, cl, flags,
-             width, precision);
+                 width, precision);
     OS_FREE(buf);
 }
-
-

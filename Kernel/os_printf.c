@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <os_macros.h>
 #include <os_memory.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+#if (defined(OS_PRINTF_USE_DEFAULT_IMPLEMENTATION) && (OS_PRINTF_USE_DEFAULT_IMPLEMENTATION))
 static char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
 
 int C__WEAK os_printf(const char* format, ...){
@@ -31,3 +33,5 @@ int C__WEAK os_printf(const char* format, ...){
     
     return len;
 }
+#endif
+

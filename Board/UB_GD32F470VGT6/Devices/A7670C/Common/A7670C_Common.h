@@ -81,10 +81,10 @@ typedef enum A7670C_Client_Index{
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C__STATIC_FORCEINLINE void A7670C_NopDelay(uint32_t delay){
-    os_scheduler_disable();
+    os_critical_enter();
     while(delay--){
     }
-    os_scheduler_enable();
+    os_critical_leave();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

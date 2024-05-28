@@ -1,6 +1,7 @@
 #include <bsp_usart0.h>
 #include <os_kernel.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -159,35 +160,36 @@ void BSP_USART0_Send(uint8_t * bytes, uint32_t size)
         while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
     }
 }
+//
+//static char printf_buffer[1204];
+//int BSP_USART0_Printf(const char* format, ...)
+//{
+//    va_list args;
+//    va_start(args, format);
+//    int len = vsnprintf(NULL, 0, format, args);
+//    va_end(args);
+//    if(len > OS_ARRAY_SIZE(printf_buffer)){
+//        char* buffer = (char*)OS_ALLOC(len + 1);
+//        va_start(args, format);
+//        len = vsnprintf(buffer, len + 1, format, args);
+//        va_end(args);
+//        buffer[len]='\0';
+//
+//        BSP_USART0_Send((uint8_t*)buffer, len);
+//        OS_FREE(buffer);
+//    }else{
+//        va_start(args, format);
+//        len = vsnprintf(printf_buffer, len + 1, format, args);
+//        va_end(args);
+//        printf_buffer[len]='\0';
+//        BSP_USART0_Send((uint8_t*)printf_buffer, len);
+//    }
+//
+//    return len;
+//}
 
-static char printf_buffer[1204];
-int BSP_USART0_Printf(const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    int len = vsnprintf(NULL, 0, format, args);
-    va_end(args);
-    if(len > OS_ARRAY_SIZE(printf_buffer)){
-        char* buffer = (char*)OS_ALLOC(len + 1);
-        va_start(args, format);
-        len = vsnprintf(buffer, len + 1, format, args);
-        va_end(args);
-        buffer[len]='\0';
 
-        BSP_USART0_Send((uint8_t*)buffer, len);
-        OS_FREE(buffer);
-    }else{
-        va_start(args, format);
-        len = vsnprintf(printf_buffer, len + 1, format, args);
-        va_end(args);
-        printf_buffer[len]='\0';
-        BSP_USART0_Send((uint8_t*)printf_buffer, len);
-    }
-
-    return len;
-}
-
-
+C__ALIGNED(OS_ALIGN_SIZE)
 static char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
 
 int os_printf_putc(int ch, void* ud){

@@ -10,6 +10,7 @@
 #include <math.h>
 #include <assert.h>
 #include <os_memory.h>
+#include <os_printf.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -173,8 +174,7 @@ static sdk_fmt_t cvt[256] = {
 
 static int outc(int c, void *cl) {
     FILE *f = cl;
-    return putc(c, f);
-//    return __io_putchar(c);
+    return os_printf_putc(c, f);
 }
 
 static int insert(int c, void *cl) {
@@ -188,6 +188,7 @@ static int append(int c, void *cl) {
     struct buf *p = cl;
     if (p->bp >= p->buf + p->size) {
         OS_RESIZE(p->buf, 2*p->size);
+        assert(p->buf);
         p->bp = p->buf + p->size;
         p->size *= 2;
     }

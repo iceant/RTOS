@@ -1,15 +1,16 @@
 #include <sdk_bit.h>
 #include <os_memory.h>
 #include <assert.h>
+#include <string.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-typedef uint32_t word_t;
+typedef os_uint_t word_t;
 
 struct sdk_bit_s{
     int length;
     unsigned char   *bytes;
-    word_t        *words;
+    word_t          *words;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

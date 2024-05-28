@@ -13,10 +13,8 @@
 #include <stdio.h>
 #endif /*INCLUDED_STDIO_H*/
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
 
 typedef struct va_list_box {
     va_list ap;
