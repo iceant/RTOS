@@ -17,7 +17,7 @@ C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t Task_TimeSync_Stack[1024];
 static os_thread_t Task_TimeSync_Thread;
 
-#define TIME_DELAY 0x3FFFFFF
+#define TIME_DELAY 0x3FFFFF
 
 static int Task_TimeSync_Sync(void){
     int nRetry = 3;
@@ -31,7 +31,7 @@ static int Task_TimeSync_Sync(void){
         if (CNTP_Write_Response.code == kA7670C_Response_Code_OK) {
             break;
         }
-        printf("[TASK_NTC] CNTP Write Failed! Code=%d\r\n", CNTP_Write_Response.code);
+        printf("[TASK_NTC] CNTP Write Failed! Code=%d, Retry=%d\r\n", CNTP_Write_Response.code, nRetry);
         if(!nRetry) {
             return -1;
         }
@@ -59,7 +59,6 @@ static int Task_TimeSync_Sync(void){
     nRetry=3;
     do {
         // 3. 读取时间
-
         result = A7670C_CCLK_Read(&CCLK_Read_Response, 12000);
         if (CCLK_Read_Response.code != kA7670C_Response_Code_OK) {
             printf("[TASK_NTC] CCLK Read Failed! Code=%d\r\n", CCLK_Read_Response.code);
@@ -112,7 +111,7 @@ void Task_TimeSync_Init(void)
     os_thread_init(&Task_TimeSync_Thread, "Tsk_TimSyc"
                    , Task_TimeSync_ThreadEntry, 0
                    , Task_TimeSync_Stack, sizeof(Task_TimeSync_Stack)
-                   , 20, os_tick_from_millisecond(50));
+                   , 20, 10);
     os_thread_startup(&Task_TimeSync_Thread);
 
 }

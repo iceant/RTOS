@@ -1,5 +1,6 @@
 #include <bsp_i2c0.h>
 #include <stdio.h>
+#include <os_kernel.h>
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// 
 #define I2C_OWN_ADDRESS7 0x00
@@ -25,16 +26,16 @@
 #define I2C_TX_DMA_CLOCK            RCU_DMA0
 #define I2C_TX_DMAx                 DMA0
 #define I2C_TX_DMA_CHn              DMA_CH6
+#define I2C_TX_DMA_SUBPERIx         DMA_SUBPERI1
 
 #define I2C_RX_DMA_CLOCK            RCU_DMA0
 #define I2C_RX_DMAx                 DMA0
-#define I2C_RX_DMA_CHn              DMA_CH2
+#define I2C_RX_DMA_CHn              DMA_CH5
+#define I2C_RX_DMA_SUBPERIx         DMA_SUBPERI1
 
 #define I2C_SPEED                   100000
 
-#define I2C_OK          1
-#define I2C_FAIL        -1
-#define I2C_END         0
+
 
 //#define I2C0_DEBUG 0
 
@@ -64,7 +65,7 @@ static void i2c_config(void)
     /* enable I2Cx */
     i2c_enable(I2Cx);
     /* enable acknowledge */
-    //i2c_ack_config(I2Cx, I2C_ACK_ENABLE);
+    i2c_ack_config(I2Cx, I2C_ACK_ENABLE);
 }
 
 
@@ -110,7 +111,7 @@ static void i2c_bus_reset(void){
     gpio_output_options_set(I2C_SDA_GPIOX, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, I2C_SDA_PIN);
     #endif
     
-    
+    i2c_config();
     
     #if 0
     int nRetry = 0;
@@ -223,6 +224,7 @@ static void i2c_bus_reset(void){
 
 }
 
+static os_mutex_t BSP_I2C0__Mutex;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// 
 
@@ -235,6 +237,18 @@ void BSP_I2C0_Init(void)
     gpio_config();
     
     i2c_config();
+
+    os_mutex_init(&BSP_I2C0__Mutex);
+}
+
+void BSP_I2C0_Lock(void)
+{
+    os_mutex_lock(&BSP_I2C0__Mutex);
+}
+
+void BSP_I2C0_UnLock(void)
+{
+    os_mutex_unlock(&BSP_I2C0__Mutex);
 }
 
 void BSP_I2C0_EnableTxDMA(void)
@@ -263,7 +277,7 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
         switch(state) {
         case I2C_START:
             #if defined(I2C0_DEBUG)
-            printf("I2C_START\r\n");
+            os_printf("I2C_START\r\n");
             #endif
             /* i2c master sends start signal only when the bus is idle */
             while(i2c_flag_get(I2Cx, I2C_FLAG_I2CBSY) && (timeout < I2C_TIME_OUT)) {
@@ -277,12 +291,12 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
                 i2c_bus_reset();
                 timeout = 0;
                 state = I2C_START;
-                printf("i2c bus is busy in WRITE!\n");
+                os_printf("i2c bus is busy in WRITE!\n");
             }
             break;
         case I2C_SEND_ADDRESS:
             #if defined(I2C0_DEBUG)
-            printf("I2C_SEND_ADDRESS\r\n");
+            os_printf("I2C_SEND_ADDRESS\r\n");
             #endif
             /* i2c master sends START signal successfully */
             while((!i2c_flag_get(I2Cx, I2C_FLAG_SBSEND)) && (timeout < I2C_TIME_OUT)) {
@@ -295,12 +309,12 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
             } else {
                 timeout = 0;
                 state = I2C_START;
-                printf("i2c master sends start signal timeout in WRITE!\n");
+                os_printf("i2c master sends start signal timeout in WRITE!\n");
             }
             break;
         case I2C_CLEAR_ADDRESS_FLAG:
             #if defined(I2C0_DEBUG)
-            printf("I2C_CLEAR_ADDRESS_FLAG\r\n");
+            os_printf("I2C_CLEAR_ADDRESS_FLAG\r\n");
             #endif
             /* address flag set means i2c slave sends ACK */
             while((!i2c_flag_get(I2Cx, I2C_FLAG_ADDSEND)) && (timeout < I2C_TIME_OUT)) {
@@ -313,12 +327,12 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
             } else {
                 timeout = 0;
                 state = I2C_START;
-                printf("i2c master clears address flag timeout in WRITE!\n");
+                os_printf("i2c master clears address flag timeout in WRITE!\n");
             }
             break;
         case I2C_TRANSMIT_DATA:
             #if defined(I2C0_DEBUG)
-            printf("I2C_TRANSMIT_DATA\r\n");
+            os_printf("I2C_TRANSMIT_DATA\r\n");
             #endif
             /* wait until the transmit data buffer is empty */
             while((!i2c_flag_get(I2Cx, I2C_FLAG_TBE)) && (timeout < I2C_TIME_OUT)) {
@@ -331,7 +345,7 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
             } else {
                 timeout = 0;
                 state = I2C_START;
-                printf("i2c master sends EEPROM's internal address timeout in WRITE!\n");
+                os_printf("i2c master sends EEPROM's internal address timeout in WRITE!\n");
             }
             /* wait until BTC bit is set */
             while(!i2c_flag_get(I2Cx, I2C_FLAG_BTC));
@@ -349,7 +363,7 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
 
             /* configure DMA mode */
             dma_circulation_disable(I2C_TX_DMAx, I2C_TX_DMA_CHn);
-            dma_channel_subperipheral_select(I2C_TX_DMAx, I2C_TX_DMA_CHn, DMA_SUBPERI1);
+            dma_channel_subperipheral_select(I2C_TX_DMAx, I2C_TX_DMA_CHn, I2C_TX_DMA_SUBPERIx);
             /* enable I2C DMA */
             i2c_dma_config(I2Cx, I2C_DMA_ON);
             /* enable DMA TX channel */
@@ -366,12 +380,12 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
             } else {
                 timeout = 0;
                 state = I2C_START;
-                printf("i2c master sends data timeout in WRITE!\n");
+                os_printf("i2c master sends data timeout in WRITE!\n");
             }
             break;
         case I2C_STOP:
             #if defined(I2C0_DEBUG)
-            printf("I2C_STOP\r\n");
+            os_printf("I2C_STOP\r\n");
             #endif
             /* send a stop condition to I2C bus */
             i2c_stop_on_bus(I2Cx);
@@ -386,17 +400,17 @@ int BSP_I2C0_DMATx(uint8_t address, uint8_t* data, int size)
             } else {
                 timeout = 0;
                 state = I2C_START;
-                printf("i2c master sends stop signal timeout in WRITE!\n");
+                os_printf("i2c master sends stop signal timeout in WRITE!\n");
             }
             break;
         default:
             #if defined(I2C0_DEBUG)
-            printf("I2C_DEFAULT\r\n");
+            os_printf("I2C_DEFAULT\r\n");
             #endif
             state = I2C_START;
             i2c_timeout_flag = I2C_OK;
             timeout = 0;
-            printf("i2c master sends start signal in WRITE.\n");
+            os_printf("i2c master sends start signal in WRITE.\n");
             break;
         }
     }
@@ -418,7 +432,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
         switch(state) {
         case I2C_START:
             #if defined(I2C0_DEBUG)
-            printf("[DMARx] I2C_START\r\n");
+            os_printf("[DMARx] I2C_START\r\n");
             #endif
             if(RESET == read_cycle) {
                 /* disable I2Cx */
@@ -441,7 +455,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                     i2c_bus_reset();
                     timeout = 0;
                     state = I2C_START;
-                    printf("i2c bus is busy in READ!\n");
+                    os_printf("i2c bus is busy in READ!\n");
                 }
             } else {
                 i2c_start_on_bus(I2Cx);
@@ -451,7 +465,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
             break;
         case I2C_SEND_ADDRESS:
             #if defined(I2C0_DEBUG)
-            printf("[DMARx] I2C_SEND_ADDRESS\r\n");
+            os_printf("[DMARx] I2C_SEND_ADDRESS\r\n");
             #endif
             /* i2c master sends START signal successfully */
             while((! i2c_flag_get(I2Cx, I2C_FLAG_SBSEND)) && (timeout < I2C_TIME_OUT)) {
@@ -460,13 +474,13 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
             if(timeout < I2C_TIME_OUT) {
                 if(RESET == read_cycle) {
                     #if defined(I2C0_DEBUG)
-                    printf("[DMARx] I2C_SEND_ADDRESS I2C_TRANSMITTER\r\n");
+                    os_printf("[DMARx] I2C_SEND_ADDRESS I2C_TRANSMITTER\r\n");
                     #endif
                     i2c_master_addressing(I2Cx, address, I2C_TRANSMITTER);
                     state = I2C_CLEAR_ADDRESS_FLAG;
                 } else {
                     #if defined(I2C0_DEBUG)
-                    printf("[DMARx] I2C_SEND_ADDRESS I2C_RECEIVER\r\n");
+                    os_printf("[DMARx] I2C_SEND_ADDRESS I2C_RECEIVER\r\n");
                     #endif
                     i2c_master_addressing(I2Cx, address, I2C_RECEIVER);
                     state = I2C_CLEAR_ADDRESS_FLAG;
@@ -476,12 +490,12 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                 timeout = 0;
                 state = I2C_START;
                 read_cycle = 0;
-                printf("i2c master sends start signal timeout in READ!\n");
+                os_printf("i2c master sends start signal timeout in READ!\n");
             }
             break;
         case I2C_CLEAR_ADDRESS_FLAG:
             #if defined(I2C0_DEBUG)
-            printf("[DMARx] I2C_CLEAR_ADDRESS_FLAG\r\n");
+            os_printf("[DMARx] I2C_CLEAR_ADDRESS_FLAG\r\n");
             #endif
             /* address flag set means i2c slave sends ACK */
             while((!i2c_flag_get(I2Cx, I2C_FLAG_ADDSEND)) && (timeout < I2C_TIME_OUT)) {
@@ -495,12 +509,12 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                 timeout = 0;
                 state = I2C_START;
                 read_cycle = 0;
-                printf("i2c master clears address flag timeout in READ!\n");
+                os_printf("i2c master clears address flag timeout in READ!\n");
             }
             break;
         case I2C_TRANSMIT_DATA:
             #if defined(I2C0_DEBUG)
-            printf("[DMARx] I2C_TRANSMIT_DATA\r\n");
+            os_printf("[DMARx] I2C_TRANSMIT_DATA\r\n");
             #endif
             if(RESET == read_cycle) {
                 /* wait until the transmit data buffer is empty */
@@ -509,7 +523,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                 }
                 if(timeout < I2C_TIME_OUT) {
                     #if defined(I2C0_DEBUG)
-                    printf("[DMARx] Slave Internal Address: %x\r\n", *buffer);
+                    os_printf("[DMARx] Slave Internal Address: %x\r\n", *buffer);
                     #endif
                     /* send the Device's internal address to write to : only one byte address */
                     i2c_data_transmit(I2Cx, *buffer);
@@ -518,7 +532,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                     timeout = 0;
                     state = I2C_START;
                     read_cycle = 0;
-                    printf("i2c master wait data buffer is empty timeout in READ!\n");
+                    os_printf("i2c master wait data buffer is empty timeout in READ!\n");
                 }
                 /* wait until BTC bit is set */
                 while((!i2c_flag_get(I2Cx, I2C_FLAG_BTC)) && (timeout < I2C_TIME_OUT)) {
@@ -534,13 +548,13 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                     timeout = 0;
                     state = I2C_START;
                     read_cycle = 0;
-                    printf("i2c master sends EEPROM's internal address timeout in READ!\n");
+                    os_printf("i2c master sends EEPROM's internal address timeout in READ!\n");
                 }
             } else {
                 /* one byte master reception procedure (polling) */
                 if(size < 2) {
                     #if defined(I2C0_DEBUG)
-                    printf("[DMARx] size=%d <2\r\n", size);
+                    os_printf("[DMARx] size=%d <2\r\n", size);
                     #endif
                     /* disable acknowledge */
                     i2c_ack_config(I2Cx, I2C_ACK_DISABLE);
@@ -571,7 +585,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                     dma_single_data_mode_init(I2C_RX_DMAx, I2C_RX_DMA_CHn, &dma_init_parameter);
                     /* configure DMA mode */
                     dma_circulation_disable(I2C_RX_DMAx, I2C_RX_DMA_CHn);
-                    dma_channel_subperipheral_select(I2C_RX_DMAx, I2C_RX_DMA_CHn, DMA_SUBPERI1);
+                    dma_channel_subperipheral_select(I2C_RX_DMAx, I2C_RX_DMA_CHn, I2C_RX_DMA_SUBPERIx);
                     i2c_dma_last_transfer_config(I2Cx, I2C_DMALST_ON);
                     /* enable I2C DMA */
                     i2c_dma_config(I2Cx, I2C_DMA_ON);
@@ -585,7 +599,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
             break;
         case I2C_STOP:
             #if defined(I2C0_DEBUG)
-            printf("[DMARx] I2C_STOP\r\n");
+            os_printf("[DMARx] I2C_STOP\r\n");
             #endif
             /* send a stop condition to I2C bus */
             //i2c_stop_on_bus(I2Cx);
@@ -601,7 +615,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
                 timeout = 0;
                 state = I2C_START;
                 read_cycle = 0;
-                printf("i2c master sends stop signal timeout in READ!\n");
+                os_printf("i2c master sends stop signal timeout in READ!\n");
             }
             break;
         default:
@@ -609,7 +623,7 @@ int BSP_I2C0_DMARx(uint8_t address, uint8_t* buffer, int size){
             read_cycle = 0;
             i2c_timeout_flag = I2C_OK;
             timeout = 0;
-            printf("i2c master sends start signal in READ.\n");
+            os_printf("i2c master sends start signal in READ.\n");
             break;
         }
     }
@@ -673,7 +687,7 @@ int BSP_I2C0_Send(uint8_t address, uint8_t* data, int size)
         i2c_data_transmit(I2Cx, *data++);
         /* wait until the TBE bit is set */
         I2CTimeout = I2CT_LONG_TIMEOUT;
-        while(!i2c_flag_get(I2Cx, I2C_FLAG_TBE))
+        while(!i2c_flag_get(I2Cx, I2C_FLAG_BTC))
         {
             if((I2CTimeout--)==0){
                 BSP_I2C0_Reset();
@@ -773,10 +787,7 @@ int BSP_I2C0_Recv(uint8_t address, uint8_t * buffer, int size)
         i2c_ack_config(I2Cx, I2C_ACK_ENABLE);
 
     }else if(size==2){
-        
-        /* send a NACK for the next data byte which will be received into the shift register */
-        i2c_ackpos_config(I2Cx, I2C_ACKPOS_NEXT);
-        
+
         /* wait until I2C bus is idle */
         I2CTimeout = I2CT_LONG_TIMEOUT;
         while(i2c_flag_get(I2Cx, I2C_FLAG_I2CBSY))
@@ -786,7 +797,11 @@ int BSP_I2C0_Recv(uint8_t address, uint8_t * buffer, int size)
                 return -10;
             }
         }
-        
+
+        /* send a NACK for the next data byte which will be received into the shift register */
+        i2c_ackpos_config(I2Cx, I2C_ACKPOS_NEXT);
+
+
         /* send a start condition to I2C bus */
         i2c_start_on_bus(I2Cx);
         
@@ -959,4 +974,308 @@ int BSP_I2C0_Recv(uint8_t address, uint8_t * buffer, int size)
 
 void BSP_I2C0_Reset(void){
     i2c_bus_reset();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
+uint8_t BSP_I2C0_Read_Timeout(uint8_t master_address, uint8_t read_address, uint8_t *p_buffer, int number_of_byte)
+{
+    uint8_t state = I2C_START;
+    uint8_t read_cycle = 0;
+    uint16_t timeout = 0;
+    uint8_t i2c_timeout_flag = 0;
+
+    /* enable acknowledge */
+    i2c_ack_config(I2Cx, I2C_ACK_ENABLE);
+    while(!(i2c_timeout_flag)) {
+        switch(state) {
+            case I2C_START:
+                if(RESET == read_cycle) {
+                    /* i2c master sends start signal only when the bus is idle */
+                    while(i2c_flag_get(I2Cx, I2C_FLAG_I2CBSY) && (timeout < I2C_TIME_OUT)) {
+                        timeout++;
+                    }
+                    if(timeout < I2C_TIME_OUT) {
+                        /* whether to send ACK or not for the next byte */
+                        if(2 == number_of_byte) {
+                            i2c_ackpos_config(I2Cx, I2C_ACKPOS_NEXT);
+                        }
+                    } else {
+                        i2c_bus_reset();
+                        timeout = 0;
+                        state = I2C_START;
+                        os_printf("i2c bus is busy in READ!\n");
+                    }
+                }
+                /* send the start signal */
+                i2c_start_on_bus(I2Cx);
+                timeout = 0;
+                state = I2C_SEND_ADDRESS;
+                break;
+            case I2C_SEND_ADDRESS:
+                /* i2c master sends START signal successfully */
+                while((!i2c_flag_get(I2Cx, I2C_FLAG_SBSEND)) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    if(RESET == read_cycle) {
+                        i2c_master_addressing(I2Cx, master_address, I2C_TRANSMITTER);
+                        state = I2C_CLEAR_ADDRESS_FLAG;
+                    } else {
+                        i2c_master_addressing(I2Cx, master_address, I2C_RECEIVER);
+                        if(number_of_byte < 3) {
+                            /* disable acknowledge */
+                            i2c_ack_config(I2Cx, I2C_ACK_DISABLE);
+                        }
+                        state = I2C_CLEAR_ADDRESS_FLAG;
+                    }
+                    timeout = 0;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    read_cycle = 0;
+                    os_printf("i2c master sends start signal timeout in READ!\n");
+                }
+                break;
+            case I2C_CLEAR_ADDRESS_FLAG:
+                /* address flag set means i2c slave sends ACK */
+                while((!i2c_flag_get(I2Cx, I2C_FLAG_ADDSEND)) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    i2c_flag_clear(I2Cx, I2C_FLAG_ADDSEND);
+                    if((SET == read_cycle) && (1 == number_of_byte)) {
+                        /* send a stop condition to I2C bus */
+                        i2c_stop_on_bus(I2Cx);
+                    }
+                    timeout = 0;
+                    state = I2C_TRANSMIT_DATA;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    read_cycle = 0;
+                    os_printf("i2c master clears address flag timeout in READ!\n");
+                }
+                break;
+            case I2C_TRANSMIT_DATA:
+                if(RESET == read_cycle) {
+                    /* wait until the transmit data buffer is empty */
+                    while((! i2c_flag_get(I2Cx, I2C_FLAG_TBE)) && (timeout < I2C_TIME_OUT)) {
+                        timeout++;
+                    }
+                    if(timeout < I2C_TIME_OUT) {
+                        /* send the EEPROM's internal address to write to : only one byte address */
+                        i2c_data_transmit(I2Cx, read_address);
+                        timeout = 0;
+                    } else {
+                        timeout = 0;
+                        state = I2C_START;
+                        read_cycle = 0;
+                        os_printf("i2c master wait data buffer is empty timeout in READ!\n");
+                    }
+                    /* wait until BTC bit is set */
+                    while((!i2c_flag_get(I2Cx, I2C_FLAG_BTC)) && (timeout < I2C_TIME_OUT)) {
+                        timeout++;
+                    }
+                    if(timeout < I2C_TIME_OUT) {
+                        timeout = 0;
+                        state = I2C_START;
+                        read_cycle++;
+                    } else {
+                        timeout = 0;
+                        state = I2C_START;
+                        read_cycle = 0;
+                        os_printf("i2c master sends EEPROM's internal address timeout in READ!\n");
+                    }
+                } else {
+                    while(number_of_byte) {
+                        timeout++;
+                        if(3 == number_of_byte) {
+                            /* wait until BTC bit is set */
+                            while(!i2c_flag_get(I2Cx, I2C_FLAG_BTC));
+                            /* disable acknowledge */
+                            i2c_ack_config(I2Cx, I2C_ACK_DISABLE);
+                        }
+                        if(2 == number_of_byte) {
+                            /* wait until BTC bit is set */
+                            while(!i2c_flag_get(I2Cx, I2C_FLAG_BTC));
+                            /* send a stop condition to I2C bus */
+                            i2c_stop_on_bus(I2Cx);
+                        }
+                        /* wait until RBNE bit is set */
+                        if(i2c_flag_get(I2Cx, I2C_FLAG_RBNE)) {
+                            /* read a byte from the EEPROM */
+                            *p_buffer = i2c_data_receive(I2Cx);
+                            /* point to the next location where the byte read will be saved */
+                            p_buffer++;
+                            /* decrement the read bytes counter */
+                            number_of_byte--;
+                            timeout = 0;
+                        }
+                        if(timeout > I2C_TIME_OUT) {
+                            timeout = 0;
+                            state = I2C_START;
+                            read_cycle = 0;
+                            os_printf("i2c master sends data timeout in READ!\n");
+                        }
+                    }
+                    timeout = 0;
+                    state = I2C_STOP;
+                }
+                break;
+            case I2C_STOP:
+                /* i2c master sends STOP signal successfully */
+                while((I2C_CTL0(I2Cx) & I2C_CTL0_STOP) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    timeout = 0;
+                    state = I2C_END;
+                    i2c_timeout_flag = I2C_OK;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    read_cycle = 0;
+                    os_printf("i2c master sends stop signal timeout in READ!\n");
+                }
+                break;
+            default:
+                state = I2C_START;
+                read_cycle = 0;
+                i2c_timeout_flag = I2C_OK;
+                timeout = 0;
+                os_printf("i2c master sends start signal in READ.\n");
+                break;
+        }
+    }
+    return I2C_END;
+}
+
+uint8_t BSP_I2C0_Write_Timeout(uint8_t master_address, uint8_t write_address, uint8_t *p_buffer, int number_of_byte)
+{
+    uint8_t state = I2C_START;
+    uint16_t timeout = 0;
+    uint8_t i2c_timeout_flag = 0;
+
+    /* enable acknowledge */
+    i2c_ack_config(I2Cx, I2C_ACK_ENABLE);
+    while(!(i2c_timeout_flag)) {
+        switch(state) {
+            case I2C_START:
+                /* i2c master sends start signal only when the bus is idle */
+                while(i2c_flag_get(I2Cx, I2C_FLAG_I2CBSY) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    i2c_start_on_bus(I2Cx);
+                    timeout = 0;
+                    state = I2C_SEND_ADDRESS;
+                } else {
+                    i2c_bus_reset();
+                    timeout = 0;
+                    state = I2C_START;
+                    os_printf("i2c bus is busy in WRITE!\n");
+                }
+                break;
+            case I2C_SEND_ADDRESS:
+                /* i2c master sends START signal successfully */
+                while((!i2c_flag_get(I2Cx, I2C_FLAG_SBSEND)) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    i2c_master_addressing(I2Cx, master_address, I2C_TRANSMITTER);
+                    timeout = 0;
+                    state = I2C_CLEAR_ADDRESS_FLAG;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    os_printf("i2c master sends start signal timeout in WRITE!\n");
+                }
+                break;
+            case I2C_CLEAR_ADDRESS_FLAG:
+                /* address flag set means i2c slave sends ACK */
+                while((!i2c_flag_get(I2Cx, I2C_FLAG_ADDSEND)) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    i2c_flag_clear(I2Cx, I2C_FLAG_ADDSEND);
+                    timeout = 0;
+                    state = I2C_TRANSMIT_DATA;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    os_printf("i2c master clears address flag timeout in WRITE!\n");
+                }
+                break;
+            case I2C_TRANSMIT_DATA:
+                /* wait until the transmit data buffer is empty */
+                while((!i2c_flag_get(I2Cx, I2C_FLAG_TBE)) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    /* send the EEPROM's internal address to write to : only one byte address */
+                    i2c_data_transmit(I2Cx, write_address);
+                    timeout = 0;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    os_printf("i2c master sends EEPROM's internal address timeout in WRITE!\n");
+                }
+                /* wait until BTC bit is set */
+                while((!i2c_flag_get(I2Cx, I2C_FLAG_BTC)) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    timeout = 0;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    os_printf("i2c master sends data timeout in WRITE!\n");
+                }
+                while(number_of_byte--) {
+                    i2c_data_transmit(I2Cx, *p_buffer);
+                    /* point to the next byte to be written */
+                    p_buffer++;
+                    /* wait until BTC bit is set */
+                    while((!i2c_flag_get(I2Cx, I2C_FLAG_BTC)) && (timeout < I2C_TIME_OUT)) {
+                        timeout++;
+                    }
+                    if(timeout < I2C_TIME_OUT) {
+                        timeout = 0;
+                    } else {
+                        timeout = 0;
+                        state = I2C_START;
+                        os_printf("i2c master sends data timeout in WRITE!\n");
+                    }
+                }
+                timeout = 0;
+                state = I2C_STOP;
+                break;
+            case I2C_STOP:
+                /* send a stop condition to I2C bus */
+                i2c_stop_on_bus(I2Cx);
+                /* i2c master sends STOP signal successfully */
+                while((I2C_CTL0(I2Cx) & I2C_CTL0_STOP) && (timeout < I2C_TIME_OUT)) {
+                    timeout++;
+                }
+                if(timeout < I2C_TIME_OUT) {
+                    timeout = 0;
+                    state = I2C_END;
+                    i2c_timeout_flag = I2C_OK;
+                } else {
+                    timeout = 0;
+                    state = I2C_START;
+                    os_printf("i2c master sends stop signal timeout in WRITE!\n");
+                }
+                break;
+            default:
+                state = I2C_START;
+                i2c_timeout_flag = I2C_OK;
+                timeout = 0;
+                os_printf("i2c master sends start signal in WRITE.\n");
+                break;
+        }
+    }
+    return I2C_END;
 }

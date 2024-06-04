@@ -10,8 +10,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct OLED_IO_S{
-    int (*send)(uint8_t address, uint8_t* data, int size);
-    int (*recv)(uint8_t address, uint8_t* data, int size);
+    int (*send)(uint8_t address, uint8_t write_address, uint8_t* data, int size);
+    int (*recv)(uint8_t address, uint8_t read_address, uint8_t* data, int size);
     void (*reset)(void);
 }OLED_IO_T;
 

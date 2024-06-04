@@ -17,11 +17,12 @@
 #define USART_RX_PIN 				GPIO_PIN_6
 
 #define USARTx						USART1
-#define USARTx_DATA_ADDRESS         ((uint32_t)&USART_DATA(USART1))
+#define USARTx_DATA_ADDRESS         ((uint32_t)&USART_DATA(USARTx))
 
-#define USART_TX_DMA_CLOCK          RCU_DMA1
-#define USART_TX_DMAx               DMA1
-#define USART_TX_DMA_CHn            DMA_CH3
+#define USART_TX_DMA_CLOCK          RCU_DMA0
+#define USART_TX_DMAx               DMA0
+#define USART_TX_DMA_CHn            DMA_CH6
+#define USART_TX_SUBPERIx           DMA_SUBPERI4
 
 #define USARTx_IRQn                 USART1_IRQn
 #define USARTx_IRQHandler           USART1_IRQHandler
@@ -103,7 +104,7 @@ void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size)
     dma_single_data_mode_init(USART_TX_DMAx, USART_TX_DMA_CHn, &dma_init_struct);
     /* configure DMA mode */
     dma_circulation_disable(USART_TX_DMAx, USART_TX_DMA_CHn);
-    dma_channel_subperipheral_select(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_SUBPERI4);
+    dma_channel_subperipheral_select(USART_TX_DMAx, USART_TX_DMA_CHn, USART_TX_SUBPERIx);
     /* enable DMA channel7 */
     dma_channel_enable(USART_TX_DMAx, USART_TX_DMA_CHn);
 

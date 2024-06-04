@@ -97,7 +97,7 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
         }else if(ticks==OS_WAIT_INFINITY){
             /* 等待 */
             current_thread = os_thread_self();
-            if(current_thread){
+            if(current_thread && current_thread->state!=OS_THREAD_STATE_WAIT){
                 current_thread->state = OS_THREAD_STATE_WAIT;
                 os_semaphore__insert(semaphore, current_thread);
                 OS_SEMAPHORE_UNLOCK(semaphore);

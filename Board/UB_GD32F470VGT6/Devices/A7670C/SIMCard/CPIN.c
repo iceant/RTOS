@@ -32,7 +32,7 @@ static A7670C_RxHandler_Result CPIN_Read_Handler(sdk_ringbuffer_t *buffer, void*
 {
     A7670C_CPIN_Read_Response* result = (A7670C_CPIN_Read_Response*)ud;
     sdk_ringbuffer_text_t find_result;
-    
+
     if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
         result->code=kA7670C_Response_Code_OK;
         int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CPIN: ", "\r\n");

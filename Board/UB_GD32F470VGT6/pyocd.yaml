@@ -3,3 +3,8 @@ pack:
 
 target_override:
   gd32f470vg
+
+probes:
+  29A509317F281FB6DC9254C4D064247F:
+    target_override:
+      gd32f470vg

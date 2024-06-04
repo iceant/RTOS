@@ -41,8 +41,8 @@ uint8_t DS1307_GetClockHalt(void) {
  * @param val Value to set, 0 to 255.
  */
 void DS1307_SetRegByte(uint8_t regAddr, uint8_t val) {
-    uint8_t bytes[2] = { regAddr, val };
-    DS1307__IO->send(DS1307_I2C_ADDR<<1, bytes, 2);
+//    uint8_t bytes[2] = { regAddr, val };
+    DS1307__IO->send(DS1307_I2C_ADDR<<1, regAddr, &val, 1);
 }
 
 /**
@@ -51,11 +51,12 @@ void DS1307_SetRegByte(uint8_t regAddr, uint8_t val) {
  * @return Value stored in the register, 0 to 255.
  */
 uint8_t DS1307_GetRegByte(uint8_t regAddr) {
-    uint8_t data[2]={regAddr, 0};
-    //uint8_t data=0;
+//    uint8_t data[2]={regAddr, 0};
+    uint8_t data=0;
     //DS1307__IO->send(DS1307_I2C_ADDR<<1, &regAddr, 1);
-    DS1307__IO->recv(DS1307_I2C_ADDR<<1, data, 2);
-    return data[1];
+//    DS1307__IO->recv(DS1307_I2C_ADDR<<1, data, 2);
+    DS1307__IO->recv(DS1307_I2C_ADDR<<1, regAddr, &data, 1);
+    return data;
 }
 
 /**

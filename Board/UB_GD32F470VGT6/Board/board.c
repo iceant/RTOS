@@ -1,22 +1,28 @@
 #include <board.h>
 #include <os_kernel.h>
 #include <stdio.h>
+#include <sdk_hex.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #if defined(ENABLE_DS1307)
-static int DS1307_Send(uint8_t address, uint8_t* data, int size){
+static int DS1307_Send(uint8_t DS1307_Address, uint8_t address, uint8_t* data, int size){
     //int ret = BSP_I2C0_Send(address, data, size);
-    int ret = BSP_I2C0_DMATx(address, data, size);
-
+//    int ret = BSP_I2C0_DMATx(address, data, size);
+    BSP_I2C0_Lock();
+    int ret = BSP_I2C0_Write_Timeout(DS1307_Address, address, data, size);
+    BSP_I2C0_UnLock();
     if(ret!=0){
         printf("I2C1 Send Error: %d\r\n", ret);
     }
 }
 
-static int DS1307_Recv(uint8_t address, uint8_t* data, int size){
-    //int ret = BSP_I2C0_Recv(address, data, size);
-    int ret = BSP_I2C0_DMARx(address, data, size);
+static int DS1307_Recv(uint8_t DS1307_Address, uint8_t address, uint8_t* data, int size){
+//    int ret = BSP_I2C0_Recv(address, data, size);
+//    int ret = BSP_I2C0_DMARx(address, data, size);
+    BSP_I2C0_Lock();
+    int ret = BSP_I2C0_Read_Timeout(DS1307_Address, address, data, size);
+    BSP_I2C0_UnLock();
     if(ret!=0){
         printf("I2C1 Recv Error: %d\r\n", ret);
     }
@@ -120,7 +126,6 @@ static os_sem_t A7670C_WaitSem;
 static uint8_t A7670C_RxBlock[A7670C_RXBLOCK_SIZE];
 static sdk_ringbuffer_t A7670C_RxBuffer;
 static bool A7670C_RxThreadFlag = false;
-static bool A7670C_ReadyFlag = false;
 
 //A7670C_RxHandler_Result (*A7670C_RxHandler_T)(sdk_ringbuffer_t * buffer, void* userdata);
 static A7670C_RxHandler_T A7670C__RxHandler=0;
@@ -140,7 +145,13 @@ static void A7670C_USART_RxThreadEntry(void* parameter){
 
     while(1){
         os_sem_take(&A7670C_RxSem, OS_WAIT_INFINITY);
-        cpu_DMB();
+
+#if 0
+        if(sdk_ringbuffer_find_str(&A7670C_RxBuffer, 0, "\r\n")!=-1){
+            sdk_hex_dump("A7670C_Rx", A7670C_RxBuffer.buffer, sdk_ringbuffer_used(&A7670C_RxBuffer));
+        }
+#endif
+
         if(A7670C__DefaultRxHandler){
             result = A7670C__DefaultRxHandler(&A7670C_RxBuffer, A7670C__DefaultRxHandlerUserdata);
             if(result==kA7670C_RxHandler_Result_CONTINUE){
@@ -175,8 +186,8 @@ static os_err_t A7670C_IO_Notify(void){
 
 static int A7670C_IO_Send(uint8_t* data, int size){
     sdk_ringbuffer_reset(&A7670C_RxBuffer);
-//    BSP_USART1_DMATx(data, size);
-    BSP_USART1_Send(data, size);
+    BSP_USART1_DMATx(data, size);
+//    BSP_USART1_Send(data, size);
     return size;
 }
 
@@ -201,6 +212,35 @@ static sFLASH_IO_T W25QFLASH_IO={.Init = BSP_SPI0_Init, .DeInit=BSP_SPI0_DeInit
         , .CS_High=BSP_SPI0_CS_High, .CS_Low=BSP_SPI0_CS_Low
         , .SendByte=BSP_SPI0_SendByte, .SendHalfWord=BSP_SPI0_SendHalfWord
 };
+
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////
+#if defined(ENABLE_OLED)
+static int OLED_Send(uint8_t OLED_Address, uint8_t address, uint8_t* data, int size){
+    BSP_I2C0_Lock();
+    int ret = BSP_I2C0_Write_Timeout(OLED_Address, address, data, size);
+    BSP_I2C0_UnLock();
+//    int ret = BSP_I2C0_DMATx(address, data, size);
+
+    if(ret!=I2C_END){
+        printf("I2C0 Send Error: %d\r\n", ret);
+    }
+}
+
+static int OLED_Recv(uint8_t OLED_Address, uint8_t address, uint8_t* data, int size){
+    BSP_I2C0_Lock();
+    int ret = BSP_I2C0_Read_Timeout(OLED_Address, address, data, size);
+    BSP_I2C0_UnLock();
+//    int ret = BSP_I2C0_DMARx(address, data, size);
+    if(ret!=I2C_END){
+        printf("I2C0 Recv Error: %d\r\n", ret);
+    }
+}
+
+static OLED_IO_T OLED_IO = {.send = OLED_Send, .recv = OLED_Recv, .reset = BSP_I2C0_Reset};
 
 #endif
 
@@ -269,6 +309,15 @@ void Board_Init(void){
     BSP_I2C0_EnableRxDMA();
     #endif
 
+    #if defined(ENABLE_OLED)
+    OLED_Init(&OLED_IO);
+    #endif
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- TFCARD ----*/
+    #if defined(ENABLE_TFCARD)
+    sd_init();
+    #endif
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- CAN0 ----*/
     #if defined(ENABLE_CAN0)
@@ -283,7 +332,7 @@ void Board_Init(void){
     A7670C_GPIO_Init();
     os_thread_init(&A7670C_RxThread, "A7670C_RxThd", A7670C_USART_RxThreadEntry, 0
                    , A7670C_RxThdStack, sizeof(A7670C_RxThdStack)
-                   , 20, os_tick_from_millisecond(100));
+                   , 20, 10);
     os_thread_startup(&A7670C_RxThread);
 
     A7670C_Init(&A7670C_power_en, &A7670C_power_key, &A7670C_power_status, &A7670C_power_reset, &A7670C_IO);

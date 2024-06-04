@@ -25,10 +25,12 @@
 #define I2C_TX_DMA_CLOCK            RCU_DMA0
 #define I2C_TX_DMAx                 DMA0
 #define I2C_TX_DMA_CHn              DMA_CH7
+#define I2C_TX_DMA_SUBPERIx         DMA_SUBPERI7
 
 #define I2C_RX_DMA_CLOCK            RCU_DMA0
 #define I2C_RX_DMAx                 DMA0
 #define I2C_RX_DMA_CHn              DMA_CH3
+#define I2C_RX_DMA_SUBPERIx         DMA_SUBPERI7
 
 #define I2C_SPEED                   100000
 
@@ -231,7 +233,7 @@ int BSP_I2C1_DMATx(uint8_t address, uint8_t* data, int size)
 
             /* configure DMA mode */
             dma_circulation_disable(I2C_TX_DMAx, I2C_TX_DMA_CHn);
-            dma_channel_subperipheral_select(I2C_TX_DMAx, I2C_TX_DMA_CHn, DMA_SUBPERI1);
+            dma_channel_subperipheral_select(I2C_TX_DMAx, I2C_TX_DMA_CHn, I2C_TX_DMA_SUBPERIx);
             /* enable I2C DMA */
             i2c_dma_config(I2Cx, I2C_DMA_ON);
             /* enable DMA TX channel */
@@ -453,7 +455,7 @@ int BSP_I2C1_DMARx(uint8_t address, uint8_t* buffer, int size){
                     dma_single_data_mode_init(I2C_RX_DMAx, I2C_RX_DMA_CHn, &dma_init_parameter);
                     /* configure DMA mode */
                     dma_circulation_disable(I2C_RX_DMAx, I2C_RX_DMA_CHn);
-                    dma_channel_subperipheral_select(I2C_RX_DMAx, I2C_RX_DMA_CHn, DMA_SUBPERI1);
+                    dma_channel_subperipheral_select(I2C_RX_DMAx, I2C_RX_DMA_CHn, I2C_RX_DMA_SUBPERIx);
                     i2c_dma_last_transfer_config(I2Cx, I2C_DMALST_ON);
                     /* enable I2C DMA */
                     i2c_dma_config(I2Cx, I2C_DMA_ON);

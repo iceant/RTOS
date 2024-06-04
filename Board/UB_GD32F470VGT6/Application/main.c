@@ -3,6 +3,7 @@
 #include <board.h>
 #include <sdk_hex.h>
 #include <sdk_fmt.h>
+#include <string.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -32,15 +33,24 @@ static void BootThread_Entry(void* p){
     USE_CAN0_Init();
 #endif
 
+#if defined(ENABLE_OLED)
+    OLED_TurnOn();
+#endif
+
+    char buf[32];
     while(1){
-        os_printf("%04d-%02d-%02d %02d:%02d:%02d\n"
-            , DS1307_GetYear()
-            , DS1307_GetMonth()
-            , DS1307_GetDate()
-            , DS1307_GetHour()
-            , DS1307_GetMinute()
-            , DS1307_GetSecond()
-        );
+        snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
+                , DS1307_GetYear()
+                , DS1307_GetMonth()
+                , DS1307_GetDate()
+                , DS1307_GetHour()
+                , DS1307_GetMinute()
+                , DS1307_GetSecond());
+
+        os_printf("%s\n", buf);
+
+        OLED_ShowString(0, 0, buf, 12);
+
 //        os_thread_yield();
         os_thread_mdelay(1000);
     }
@@ -87,7 +97,7 @@ int main(void)
                    , BootThread_Stack, sizeof(BootThread_Stack), 30,10);
     os_thread_startup(&BootThread);
 
-    Test_Printf_Init();
+//    Test_Printf_Init();
 
     os_kernel_startup();
 

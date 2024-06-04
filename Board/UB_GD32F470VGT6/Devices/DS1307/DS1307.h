@@ -44,8 +44,8 @@ typedef enum DS1307_SquareWaveEnable{
 
 typedef struct DS1307_IO_S{
     void (*reset)(void);
-    int (*send)(uint8_t address, uint8_t * data, int size);
-    int (*recv)(uint8_t address, uint8_t * buffer, int size);
+    int (*send)(uint8_t DS1307_Address, uint8_t address, uint8_t * data, int size);
+    int (*recv)(uint8_t DS1307_Address, uint8_t address, uint8_t * buffer, int size);
 }DS1307_IO_T;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -110,8 +110,8 @@ void Write_IIC_Command(unsigned char IIC_Command)
 //    Write_IIC_Byte(IIC_Command);
 //    IIC_Wait_Ack();
 //    IIC_Stop();
-    uint8_t data[]={0x00, IIC_Command};
-    int err = OLED__device->send(OLED_ADDRESS, data, 2);
+//    uint8_t data[]={0x00, IIC_Command};
+    int err = OLED__device->send(OLED_ADDRESS, 0x00, &IIC_Command, 1);
     if(err<0){
         printf("OLED Write CMD 0x%02X Failed! Err=%d\n", IIC_Command, err);
     }
@@ -130,8 +130,9 @@ void Write_IIC_Data(unsigned char IIC_Data)
 //    Write_IIC_Byte(IIC_Data);
 //    IIC_Wait_Ack();
 //    IIC_Stop();
-    uint8_t data[]={0x40, IIC_Data};
-    int err = OLED__device->send(OLED_ADDRESS, data, 2);
+//    uint8_t data[]={0x40, IIC_Data};
+//    int err = OLED__device->send(OLED_ADDRESS, data, 2);
+    int err = OLED__device->send(OLED_ADDRESS, 0x40, &IIC_Data, 1);
     if(err<0){
         printf("OLED Write Data 0x%02X Failed! Err=%d\n", IIC_Data, err);
     }
@@ -222,6 +223,7 @@ void OLED_Clear(void)
         OLED_WR_Byte (0x10,OLED_CMD);      //设置显示位置—列高地址
         for(n=0;n<128;n++)OLED_WR_Byte(0,OLED_DATA);
     } //更新显示
+
 }
 
 void OLED_On(void)

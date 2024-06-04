@@ -115,8 +115,8 @@ __A7670C__Boot:
                 break;
             }
         }
+        os_printf("retry %d...\n", nRetry);
         if(nRetry++==10){
-//            return kA7670C_Result_TIMEOUT;
             break;
         }
         A7670C_NopDelay(0x3FFFFF);
@@ -136,6 +136,7 @@ __A7670C__Boot:
                 break;
             }
         }
+        os_printf("retry %d...\n", nRetry);
         if(nRetry++==10){
             break;
         }
@@ -155,6 +156,7 @@ __A7670C__Boot:
                     break;
                 }
             }
+            os_printf("retry %d...\n", nRetry);
             if(nRetry++==10){
                 break;
 //                return kA7670C_Result_TIMEOUT;
@@ -232,13 +234,15 @@ __A7670C__Boot:
 
     nRetry = 0;
     while(1){
+        os_printf("CNTP Try to  Set To ntp.aliyun.com...\n");
         A7670C_CNTP_Write_Response CNTP_Write_Response;
-        result = A7670C_CNTP_Write(&CNTP_Write_Response, "203.107.6.88" /*ntp.aliyun.com*/, 32, 12000);
+        result = A7670C_CNTP_Write(&CNTP_Write_Response, "ntp.aliyun.com" /*ntp.aliyun.com*/, 32, 12000);
 
         if(CNTP_Write_Response.code == kA7670C_Response_Code_OK){
             os_printf("CNTP Set To ntp.aliyun.com\n");
             break;
         }
+        os_printf("retry %d...\n", nRetry);
         if(nRetry++==10){
             return kA7670C_Result_TIMEOUT;
         }

@@ -27,8 +27,6 @@ static char A7670C__Printf_Buffer[256];
 ////
 A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7670C_Pin_T* power_status, A7670C_Pin_T* power_reset, A7670C_IO_T* uart)
 {
-
-
     A7670C__Instance.power_en = power_en;
     A7670C__Instance.power_key = power_key;
     A7670C__Instance.power_status = power_status;
