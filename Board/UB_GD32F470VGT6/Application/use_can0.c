@@ -5,6 +5,8 @@
 #include <string.h>
 #include <sdk_mp.h>
 #include <sdk_fmt.h>
+#include "sdk_ultoa.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct USE_CAN0_RxRecord_S{
@@ -29,12 +31,28 @@ typedef struct USE_CAN0_Snapshot_S{
 #define USE_CAN0_RX_RING_SIZE           (USE_CAN0_RX_OBJECT_COUNT * USE_CAN0_RX_OBJECT_SIZE)
 
 
-#define K_VOLTAGE_RATIO                 0.987289474 /*斜率: 1.00045 precision: 100000*/
-#define VOLTAGE_BASE                    24000U  /*precision: 10000*/
+/*
+
+    K_VOLTAGE_RATIO = (VOLTAGE_CALIBRATION_MAX - VOLTAGE_CALIBRATION_MIN)/(rdVOLTAGE_MAX - VOLTAGE_BASE)
+
+    Voltage = ((rdVoltage - VOLTAGE_BASE) x K_VOLTAGE_RATIO + VOLTAGE_CALIBRATION_BASE)
+
+ */
+#define K_VOLTAGE_RATIO                 0.99890 /*斜率: 1.00045 precision: 100000*/
+#define VOLTAGE_BASE                    25000U  /*precision: 10000*/
 #define VOLTAGE_BASE_PRECISION          10000
 #define K_VOLTAGE_RATIO_PRECISION       1000000000
 #define VOLTAGE_PRECISION               1000
 #define VOLTAGE_CALIBRATION_BASE        24988U
+
+/* Current = ((rdCurrent - CURRENT_BASE) x K_CURRENT_RATIO + CURRENT_CALIBRATION_BASE) */
+#define K_CURRENT_RATIO                 0.99890 /*斜率: 1.00045 precision: 100000*/
+#define CURRENT_BASE                    25000U  /*precision: 10000*/
+#define CURRENT_BASE_PRECISION          10000
+#define K_CURRENT_RATIO_PRECISION       1000000000
+#define CURRENT_PRECISION               1000
+#define CURRENT_CALIBRATION_BASE        24988U
+
 
 #define HUMAN_VOLTAGE_PRECISION          10000
 #define HUMAN_CURRENT_PRECISION          1000
@@ -86,7 +104,7 @@ static uint32_t voltage_real_value(uint32_t voltage){
     return (uint32_t)((voltage - VOLTAGE_BASE) * K_VOLTAGE_RATIO + VOLTAGE_CALIBRATION_BASE);
 }
 
-
+static char USE_CAN0__ShowBuf[32];
 
 static void USE_CAN0__RxThreadEntry(void* p){
     os_size_t used = 0;
@@ -121,7 +139,8 @@ static void USE_CAN0__RxThreadEntry(void* p){
                 if(current<5){
                     current = 0;
                 }
-                rVoltage = voltage_real_value(voltage * VOLTAGE_PRECISION);
+//                rVoltage = voltage_real_value(voltage * VOLTAGE_PRECISION);
+                rVoltage = voltage * VOLTAGE_PRECISION;
 
                 if(USE_CAN0_LatestSnapshot.Current==0 && USE_CAN0_LatestSnapshot.Voltage==0){
                     if(USE_CAN0__State!=USE_CAN0_STATE_CHARGE_IDLE){
@@ -131,7 +150,8 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         /*
                          1. 显示最终的电能
                          */
-                        sdk_fmt_sfmt(OLED_Buffer, sizeof(OLED_Buffer), "Energy: %M", USE_CAN0_LatestSnapshot.EnergyWH, 10);
+                        sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
+                        sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy: %F", USE_CAN0__ShowBuf, 7);
                         OLED_Clear();
                         OLED_ShowString(1,2, OLED_Buffer, 12);
                     }
@@ -161,15 +181,20 @@ static void USE_CAN0__RxThreadEntry(void* p){
 
                         if(BSP_TIM6__TickCount-nCount>1000){
                             nCount = BSP_TIM6__TickCount;
-                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %d", USE_CAN0_LatestSnapshot.Current);
+//                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %d", USE_CAN0_LatestSnapshot.Current);
+                            sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
+                            sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %F", USE_CAN0__ShowBuf, 3);
                             OLED_ShowString(1, 2, OLED_Buffer, 12);
                             os_printf("%s ", OLED_Buffer);
 
-                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %d", USE_CAN0_LatestSnapshot.Voltage);
+//                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %d", USE_CAN0_LatestSnapshot.Voltage);
+                            sdk_ultoa(USE_CAN0_LatestSnapshot.Voltage, USE_CAN0__ShowBuf, 10);
+                            sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %F", USE_CAN0__ShowBuf, 4);
                             OLED_ShowString(1, 3, OLED_Buffer, 12);
                             os_printf("%s ", OLED_Buffer);
 
-                            sdk_fmt_sfmt(OLED_Buffer, sizeof(OLED_Buffer), "Energy : %M", USE_CAN0_LatestSnapshot.EnergyWH, 10);
+                            sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
+                            sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy : %F", USE_CAN0__ShowBuf, 7);
                             OLED_ShowString(1,4, OLED_Buffer, 12);
                             os_printf("%s\n", OLED_Buffer);
                         }

@@ -4,7 +4,7 @@
 #include <sdk_hex.h>
 #include <sdk_fmt.h>
 #include <string.h>
-
+#include <sdk_float_fmt.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -51,6 +51,7 @@ static void BootThread_Entry(void* p){
 
         OLED_ShowString(0, 0, buf, 12);
 
+
 //        os_thread_yield();
         os_thread_mdelay(1000);
     }
@@ -83,6 +84,7 @@ int main(void)
     /* startup */
     Board_Init();
 
+    sdk_fmt_register('F', sdk_float_str_fmt);
 
     dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
     dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
