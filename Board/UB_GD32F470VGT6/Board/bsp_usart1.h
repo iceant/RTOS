@@ -27,4 +27,8 @@ void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size);
 
 void BSP_USART1_Send(uint8_t* data, int size);
 
+void BSP_USART1_Lock(void);
+
+void BSP_USART1_UnLock(void);
+
 #endif /* INCLUDED_BSP_USART0_H */

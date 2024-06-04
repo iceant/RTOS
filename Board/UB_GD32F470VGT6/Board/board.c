@@ -185,9 +185,11 @@ static os_err_t A7670C_IO_Notify(void){
 }
 
 static int A7670C_IO_Send(uint8_t* data, int size){
+    BSP_USART1_Lock();
     sdk_ringbuffer_reset(&A7670C_RxBuffer);
     BSP_USART1_DMATx(data, size);
 //    BSP_USART1_Send(data, size);
+    BSP_USART1_UnLock();
     return size;
 }
 
@@ -303,7 +305,7 @@ void Board_Init(void){
 #endif
     /* ------------------------------------------------------------------------------------------ */
     /* ---- I2C0: RTC/OLED ----*/
-    #if defined(ENABLE_I2C0) || defined(ENABLE_DS1307)
+    #if defined(ENABLE_I2C0) || defined(ENABLE_DS1307) || defined(ENABLE_OLED)
     BSP_I2C0_Init();
     BSP_I2C0_EnableTxDMA();
     BSP_I2C0_EnableRxDMA();

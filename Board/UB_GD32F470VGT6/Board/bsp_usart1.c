@@ -30,8 +30,7 @@
 ////
 static BSP_USART1_RxHandler         BSP_USART__RxHandler = 0;
 static void*                        BSP_USART__RxHandlerUserdata = 0;
-
-
+static os_mutex_t BSP_USART1__Mutex;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -67,6 +66,8 @@ void BSP_USART1_Init(void)
     usart_receive_config(USARTx, USART_RECEIVE_ENABLE);
     usart_transmit_config(USARTx, USART_TRANSMIT_ENABLE);
     usart_enable(USARTx);
+
+    os_mutex_init(&BSP_USART1__Mutex);
 }
 
 void BSP_USART1_SetRxHandler(BSP_USART1_RxHandler rxHandler, void* userdata)
@@ -125,6 +126,16 @@ void BSP_USART1_Send(uint8_t* data, int size)
     }
 }
 
+
+void BSP_USART1_Lock(void)
+{
+    os_mutex_lock(&BSP_USART1__Mutex);
+}
+
+void BSP_USART1_UnLock(void)
+{
+    os_mutex_unlock(&BSP_USART1__Mutex);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
