@@ -99,6 +99,16 @@
 #include <bsp_tim6.h>
 #endif /*INCLUDED_BSP_TIM6_H*/
 
+#ifndef INCLUDED_BSP_GD303EN_H
+#include <bsp_gd303en.h>
+#endif /*INCLUDED_BSP_GD303EN_H*/
+
+#ifndef INCLUDED_BSP_USART2_H
+#include <bsp_usart2.h>
+#endif /*INCLUDED_BSP_USART2_H*/
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

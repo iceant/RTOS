@@ -24,5 +24,8 @@
 #define C__SECTION(x)                           __attribute__((section (#x)))
 #endif
 
+#ifndef C__PACKED
+#define C__PACKED                               __attribute__((__packed__))
+#endif
 
 #endif /*INCLUDED_RTOS_COMPILER_H*/

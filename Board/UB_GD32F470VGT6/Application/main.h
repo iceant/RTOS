@@ -59,11 +59,13 @@ OF SUCH DAMAGE.
 #include <use_can0.h>
 #endif /*INCLUDED_USE_CAN0_H*/
 
+#ifndef INCLUDED_USE_USART2_H
+#include <use_usart2.h>
+#endif /*INCLUDED_USE_USART2_H*/
 
-
-
-
-
+#ifndef INCLUDED_MCU_PROTOCOL_H
+#include <mcu_protocol.h>
+#endif /*INCLUDED_MCU_PROTOCOL_H*/
 
 
 

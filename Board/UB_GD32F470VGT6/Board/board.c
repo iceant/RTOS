@@ -351,6 +351,18 @@ void Board_Init(void){
     #if defined(ENABLE_DS1307)
     DS1307_Init(&DS1307_IO);
     #endif
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- GD32F303 ----*/
+    BSP_GD303EN_Init();
+    BSP_GD303EN_Enable();
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- USART2: 和 MCU GD303 通讯 ----*/
+    BSP_USART2_Init();
+    BSP_USART2_EnableDMATx();
+    BSP_USART2_EnableRxIRQ();
+
 }
 
 

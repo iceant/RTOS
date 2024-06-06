@@ -1,0 +1,11 @@
+#include <gd32f303xx_it.h>
+#include <os_kernel.h>
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+
+void SysTick_Handler(void)
+{
+    os_scheduler_on_systick();
+}

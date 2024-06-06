@@ -176,7 +176,11 @@ uint8_t sdk_ringbuffer_peek(sdk_ringbuffer_t *buffer, int idx) {
 }
 
 int sdk_ringbuffer_is_full(sdk_ringbuffer_t *buffer) {
-    return RB_ISFULL(buffer);
+    uint32_t next_write_idx = buffer->write_offset + 1;
+    if(next_write_idx>=buffer->buffer_size){
+        next_write_idx = 0;
+    }
+    return (next_write_idx==buffer->read_offset);
 }
 
 int sdk_ringbuffer_is_empty(sdk_ringbuffer_t *buffer) {
@@ -377,9 +381,9 @@ os_size_t sdk_ringbuffer_memcpy(uint8_t * dst, sdk_ringbuffer_t* buffer, int off
     os_size_t buffer_size = sdk_ringbuffer_used(buffer);
     os_size_t copy_size = buffer_size>size?size:buffer_size;
 //    rt_kprintf("buffer_size: %d, copy_size:%d\n", buffer_size, copy_size);
-    int i;
+    os_size_t i;
     for(i=0; i<copy_size; i++){
-        c = sdk_ringbuffer_peek(buffer, i+offset);
+        c = sdk_ringbuffer_peek(buffer, (int)(i+offset));
         *dst++ = c;
     }
     return copy_size;

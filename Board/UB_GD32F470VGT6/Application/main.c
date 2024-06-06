@@ -37,6 +37,8 @@ static void BootThread_Entry(void* p){
     OLED_TurnOn();
 #endif
 
+    USE_USART2_Init();
+
     char buf[32];
     while(1){
         snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
@@ -51,6 +53,8 @@ static void BootThread_Entry(void* p){
 
         OLED_ShowString(0, 0, buf, 12);
 
+//        mcu_protocol_t protocol;
+//        mcu_protocol_du_print(&protocol, "MAIN", 5);
 
 //        os_thread_yield();
         os_thread_mdelay(1000);
@@ -111,7 +115,7 @@ int main(void)
             sdk_hex_dump("USART0", usart0_rx_buf->buffer, sdk_ringbuffer_used(usart0_rx_buf));            
         }
         os_printf("[main] ERROR count=%d\n", nCount++);
-        for(int i=0; i<0x3FffFFf; i++){}
+        for(int i=0; i<0x3FFFFFF; i++){}
     }
 }
 #else
