@@ -130,7 +130,8 @@ os_err_t os_scheduler_init(void){
 
     os_scheduler__current_tick = 0;
     os_scheduler__current_thread = 0;
-    
+    os_scheduler__stop_nest = 0;
+
     cpu_lock_init(&os_scheduler__lock);
     os_scheduler__state = OS_SCHEDULER_STATE_INITIALIZED;
 

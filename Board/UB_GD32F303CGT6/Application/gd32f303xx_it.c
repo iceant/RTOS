@@ -7,5 +7,7 @@
 
 void SysTick_Handler(void)
 {
+#if OS_ENABLE
     os_scheduler_on_systick();
+#endif
 }

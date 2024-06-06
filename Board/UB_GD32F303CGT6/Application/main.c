@@ -3,33 +3,46 @@
 #include <os_kernel.h>
 #include <sdk_fmt.h>
 #include <string.h>
-
+#include <meter_task.h>
+#include <meter_protocol.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define BOOT_THREAD_STACK_SIZE 1024
-
 C__ALIGNED(OS_ALIGN_SIZE)
-static uint8_t BootThread_Stack[BOOT_THREAD_STACK_SIZE];
+static uint8_t BootThread_Stack[1024];
 static os_thread_t BootThread;
-
-////////////////////////////////////////////////////////////////////////////////
-////
+static char BootThread_Buf[128];
 static void BootThread_Entry(void* p){
-    os_size_t nCount = 0;
-    char buf[32];
+
+    /* 等待主控MCU启动 */
+    os_thread_mdelay(1000);
+
+    /* 通知主控，我已经启动了 */
+    mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "GD303 Startup", 13);
+
+    /* 用于计算电能 */
+    Meter_Task_Init();
 
     while(1){
-        int size = sdk_fmt_sfmt(buf, sizeof(buf), "Thread:%p, nCount:%d\n", os_thread_self(), nCount++);
-        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, buf, size);
-
+        meter_protocol_datetime_t * datetime = meter_protocol_datetime_get();
+        /* 每秒发送一次数据，测试TIMER的精度 */
+        int sz = snprintf(BootThread_Buf, sizeof(BootThread_Buf), "Tick:%d, %04d-%02d-%02d %02d:%02d:%02d.%d"
+                          , BSP_TIM6__TickCount
+                          , datetime->year
+                          , datetime->month
+                          , datetime->date
+                          , datetime->hour
+                          , datetime->min
+                          , datetime->sec
+                          , BSP_TIM6__TickCount%1000);
+        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, BootThread_Buf, sz);
+//        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "Hello", 5);
         os_thread_mdelay(1000);
     }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
 
 
 int main(void){
@@ -40,25 +53,27 @@ int main(void){
 #if 1
     os_kernel_init();
 
+    /* 用于和 MCU 通讯 */
     USE_USART1_Init();
 
-    os_thread_init(&BootThread, "BootThd", BootThread_Entry, 0, BootThread_Stack, sizeof(BootThread_Stack)
-                   , 20, 10);
+    os_thread_init(&BootThread, "Boot", BootThread_Entry, 0
+                   , BootThread_Stack, sizeof(BootThread_Stack), 20, 10);
     os_thread_startup(&BootThread);
+
 
     os_kernel_startup();
 
 #endif
 
 #if 0
-    char buf[32];
+    char buf[128];
     uint32_t nCount = 0;
 
     char* message = "Hello";
     while(1) {
-        int size = snprintf(buf, sizeof(buf), "Hello, %d", nCount++);
-        mcu_protocol_du_print(&mcuProtocol, buf, size);
-//        mcu_protocol_du_print(&mcuProtocol, message, strlen(message));
+        int size = snprintf(buf, sizeof(buf), "Hello, %d", BSP_TIM6__TickCount);
+        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, buf, size);
+//        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, message, strlen(message));
 
 //        BSP_USART1_DMATx(message, strlen(message));
 

@@ -239,6 +239,6 @@ void USE_CAN0_Init(void)
     os_semaphore_init(&USE_CAN0__RxSem, "USE_CAN0_RxSem", 0, OS_SEMAPHORE_FLAG_FIFO);
     os_thread_init(&USE_CAN0__RxThread, "USE_CAN0_RxThd", USE_CAN0__RxThreadEntry, 0
                    , USE_CAN0__RxThreadStack, sizeof(USE_CAN0__RxThreadStack)
-                   , 20,10);
+                   , 20,100);
     os_thread_startup(&USE_CAN0__RxThread);
 }

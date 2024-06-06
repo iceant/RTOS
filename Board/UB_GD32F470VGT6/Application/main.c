@@ -39,15 +39,24 @@ static void BootThread_Entry(void* p){
 
     USE_USART2_Init();
 
+    Task_MCU_DateTime_Init();
+
     char buf[32];
     while(1){
+        global_g_datetime.year = DS1307_GetYear();
+        global_g_datetime.month = DS1307_GetMonth();
+        global_g_datetime.date = DS1307_GetDate();
+        global_g_datetime.hour = DS1307_GetHour();
+        global_g_datetime.min = DS1307_GetMinute();
+        global_g_datetime.sec = DS1307_GetSecond();
+
         snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
-                , DS1307_GetYear()
-                , DS1307_GetMonth()
-                , DS1307_GetDate()
-                , DS1307_GetHour()
-                , DS1307_GetMinute()
-                , DS1307_GetSecond());
+                , global_g_datetime.year
+                , global_g_datetime.month
+                , global_g_datetime.date
+                , global_g_datetime.hour
+                , global_g_datetime.min
+                , global_g_datetime.sec);
 
         os_printf("%s\n", buf);
 

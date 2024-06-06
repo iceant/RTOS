@@ -17,7 +17,6 @@ void Board_Init(void)
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
 
-
     SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */
     NVIC_SetPriority(SysTick_IRQn, 0xFE);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
@@ -27,6 +26,14 @@ void Board_Init(void)
     BSP_USART1_Init();
     BSP_USART1_EnableDMATx();
     BSP_USART1_EnableRxIRQ();
+
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* CAN0: 用于采集电压电流数据 */
+    BSP_CAN0_Init(250);
+
+    /* ---------------------------------------------------------------------------------------------------- */
+    /* TIMER6: 用于计算电能 */
+    BSP_TIM6_Init();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@ typedef os_uint_t os_tick_t;
 ////
 
 #ifndef OS_TICKS_PER_SECOND
-#define OS_TICKS_PER_SECOND 1000
+#define OS_TICKS_PER_SECOND 100
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

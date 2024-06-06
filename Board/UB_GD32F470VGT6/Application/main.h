@@ -67,6 +67,15 @@ OF SUCH DAMAGE.
 #include <mcu_protocol.h>
 #endif /*INCLUDED_MCU_PROTOCOL_H*/
 
+#ifndef INCLUDED_TASK_MCU_DATETIME_H
+#include <task_mcu_datetime.h>
+#endif /*INCLUDED_TASK_MCU_DATETIME_H*/
+
+#ifndef INCLUDED_GLOBAL_H
+#include <global.h>
+#endif /*INCLUDED_GLOBAL_H*/
+
+
 
 
 #endif /* __MAIN_H */

@@ -64,8 +64,8 @@ void BSP_USART1_Init(void)
     usart_parity_config(USARTx, USART_PM_NONE);
     usart_hardware_flow_rts_config(USARTx, USART_RTS_DISABLE);
     usart_hardware_flow_cts_config(USARTx, USART_CTS_DISABLE);
-    usart_receive_config(USARTx, USART_RECEIVE_ENABLE);
     usart_transmit_config(USARTx, USART_TRANSMIT_ENABLE);
+    usart_receive_config(USARTx, USART_RECEIVE_ENABLE);
     usart_enable(USARTx);
 
 }
@@ -124,7 +124,7 @@ void BSP_USART1_Send(uint8_t* data, int size)
 {
     for(int i=0; i<size; i++){
         usart_data_transmit(USARTx, (uint8_t)*data++);
-        while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
+        while(RESET == usart_flag_get(USARTx, USART_FLAG_TC));
     }
 }
 

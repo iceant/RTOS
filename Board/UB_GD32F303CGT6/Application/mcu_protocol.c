@@ -3,13 +3,39 @@
 #include <sdk_hex.h>
 #include <string.h>
 #include <board.h>
+#include <meter_protocol.h>
+#include <stdio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
 
-static void mcu_protocol_handler(mcu_protocol_t * protocol, void* ud){
-
+static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
+    switch(MCU_PROTOCOL_DU_TYPE_GET(protocol)){
+        case kMCU_PROTOCOL_DU_DATETIME:{
+            uint8_t * du = MCU_PROTOCOL_DU_GET(protocol);
+            meter_protocol_datetime_set(
+                    SDK_HEX_GET_UINT16_BE(du, 0), /*year*/
+                    SDK_HEX_GET_UINT8(du, 2),/*month*/
+                    SDK_HEX_GET_UINT8(du, 3),/*date*/
+                    SDK_HEX_GET_UINT8(du, 4),/*hour*/
+                    SDK_HEX_GET_UINT8(du, 5),/*min*/
+                    SDK_HEX_GET_UINT8(du, 6),/*sec*/
+                    (uint16_t)(BSP_TIM6__TickCount % 1000)
+                    );
+//            char buf[128];
+//            meter_protocol_datetime_t * datetime = meter_protocol_datetime_get();
+//            int size = snprintf(buf, sizeof(buf), "GOT:%04d-%02d-%02d %02d:%02d:%02d"
+//                     , datetime->year
+//                     , datetime->month
+//                     , datetime->date
+//                     , datetime->hour
+//                     , datetime->min
+//                     , datetime->sec);
+//            mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, buf, size);
+            break;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +43,7 @@ static void mcu_protocol_handler(mcu_protocol_t * protocol, void* ud){
 
 
 
-mcu_protocol_handler_t mcu_protocol_g_handler = mcu_protocol_handler;
+mcu_protocol_handler_t mcu_protocol_g_handler = mcu_protocol__handler;
 
 mcu_protocol_t mcu_protocol_g_rx_protocol;
 mcu_protocol_t mcu_protocol_g_tx_protocol;

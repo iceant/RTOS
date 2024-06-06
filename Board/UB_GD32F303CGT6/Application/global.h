@@ -1,0 +1,4 @@
+#ifndef INCLUDED_GLOBAL_H
+#define INCLUDED_GLOBAL_H
+
+#endif /*INCLUDED_GLOBAL_H*/

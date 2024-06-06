@@ -21,22 +21,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #ifndef MCU_PROTOCOL_DU_MAX_SIZE
-#define MCU_PROTOCOL_DU_MAX_SIZE (1024 * 2)
+#define MCU_PROTOCOL_DU_MAX_SIZE (1024 * 4)
 #endif
 
 #ifndef MCU_PROTOCOL_BUFFER_SIZE
 #define MCU_PROTOCOL_BUFFER_SIZE (MCU_PROTOCOL_DU_MAX_SIZE + 7)
 #endif
+
+#define MCU_PROTOCOL_START 0xBEEF
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_PRINT = 0,
-    kMCU_PROTOCOL_DU_ECRC
+    kMCU_PROTOCOL_DU_ECRC,
+    kMCU_PROTOCOL_DU_DATETIME,
 }mcu_protocol_du_type_t;
 
 /*
- * START: 0x23, 0x23
+ * START: 0xBE, 0xEF
  * DU_SIZE: uint16_t BE
  * DU_TYPE: uint8_t
  * DU     : uint8_t[MCU_PROTOCOL_DU_MAX_SIZE]
@@ -53,7 +56,7 @@ extern mcu_protocol_handler_t mcu_protocol_g_handler;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define MCU_PROTOCOL_DU_START_SET(P) SDK_HEX_SET_UINT16_BE((P)->buffer, 0, 0x2323)
+#define MCU_PROTOCOL_DU_START_SET(P) SDK_HEX_SET_UINT16_BE((P)->buffer, 0, MCU_PROTOCOL_START)
 
 #define MCU_PROTOCOL_DU_SIZE_GET(P) SDK_HEX_GET_UINT16_BE((P)->buffer, 2)
 #define MCU_PROTOCOL_DU_SIZE_SET(P, SZ) SDK_HEX_SET_UINT16_BE((P)->buffer, 2, (SZ))
@@ -61,7 +64,8 @@ extern mcu_protocol_handler_t mcu_protocol_g_handler;
 #define MCU_PROTOCOL_DU_TYPE_GET(P) SDK_HEX_GET_UINT8((P)->buffer, 4)
 #define MCU_PROTOCOL_DU_TYPE_SET(P, SZ) SDK_HEX_SET_UINT8((P)->buffer, 4, (SZ))
 
-#define MCU_PROTOCOL_DU_SET(P, DU, DU_SZ) memcpy((P)->buffer + 5, (DU), (DU_SZ))
+#define MCU_PROTOCOL_DU_SET(P, DU, DU_SZ) memcpy(((P)->buffer + 5), (DU), (DU_SZ))
+#define MCU_PROTOCOL_DU_GET(P) ((P)->buffer + 5)
 
 #define MCU_PROTOCOL_CRC_SET(P, CRC) SDK_HEX_SET_UINT16_LE((P)->buffer, MCU_PROTOCOL_DU_SIZE_GET(P) + 5, (CRC))
 

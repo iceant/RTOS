@@ -8,7 +8,7 @@
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
 
-static void mcu_protocol_handler(mcu_protocol_t * protocol, void* ud){
+static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
     switch (MCU_PROTOCOL_DU_TYPE_GET(protocol)) {
         case kMCU_PROTOCOL_DU_PRINT:{
             os_printf("[GD303]");
@@ -27,10 +27,9 @@ static void mcu_protocol_handler(mcu_protocol_t * protocol, void* ud){
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-
-
-mcu_protocol_handler_t mcu_protocol_g_handler = mcu_protocol_handler;
-
+mcu_protocol_handler_t mcu_protocol_g_handler = mcu_protocol__handler;
+mcu_protocol_t mcu_protocol_g_tx_protocol;
+mcu_protocol_t mcu_protocol_g_rx_protocol;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -73,8 +72,8 @@ void mcu_protocol_crc(mcu_protocol_t * protocol)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define MCU_PROTOCOL_SEND BSP_USART1_Send
-//#define MCU_PROTOCOL_SEND BSP_USART1_DMATx
+//#define MCU_PROTOCOL_SEND BSP_USART2_Send
+#define MCU_PROTOCOL_SEND BSP_USART2_DMATx
 
 void mcu_protocol_send(mcu_protocol_t * protocol){
 //    os_mutex_lock(&mcu_protocol_lock);
@@ -85,7 +84,6 @@ void mcu_protocol_send(mcu_protocol_t * protocol){
     MCU_PROTOCOL_SEND(protocol->data_unit, protocol->du_size.uint);
     MCU_PROTOCOL_SEND(protocol->crc, 2);
 #else
-//    BSP_USART1_Send("HELLO!!!", 8);
     MCU_PROTOCOL_SEND(protocol->buffer, MCU_PROTOCOL_DU_SIZE_GET(protocol) + 7);
 #endif
 
@@ -121,5 +119,29 @@ int mcu_protocol_du_ecrc(mcu_protocol_t * protocol)
     }
 
     mcu_protocol_crc(protocol);
+    return 0;
+}
+
+int mcu_protocol_du_datetime(mcu_protocol_t * protocol, uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t min, uint8_t sec)
+{
+    int err = mcu_protocol_init(protocol, kMCU_PROTOCOL_DU_DATETIME, 0, 0);
+
+    if(err!=0){
+        return err;
+    }
+
+    uint8_t * du = MCU_PROTOCOL_DU_GET(protocol);
+    int idx = 0;
+    SDK_HEX_SET_UINT16_BE(du, idx, year); idx+=2;
+    SDK_HEX_SET_UINT8(du, idx, month); idx+=1;
+    SDK_HEX_SET_UINT8(du, idx, date); idx+=1;
+    SDK_HEX_SET_UINT8(du, idx, hour); idx+=1;
+    SDK_HEX_SET_UINT8(du, idx, min); idx+=1;
+    SDK_HEX_SET_UINT8(du, idx, sec); idx+=1;
+
+    MCU_PROTOCOL_DU_SIZE_SET(protocol, 7);
+
+    mcu_protocol_crc(protocol);
+
     return 0;
 }

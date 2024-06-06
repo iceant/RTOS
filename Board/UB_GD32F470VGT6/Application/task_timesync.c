@@ -111,7 +111,7 @@ void Task_TimeSync_Init(void)
     os_thread_init(&Task_TimeSync_Thread, "Tsk_TimSyc"
                    , Task_TimeSync_ThreadEntry, 0
                    , Task_TimeSync_Stack, sizeof(Task_TimeSync_Stack)
-                   , 20, 10);
+                   , 20, 100);
     os_thread_startup(&Task_TimeSync_Thread);
 
 }

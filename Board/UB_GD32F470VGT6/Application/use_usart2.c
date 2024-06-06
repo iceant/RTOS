@@ -8,8 +8,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define USE_USART2_THREAD_STACK_SIZE 1024
-#define USE_USART2_DU_SIZE (1024*2)
-#define USE_USART2_RX_BLOCK_SIZE (USE_USART2_DU_SIZE + 256)
+#define USE_USART2_DU_SIZE (1024*4)
+#define USE_USART2_RX_BLOCK_SIZE (USE_USART2_DU_SIZE + 7)
 
 C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t USE_USART2__ThreadStack[USE_USART2_THREAD_STACK_SIZE];
@@ -18,7 +18,7 @@ static os_semaphore_t USE_USART2__Sem;
 static uint8_t USE_USART2__RxBlock[USE_USART2_RX_BLOCK_SIZE];
 static sdk_ringbuffer_t USE_USART2__RxBuffer;
 
-static uint8_t USE_USART2__DataUnit[USE_USART2_DU_SIZE];
+//static uint8_t USE_USART2__DataUnit[USE_USART2_DU_SIZE];
 
 static mcu_protocol_handler_t USE_USART2__ProtocolHandler = 0;
 static void* USE_USART2__ProtocolHandler_Userdata = 0;
@@ -55,13 +55,9 @@ static void USE_USART2__RxThread(void* p){
             continue;
         }
 
-//        os_printf("write_idx:%d, read_idx:%d, used:%d\n", USE_USART2__RxBuffer.write_offset, USE_USART2__RxBuffer.read_offset
-//                , sdk_ringbuffer_used(&USE_USART2__RxBuffer));
-//        sdk_hex_dump("USART2", USE_USART2__RxBuffer.buffer, sdk_ringbuffer_used(&USE_USART2__RxBuffer));
-
         start_idx = -1;
         for(int i=0; i<used; i++){
-            if(sdk_ringbuffer_peek(&USE_USART2__RxBuffer, i)==0x23 && sdk_ringbuffer_peek(&USE_USART2__RxBuffer, i+1)){
+            if(sdk_ringbuffer_peek(&USE_USART2__RxBuffer, i)==0xBE && sdk_ringbuffer_peek(&USE_USART2__RxBuffer, i+1)==0xEF){
                 start_idx = i;
                 break;
             }
@@ -123,10 +119,11 @@ void USE_USART2_Init(void)
     USE_USART2__ProtocolHandler = mcu_protocol_g_handler;
 
     sdk_ringbuffer_init(&USE_USART2__RxBuffer, USE_USART2__RxBlock, sizeof(USE_USART2__RxBlock));
+
     os_semaphore_init(&USE_USART2__Sem, "USE_USART2__Sem", 0, OS_QUEUE_FIFO);
     os_thread_init(&USE_USART2__Thread, "USE_USART2_Thd", USE_USART2__RxThread, 0,
                    USE_USART2__ThreadStack, sizeof(USE_USART2__ThreadStack)
-                   , 20, 10);
+                   , 20, 100);
     os_thread_startup(&USE_USART2__Thread);
 
 }

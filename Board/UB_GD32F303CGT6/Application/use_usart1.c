@@ -8,8 +8,8 @@
 ////
 
 #define USE_USART1_THREAD_STACK_SIZE 1024
-#define USE_USART1_DU_SIZE (1024*2)
-#define USE_USART1_RX_BLOCK_SIZE (USE_USART1_DU_SIZE + 256)
+#define USE_USART1_DU_SIZE (1024*4)
+#define USE_USART1_RX_BLOCK_SIZE (USE_USART1_DU_SIZE + 7)
 
 static uint8_t USE_USART1_Thread_Stack[USE_USART1_THREAD_STACK_SIZE];
 static os_thread_t USE_USART1_Thread;
@@ -17,7 +17,7 @@ static os_semaphore_t USE_USART1_Sem;
 static uint8_t USE_USART1_RxBlock[USE_USART1_RX_BLOCK_SIZE];
 static sdk_ringbuffer_t USE_USART1_RxBuffer;
 
-static uint8_t USE_USART1__DataUnit[USE_USART1_DU_SIZE];
+//static uint8_t USE_USART1__DataUnit[USE_USART1_DU_SIZE];
 
 static mcu_protocol_handler_t USE_USART1__ProtocolHandler = 0;
 static void* USE_USART1__ProtocolHandler_Userdata = 0;
@@ -38,6 +38,7 @@ static void USE_USART1__SendErrorCRC(void){
 static void USE_USART1__ThreadEntry(void* p){
 
     BSP_USART1_SetRxHandler(USE_USART1__RxHandler, 0);
+
     int used = 0;
     int start_idx = -1;
     while(1){
@@ -45,13 +46,13 @@ static void USE_USART1__ThreadEntry(void* p){
             os_semaphore_take(&USE_USART1_Sem, OS_WAIT_INFINITY);
         }
 
-        if(used<7){
+        if(used<5){
             continue;
         }
 
         start_idx = -1;
         for(int i=0; i<used; i++){
-            if(sdk_ringbuffer_peek(&USE_USART1_RxBuffer, i)==0x23 && sdk_ringbuffer_peek(&USE_USART1_RxBuffer, i+1)){
+            if(sdk_ringbuffer_peek(&USE_USART1_RxBuffer, i)==0xBE && sdk_ringbuffer_peek(&USE_USART1_RxBuffer, i+1)==0xEF){
                 start_idx = i;
                 break;
             }
@@ -68,7 +69,7 @@ static void USE_USART1__ThreadEntry(void* p){
             continue;
         }
 
-        uint16_t du_size = SDK_HEX_GET_UINT16_BE(USE_USART1_RxBuffer.buffer, start_idx);
+        uint16_t du_size = SDK_HEX_GET_UINT16_BE(USE_USART1_RxBuffer.buffer, start_idx+2);
 
         if(used < (start_idx + du_size + 7)){
             /*还没有接收完成*/
@@ -78,7 +79,7 @@ static void USE_USART1__ThreadEntry(void* p){
         uint8_t  du_type = USE_USART1_RxBuffer.buffer[start_idx + 4];
 
         uint16_t crc = SDK_HEX_GET_UINT16_LE(USE_USART1_RxBuffer.buffer, start_idx+5+du_size);
-        uint16_t chk_crc = sdk_crc16(USE_USART1_RxBuffer.buffer+start_idx+5, du_size);
+        uint16_t chk_crc = sdk_crc16(USE_USART1_RxBuffer.buffer+start_idx, du_size+5);
         if(crc!=chk_crc){
             sdk_ringbuffer_reset(&USE_USART1_RxBuffer);
             USE_USART1__SendErrorCRC();
@@ -89,6 +90,7 @@ static void USE_USART1__ThreadEntry(void* p){
             mcu_protocol_init(&mcu_protocol_g_rx_protocol, du_type, 0, 0);
             assert(du_size < MCU_PROTOCOL_DU_MAX_SIZE);
             MCU_PROTOCOL_DU_SET(&mcu_protocol_g_rx_protocol, USE_USART1_RxBuffer.buffer+start_idx+5, du_size);
+            MCU_PROTOCOL_DU_SIZE_SET(&mcu_protocol_g_rx_protocol, du_size);
             MCU_PROTOCOL_CRC_SET(&mcu_protocol_g_rx_protocol, crc);
             USE_USART1__ProtocolHandler(&mcu_protocol_g_rx_protocol, USE_USART1__ProtocolHandler_Userdata);
         }

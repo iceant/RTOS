@@ -36,6 +36,9 @@ static os_mutex_t                   BSP_USART2__Mutex;
 
 void BSP_USART2_Init(void)
 {
+
+    os_mutex_init(&BSP_USART2__Mutex);
+
     /* enable GPIO clock */
     rcu_periph_clock_enable(USART_TX_GPIO_CLOCK);
     rcu_periph_clock_enable(USART_RX_GPIO_CLOCK);
@@ -67,7 +70,6 @@ void BSP_USART2_Init(void)
     usart_transmit_config(USARTx, USART_TRANSMIT_ENABLE);
     usart_enable(USARTx);
 
-    os_mutex_init(&BSP_USART2__Mutex);
 }
 
 void BSP_USART2_SetRxHandler(BSP_USART2_RxHandler rxHandler, void* userdata)
@@ -122,7 +124,7 @@ void BSP_USART2_Send(uint8_t* data, int size)
 {
     for(int i=0; i<size; i++){
         usart_data_transmit(USARTx, (uint8_t)*data++);
-        while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
+        while(RESET == usart_flag_get(USARTx, USART_FLAG_TC));
     }
 }
 
