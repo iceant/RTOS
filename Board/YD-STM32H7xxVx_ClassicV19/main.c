@@ -19,22 +19,26 @@ static void worker_thread_entry(void* p){
     int id = (int)p;
     os_size_t nCount = 0;
     while(1){
-//        switch(id){
-//            case 1:{
-//                LED_YELLOW_Toggle();
-//                break;
-//            }
-//            case 2:{
-//                LED_BLUE_Toggle();
-//                break;
-//            }
-//            default:
-//                break;
-//        }
-        os_printf("[%s] %ld remain:%ld, tick:%ld, sp=%p\r\n", os_thread_self()->name, nCount++, os_thread_self()->remain_ticks, os_scheduler_get_current_tick(), os_thread_self()->sp);
+        nCount++;
+        if(nCount==100000){
+            nCount = 0;
+            switch(id){
+                case 1:{
+                    LED_YELLOW_Toggle();
+                    break;
+                }
+                case 2:{
+                    LED_BLUE_Toggle();
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
         
-        os_thread_yield();
+//        os_printf("[%s] %ld remain:%ld, tick:%ld, sp=%p\r\n", os_thread_self()->name, nCount++, os_thread_self()->remain_ticks, os_scheduler_get_current_tick(), os_thread_self()->sp);
 //        os_thread_mdelay(id * 1000);
+        os_thread_yield();
     }
 }
 

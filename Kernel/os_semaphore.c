@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "os_scheduler.h"
+#include "os_printf.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -151,24 +152,28 @@ os_err_t os_semaphore_release(os_semaphore_t * semaphore){
         node = OS_LIST_NEXT(head);
         OS_LIST_REMOVE(node);
         thread = OS_CONTAINER_OF(node, os_thread_t, wait_node);
-        curr_thread = os_scheduler_current_thread();
         if(thread){
+            curr_thread = os_scheduler_current_thread();
             if(curr_thread){
-                if(os_priority_cmp(thread->curr_priority, curr_thread->curr_priority)==OS_PRIORITY_CMP_HIGH)
-                {
-                    #if defined(OS_SEM_DEBUG_ENABLE)
-                    os_printf("[sem-dbg] %s high > %s\n", thread->name, curr_thread->name);
-                    #endif
-                    /*优先级比现在运行的优先级高，强制切换*/
-                    os_scheduler_yield(curr_thread);
-                    os_scheduler_push_front(thread); /*加到队列前面，优先执行*/
-                    OS_SEMAPHORE_UNLOCK(semaphore);
-                    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
+                if(curr_thread->state!=OS_THREAD_STATE_RUNNING){
+                    os_scheduler_push(thread); /*当前线程不在运行状态，忽略，直接将目标线程加入调度列表*/
                 }else{
-                    #if defined(OS_SEM_DEBUG_ENABLE)
-                    os_printf("[sem-dbg] push %s\n", thread->name);
-                    #endif
-                    os_scheduler_push(thread); /* 比当前线程优先级低，将线程加入就绪表，等待调用 */
+                    if(os_priority_cmp(thread->curr_priority, curr_thread->curr_priority)==OS_PRIORITY_CMP_HIGH)
+                    {
+                        #if defined(OS_SEM_DEBUG_ENABLE)
+                        os_printf("[sem-dbg] %s high > %s\n", thread->name, curr_thread->name);
+                        #endif
+                        /*优先级比现在运行的优先级高，强制切换*/
+                        os_scheduler_yield(curr_thread);
+                        os_scheduler_push_front(thread); /*加到队列前面，优先执行*/
+                        OS_SEMAPHORE_UNLOCK(semaphore);
+                        return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
+                    }else{
+                        #if defined(OS_SEM_DEBUG_ENABLE)
+                        os_printf("[sem-dbg] push %s\n", thread->name);
+                        #endif
+                        os_scheduler_push(thread); /* 比当前线程优先级低，将线程加入就绪表，等待调用 */
+                    }
                 }
             }else{
                 #if defined(OS_SEM_DEBUG_ENABLE)

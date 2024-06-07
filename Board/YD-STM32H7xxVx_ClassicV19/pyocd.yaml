@@ -6,7 +6,7 @@ target_override: stm32h743vitx
 probes:
   0001A0000001:
     target_override: stm32h743vitx
-    frequency: 1000000         #烧录速率
+    frequency: 8000000         #烧录速率
   601012352:
 
 

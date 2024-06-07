@@ -8,7 +8,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-
+#ifndef OS_TICKS_PER_SECOND
+    #define OS_TICKS_PER_SECOND 100
+#endif
 
 #ifndef OS_NAME_SIZE
 #define OS_NAME_SIZE 8
