@@ -5,7 +5,8 @@
 #include <string.h>
 #include <sdk_mp.h>
 #include <sdk_fmt.h>
-#include "sdk_ultoa.h"
+#include <sdk_ultoa.h>
+#include "global.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -34,7 +35,6 @@ typedef struct USE_CAN0_Snapshot_S{
 /*
 
     K_VOLTAGE_RATIO = (VOLTAGE_CALIBRATION_MAX - VOLTAGE_CALIBRATION_MIN)/(rdVOLTAGE_MAX - VOLTAGE_BASE)
-
     Voltage = ((rdVoltage - VOLTAGE_BASE) x K_VOLTAGE_RATIO + VOLTAGE_CALIBRATION_BASE)
 
  */
@@ -79,9 +79,9 @@ static sdk_mp_t USE_CAN0__EnergyRatio;
 static int USE_CAN0__State;
 
 static uint8_t OLED_Buffer[64];
+static char USE_CAN0__ShowBuf[32];
 
 #define USE_CAN0_STATE_CHARGE_IDLE          0
-#define USE_CAN0_STATE_CHARGE_START         1
 #define USE_CAN0_STATE_CHARGE_WIP           2
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -98,23 +98,41 @@ static void USE_CAN0__RxHandler(can_receive_message_struct* rxMsg, void* userdat
 }
 
 static uint32_t voltage_real_value(uint32_t voltage){
-    if(voltage<=VOLTAGE_BASE){
-        return 0;
+    global_t* global = global_get();
+    if(global->meter.std_voltage_min!=-1U && global->meter.rd_voltage_min!=-1U){
+        if(voltage<=global->meter.rd_voltage_min){
+            return 0;
+        }
+        return (uint32_t)(((voltage - global->meter.rd_voltage_min) * global->meter.voltage_ratio) + global->meter.std_voltage_min);
+    }else{
+        return voltage;
     }
-    return (uint32_t)((voltage - VOLTAGE_BASE) * K_VOLTAGE_RATIO + VOLTAGE_CALIBRATION_BASE);
 }
 
-static char USE_CAN0__ShowBuf[32];
+static uint32_t current_real_value(uint32_t current){
+    global_t* global = global_get();
+    if(global->meter.std_current_min!=-1U && global->meter.rd_current_min!=-1U){
+        if(current<=global->meter.rd_current_min){
+            return 0;
+        }
+        return (uint32_t)(((current - global->meter.rd_current_min) * global->meter.current_ratio) + global->meter.std_current_min);
+    }else{
+        return current;
+    }
+}
+
 
 static void USE_CAN0__RxThreadEntry(void* p){
     os_size_t used = 0;
     uint32_t current = 0;
     uint16_t voltage = 0;
     uint32_t rVoltage = 0;
+    uint32_t rCurrent = 0;
     uint32_t nCount = BSP_TIM6__TickCount;
     uint32_t DeltaMS = 0;
     BSP_CAN0_SetRxHandler(USE_CAN0__RxHandler, 0);
     USE_CAN0__State = USE_CAN0_STATE_CHARGE_IDLE;
+
     while(1){
         while((used = sdk_ring_used(&USE_CAN0__RxRing))==0) {
             os_semaphore_take(&USE_CAN0__RxSem, OS_WAIT_INFINITY);
@@ -129,6 +147,7 @@ static void USE_CAN0__RxThreadEntry(void* p){
                 current= SDK_HEX_GET_UINT32_BE(record->can_msg.rx_data, 0);
                 voltage = SDK_HEX_GET_UINT16_BE(record->can_msg.rx_data, 4);
 
+//                printf("rawCurrent: %x, rawVoltage:%x\n", current, voltage);
 
                 if(current>0x7FFFFFFFU){
                     current = current - 0x80000000U;
@@ -139,8 +158,9 @@ static void USE_CAN0__RxThreadEntry(void* p){
                 if(current<5){
                     current = 0;
                 }
-//                rVoltage = voltage_real_value(voltage * VOLTAGE_PRECISION);
-                rVoltage = voltage * VOLTAGE_PRECISION;
+
+                rCurrent = current_real_value(current);
+                rVoltage = voltage_real_value(voltage * VOLTAGE_PRECISION);
 
                 if(USE_CAN0_LatestSnapshot.Current==0 && USE_CAN0_LatestSnapshot.Voltage==0){
                     if(USE_CAN0__State!=USE_CAN0_STATE_CHARGE_IDLE){
@@ -179,7 +199,7 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         /*转换为人类可阅读的值*/
                         sdk_mp_div(USE_CAN0_LatestSnapshot.EnergyWH, USE_CAN0_LatestSnapshot.EnergySum, USE_CAN0__EnergyRatio, &USE_CAN0_LatestSnapshot.EnergyWH);
 
-                        if(BSP_TIM6__TickCount-nCount>1000){
+                        if((BSP_TIM6__TickCount-nCount)>=1000){
                             nCount = BSP_TIM6__TickCount;
 //                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %d", USE_CAN0_LatestSnapshot.Current);
                             sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
@@ -202,7 +222,7 @@ static void USE_CAN0__RxThreadEntry(void* p){
                 }
 
 
-                USE_CAN0_LatestSnapshot.Current = current;
+                USE_CAN0_LatestSnapshot.Current = rCurrent;
                 USE_CAN0_LatestSnapshot.Voltage = rVoltage;
                 USE_CAN0_LatestSnapshot.TickStamp = record->tick_ms;
 
@@ -234,11 +254,11 @@ void USE_CAN0_Init(void)
     sdk_mp_divui(USE_CAN0__EnergyRatio, USE_CAN0__EnergyRatio, HUMAN_ENERGY_PRECISION, &USE_CAN0__EnergyRatio);
 
 
-
     sdk_ring_init(&USE_CAN0__RxRing, USE_CAN0__RxRingBlock, USE_CAN0_RX_OBJECT_COUNT, USE_CAN0_RX_OBJECT_SIZE);
     os_semaphore_init(&USE_CAN0__RxSem, "USE_CAN0_RxSem", 0, OS_SEMAPHORE_FLAG_FIFO);
     os_thread_init(&USE_CAN0__RxThread, "USE_CAN0_RxThd", USE_CAN0__RxThreadEntry, 0
                    , USE_CAN0__RxThreadStack, sizeof(USE_CAN0__RxThreadStack)
-                   , 20,100);
+            , GLOBAL_DEFAULT_THREAD_PRIORITY
+            , GLOBAL_DEFAULT_THREAD_TTICKS);
     os_thread_startup(&USE_CAN0__RxThread);
 }

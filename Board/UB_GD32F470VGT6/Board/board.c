@@ -202,8 +202,14 @@ static void A7670C_USART_RxHandler(uint16_t data, void* userdata)
     }
 }
 
+static void A7670C_Reset(void){
+    A7670C_power_reset.on();
+    for(int i=0; i<0x3ffff; i++);
+    A7670C_power_reset.off();
+}
+
 static A7670C_IO_T  A7670C_IO={.send=A7670C_IO_Send, .wait=A7670C_IO_Wait, .notify =A7670C_IO_Notify,
-        .setRxHandler = A7670C__SetRxHandler, .setDefaultRxHandler=A7670C__SetDefaultRxHandler };
+        .setRxHandler = A7670C__SetRxHandler, .setDefaultRxHandler=A7670C__SetDefaultRxHandler};
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -365,7 +371,9 @@ void Board_Init(void){
 
 }
 
-
+void Board_Reboot(void){
+    cpu_reboot();
+}
 
 
 

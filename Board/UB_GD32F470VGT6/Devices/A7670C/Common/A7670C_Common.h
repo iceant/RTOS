@@ -98,6 +98,8 @@ void A7670C_PowerOn(void);
 void A7670C_PowerOff(void);
 os_bool_t A7670C_IsPowerOn(void);
 
+void A7670C_Reset(void);
+
 os_size_t A7670C_Send(uint8_t* data, os_size_t size);
 
 void A7670C_SetRxHandler(A7670C_RxHandler_Handle* previousHandle, A7670C_RxHandler_T* rxHandler, void* userdata);

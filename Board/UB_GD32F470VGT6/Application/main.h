@@ -75,6 +75,12 @@ OF SUCH DAMAGE.
 #include <global.h>
 #endif /*INCLUDED_GLOBAL_H*/
 
+#ifndef INCLUDED_MQTT_H
+#include <mqtt.h>
+#endif /*INCLUDED_MQTT_H*/
+
+
+
 
 
 

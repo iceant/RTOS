@@ -5,6 +5,7 @@
 #include <sdk_crc16.h>
 #include <mcu_protocol.h>
 #include <assert.h>
+#include "global.h"
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define USE_USART2_THREAD_STACK_SIZE 1024
@@ -123,7 +124,8 @@ void USE_USART2_Init(void)
     os_semaphore_init(&USE_USART2__Sem, "USE_USART2__Sem", 0, OS_QUEUE_FIFO);
     os_thread_init(&USE_USART2__Thread, "USE_USART2_Thd", USE_USART2__RxThread, 0,
                    USE_USART2__ThreadStack, sizeof(USE_USART2__ThreadStack)
-                   , 20, 100);
+            , GLOBAL_DEFAULT_THREAD_PRIORITY
+            , GLOBAL_DEFAULT_THREAD_TTICKS);
     os_thread_startup(&USE_USART2__Thread);
 
 }

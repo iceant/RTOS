@@ -1,5 +1,6 @@
 #include <use_usart0.h>
 #include "board.h"
+#include "global.h"
 #include <os_kernel.h>
 #include <sdk_ringbuffer.h>
 #include <sdk_hex.h>
@@ -51,7 +52,8 @@ void USE_USART0_Init(void){
     os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_QUEUE_FIFO);
     os_thread_init(&USART0_RxThread, "USART0_RxThd", USART0_RxThread_Entry, 0
                    , USART0_RxThread_Stack, sizeof(USART0_RxThread_Stack)
-                   , 10, 100);
+                   , 10
+                   , GLOBAL_DEFAULT_THREAD_TTICKS);
     os_thread_startup(&USART0_RxThread);
     
 }

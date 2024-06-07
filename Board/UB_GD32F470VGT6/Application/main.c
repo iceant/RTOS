@@ -5,6 +5,13 @@
 #include <sdk_fmt.h>
 #include <string.h>
 #include <sdk_float_fmt.h>
+#include <meter_protocol.h>
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define dbg_print os_printf
+#define USE_RELEASE_VERSION 1
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -12,11 +19,21 @@ C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t BootThread_Stack[2048];
 static os_thread_t BootThread;
 
-static void BootThread_Entry(void* p){
+////////////////////////////////////////////////////////////////////////////////
+////
 
+
+static void BootThread_Entry(void* p){
+    char time_display_buf[32];
+    int err;
 #if defined(ENABLE_SPI_FLASH)
     uint32_t FlashID = sFLASH_ReadID();
     os_printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
+#endif
+
+#if defined(ENABLE_OLED)
+    OLED_TurnOn();
+    OLED_ShowString(0, 0, "System Booting...", 12);
 #endif
 
 #if defined(ENABLE_4G)
@@ -25,7 +42,19 @@ static void BootThread_Entry(void* p){
         cpu_reboot();
         return;
     }
+#endif
 
+    /* 加载全局数据, 可能读取 IMEI/ICCID */
+    global_init();
+
+#if defined(ENABLE_4G)
+    /*启动MQTT*/
+    err = MQTT_Init();
+    if(err!=0){
+        Board_Reboot();
+    }
+
+    /* 启动网络对时 */
     Task_TimeSync_Init();
 #endif
 
@@ -33,53 +62,43 @@ static void BootThread_Entry(void* p){
     USE_CAN0_Init();
 #endif
 
-#if defined(ENABLE_OLED)
-    OLED_TurnOn();
-#endif
-
+    /* 与 GD32F303CGT6 通讯 */
     USE_USART2_Init();
-
+    /* 与 GD32F303CGT6 同步时间 */
     Task_MCU_DateTime_Init();
 
-    char buf[32];
+    /* 更新 GLOBAL 里的时间 */
+
     while(1){
-        global_g_datetime.year = DS1307_GetYear();
-        global_g_datetime.month = DS1307_GetMonth();
-        global_g_datetime.date = DS1307_GetDate();
-        global_g_datetime.hour = DS1307_GetHour();
-        global_g_datetime.min = DS1307_GetMinute();
-        global_g_datetime.sec = DS1307_GetSecond();
+        uint16_t year = DS1307_GetYear();
+        uint8_t month = DS1307_GetMonth();
+        uint8_t date = DS1307_GetDate();
+        uint8_t hour = DS1307_GetHour();
+        uint8_t min = DS1307_GetMinute();
+        uint8_t sec = DS1307_GetSecond();
 
-        snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d"
-                , global_g_datetime.year
-                , global_g_datetime.month
-                , global_g_datetime.date
-                , global_g_datetime.hour
-                , global_g_datetime.min
-                , global_g_datetime.sec);
+        global_set_datetime(year, month, date, hour, min, sec);
 
-        os_printf("%s\n", buf);
+        snprintf(time_display_buf, sizeof(time_display_buf), "%04d-%02d-%02d %02d:%02d:%02d"
+                , year
+                , month
+                , date
+                , hour
+                , min
+                , sec);
 
-        OLED_ShowString(0, 0, buf, 12);
+        os_printf("%s\n", time_display_buf);
 
-//        mcu_protocol_t protocol;
-//        mcu_protocol_du_print(&protocol, "MAIN", 5);
+        OLED_ShowString(0, 0, time_display_buf, 12);
 
-//        os_thread_yield();
         os_thread_mdelay(1000);
     }
 
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-////
-#define dbg_print os_printf
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define USE_RELEASE_VERSION 1
 
 #if (USE_RELEASE_VERSION)
 /*!
@@ -105,27 +124,23 @@ int main(void)
     dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
     dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
     dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
+    dbg_print("CPUID: %s\n", BSP_CPUID_Read());
 
+    /*初始化终端*/
     USE_USART0_Init();
 
+    /*启动*/
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0
                    , BootThread_Stack, sizeof(BootThread_Stack), 30,10);
     os_thread_startup(&BootThread);
 
-//    Test_Printf_Init();
 
     os_kernel_startup();
 
+    ////////////////////////////////////////////////////////////////////////////////
+    //// 不应该运行以下代码
 
-    size_t nCount = 0;
-    while(1) {
-        sdk_ringbuffer_t* usart0_rx_buf = USE_USART0_GetRxBuffer();
-        if(sdk_ringbuffer_used(usart0_rx_buf)>0){
-            sdk_hex_dump("USART0", usart0_rx_buf->buffer, sdk_ringbuffer_used(usart0_rx_buf));            
-        }
-        os_printf("[main] ERROR count=%d\n", nCount++);
-        for(int i=0; i<0x3FFFFFF; i++){}
-    }
+    while(1);
 }
 #else
 int main(void)

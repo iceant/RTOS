@@ -145,3 +145,18 @@ int mcu_protocol_du_datetime(mcu_protocol_t * protocol, uint16_t year, uint8_t m
 
     return 0;
 }
+
+int mcu_protocol_du_hwid(mcu_protocol_t * protocol, char* hwid, int hwid_size)
+{
+    int size = OS_MIN(hwid_size, MCU_PROTOCOL_DU_MAX_SIZE);
+
+    int err = mcu_protocol_init(protocol, kMCU_PROTOCOL_DU_CPUID, hwid, size);
+    if(err!=0){
+        return err;
+    }
+    mcu_protocol_crc(protocol);
+    mcu_protocol_send(protocol);
+
+    return 0;
+}
+

@@ -74,6 +74,12 @@ void A7670C_UnLock(void){
     os_mutex_unlock(&A7670C__mutex);
 }
 
+
+void A7670C_Reset(void){
+    A7670C__Instance.power_reset->on();
+    A7670C_NopDelay(0x3FFFFF);
+    A7670C__Instance.power_reset->off();
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 

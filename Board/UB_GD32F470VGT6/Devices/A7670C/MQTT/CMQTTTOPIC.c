@@ -44,12 +44,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t *buffer, void* ud)
     if(sdk_ringbuffer_find_str(buffer, 0, ">\r\n")!=-1 /*可以发送 topic 了*/ && (result->send_flag==false)){
         sdk_ringbuffer_reset(buffer);
         A7670C_Send((uint8_t*)result->topic, result->topic_length);
-//        if(send_bytes!=result->topic_length){
-//            result->response->code = kA7670C_Response_Code_ERROR; /*错误：串口通讯失败*/
-//            sdk_ringbuffer_reset(buffer);
-//            A7670C_Notify();
-//            return kA7670C_RxHandler_Result_RESET;
-//        }
+
         result->send_flag = true;
         return kA7670C_RxHandler_Result_CONTINUE; /*重置buffer，等待返回*/
     }
@@ -62,7 +57,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t *buffer, void* ud)
     }
     
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束: 错误*/){
-        sdk_hex_dump("CMQTTTOPIC WRITE", buffer->buffer, sdk_ringbuffer_used(buffer));
+        sdk_hex_dump("[CMQTTTOPIC-WRITE]", buffer->buffer, sdk_ringbuffer_used(buffer));
         sdk_ringbuffer_text_t find_text;
         int find_status = sdk_ringbuffer_cut(&find_text,buffer, 0, sdk_ringbuffer_used(buffer), "+CMQTTTOPIC: ", "\r\n");
         if(find_status==0){

@@ -1,4 +1,5 @@
 #include <CMQTTCFG.h>
+#include <sdk_hex.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -96,6 +97,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t * buffer, void* ud
     A7670C_CMQTTCFG_Write_Response* result = (A7670C_CMQTTCFG_Write_Response*)ud;
     
     if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束: 成功*/){
+        sdk_hex_dump("[CMQTTCFG-OK]", buffer->buffer, sdk_ringbuffer_used(buffer));
         result->code = kA7670C_Response_Code_OK;
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
@@ -103,6 +105,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t * buffer, void* ud
     }
     
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束: 错误*/){
+        sdk_hex_dump("[CMQTTCFG]", buffer->buffer, sdk_ringbuffer_used(buffer));
         result->code = kA7670C_Response_Code_ERROR;
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();

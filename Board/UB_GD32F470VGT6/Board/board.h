@@ -108,11 +108,19 @@
 #endif /*INCLUDED_BSP_USART2_H*/
 
 
+#ifndef INCLUDED_FMC_OPERATION_H
+#include <fmc_operation.h>
+#endif /*INCLUDED_FMC_OPERATION_H*/
+
+#ifndef INCLUDED_BSP_CPUID_H
+#include <bsp_cpuid.h>
+#endif /*INCLUDED_BSP_CPUID_H*/
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//#define ENABLE_4G
+#define ENABLE_4G
 #define ENABLE_LED
 #define ENABLE_USART0
 #define ENABLE_I2C0
@@ -127,8 +135,7 @@
 ////
 void Board_Init(void);
 
-
-
+void Board_Reboot(void);
 
 
 #endif /*INCLUDED_BOARD_H*/

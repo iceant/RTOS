@@ -171,7 +171,7 @@ static void MeterTask_ThreadEntry(void* p){
             if(MeterTask__LatestData.Current!=0 && MeterTask__LatestData.Voltage!=0){
                 if(MeterTask__State == METER_TASK_STATE_IDLE){
                     /*开始充电，第一条记录先记下，计算从第二条记录开始*/
-                    MeterTask__State == METER_TASK_STATE_CHARGING;
+                    MeterTask__State = METER_TASK_STATE_CHARGING;
 
                     /* 重置为0 */
                     sdk_mp_fromintu(MeterTask__LatestData.Power, 0, 0);

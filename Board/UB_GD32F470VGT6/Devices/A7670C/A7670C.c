@@ -8,7 +8,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define DELAY_TIME 0x3FFFFF
+#define DELAY_TIME 0x3FFFFFF
 
 
 
@@ -198,7 +198,7 @@ __A7670C__Boot:
         A7670C_NopDelay(DELAY_TIME);
     }
 
-
+#if 0
 
     nRetry = 0;
     while(1){
@@ -263,6 +263,7 @@ __A7670C__Boot:
         }
         A7670C_NopDelay(DELAY_TIME);
     }
+#endif
 
     return kA7670C_Result_OK;
     

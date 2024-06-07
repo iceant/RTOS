@@ -27,7 +27,7 @@ rb_ret_t sdk_ringbuffer_init(sdk_ringbuffer_t *buffer, uint8_t *block, os_size_t
 void sdk_ringbuffer_reset(sdk_ringbuffer_t *buffer) {
     buffer->read_offset = 0;
     buffer->write_offset = 0;
-    //memset(buffer->buffer, 0, buffer->buffer_size);
+    memset(buffer->buffer, 0, buffer->buffer_size);
 }
 
 rb_ret_t sdk_ringbuffer_put(sdk_ringbuffer_t *buffer, uint8_t data) {

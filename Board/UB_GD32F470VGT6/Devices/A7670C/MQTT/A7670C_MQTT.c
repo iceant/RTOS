@@ -237,24 +237,23 @@ A7670C_Result A7670C_MQTT_Connect(
                 break;
             }
 //            os_thread_delayms(1000);
-            A7670C_NopDelay(0x7FFFFF);
+            A7670C_NopDelay(0x3FFFFF);
         }
     }
     
     if(session->state == kA7670C_MQTT_State_ACCQ){
         A7670C_CMQTTCFG_Write_Response CMQTTCFG_Write_Response;
-        /* 设置忽略 UTF8 */
         printf("MQTT CFG Write...\n");
-        result = A7670C_CMQTTCFG_Write(&CMQTTCFG_Write_Response, session->client_index, false, 12000);
+        result = A7670C_CMQTTCFG_Write(&CMQTTCFG_Write_Response, session->client_index, false, 24000);
         if(CMQTTCFG_Write_Response.code!=kA7670C_Response_Code_OK){
-            return kA7670C_Result_ERROR;
+            printf("[A7670C_MQTT] CMQTTCFG Set Check UTF8=0 Failed!\n");
         }
 
         /*设置操作超时*/
         printf("MQTT CFG Write2...\n");
-        result = A7670C_CMQTTCFG_Write2(&CMQTTCFG_Write_Response, session->client_index, 120 /* 20s - 120s */, 12000);
+        result = A7670C_CMQTTCFG_Write2(&CMQTTCFG_Write_Response, session->client_index, 120 /* 20s - 120s */, 24000);
         if(CMQTTCFG_Write_Response.code!=kA7670C_Response_Code_OK){
-            return kA7670C_Result_ERROR;
+            printf("[A7670C_MQTT] CMQTTCFG Set Timeout Failed!\n");
         }
 
         session->state = kA7670C_MQTT_State_CFG;
@@ -355,9 +354,10 @@ A7670C_Result A7670C_MQTT_SubscribeOneTopic(
         , A7670C_Bool dup
 ){
     A7670C_Result result;
+    A7670C_CMQTTSUB_Write_Response CMQTTSUB_Write_Response;
+
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
-        A7670C_CMQTTSUB_Write_Response CMQTTSUB_Write_Response;
-        result = A7670C_CMQTTSUB_Write2(&CMQTTSUB_Write_Response, session->client_index, topic, qos, dup, 12000);
+    result = A7670C_CMQTTSUB_Write2(&CMQTTSUB_Write_Response, session->client_index, topic, qos, dup, 12000);
         if(CMQTTSUB_Write_Response.code!=kA7670C_Response_Code_OK){
             return kA7670C_Result_ERROR;
         }
@@ -519,11 +519,11 @@ A7670C_Result A7670C_MQTT_Publish(
     A7670C_Result result = kA7670C_Result_ERROR;
     int err_code = 0;
     int nRetry = 3;
-    
+    A7670C_CMQTTTOPIC_Write_Response CMQTTTOPIC_Write_Response;
+
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
         
         while(1){
-            A7670C_CMQTTTOPIC_Write_Response CMQTTTOPIC_Write_Response;
             result = A7670C_CMQTTTOPIC_Write(&CMQTTTOPIC_Write_Response, session->client_index, topic, 12000);
             if(CMQTTTOPIC_Write_Response.code==kA7670C_Response_Code_OK){
                 break;

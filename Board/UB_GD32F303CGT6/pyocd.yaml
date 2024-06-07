@@ -14,3 +14,9 @@ probes:
   2912140EC415303030303032:
     target_override:
       gd32f303cg
+
+  602712602:
+    target_override:
+      gd32f303cg
+    frequency:
+      1000000

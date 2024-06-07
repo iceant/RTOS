@@ -64,6 +64,9 @@ static A7670C_RxHandler_Result CSQ_Exec_Handler(sdk_ringbuffer_t *buffer, void* 
 
 A7670C_Result A7670C_CSQ_Exec(A7670C_CSQ_Exec_Response * result, uint32_t timeout_ms)
 {
+    result->rssi = -1;
+    result->code = -1;
+    result->ber = -1;
     A7670C_Result err = A7670C_RequestWithCmd(CSQ_Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CSQ\r\n");
     return err;
 }
