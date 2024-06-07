@@ -4,6 +4,7 @@
 #include <os_tick.h>
 #include <os_thread.h>
 #include <stdio.h>
+#include <assert.h>
 #include "os_scheduler.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +98,7 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
         }else if(ticks==OS_WAIT_INFINITY){
             /* 等待 */
             current_thread = os_thread_self();
-            if(current_thread && current_thread->state!=OS_THREAD_STATE_WAIT){
+            if(current_thread && current_thread->state==OS_THREAD_STATE_RUNNING){
                 current_thread->state = OS_THREAD_STATE_WAIT;
                 os_semaphore__insert(semaphore, current_thread);
                 OS_SEMAPHORE_UNLOCK(semaphore);
@@ -109,7 +110,8 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
         }else{
             /*等待特定时间*/
             current_thread = os_thread_self();
-            if(current_thread){
+            assert(current_thread);
+            if(current_thread && current_thread->state == OS_THREAD_STATE_RUNNING){
                 current_thread->error = OS_THREAD_ERROR_OK;
                 os_scheduler_timed_wait(current_thread, ticks); /*挂在时间调度器上*/
                 OS_SEMAPHORE_UNLOCK(semaphore);
@@ -121,6 +123,7 @@ os_err_t os_semaphore_take(os_semaphore_t * semaphore, os_tick_t ticks){
                     return OS_ETIMEOUT;
                 }
             }else{
+                /* 不应该出现这种情况 */
                 OS_SEMAPHORE_UNLOCK(semaphore);
                 OS_SCHEDULER_SCHEDULE();
             }
@@ -160,7 +163,7 @@ os_err_t os_semaphore_release(os_semaphore_t * semaphore){
                     os_scheduler_yield(curr_thread);
                     os_scheduler_push_front(thread); /*加到队列前面，优先执行*/
                     OS_SEMAPHORE_UNLOCK(semaphore);
-                    return OS_SCHEDULER_SCHEDULE();
+                    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
                 }else{
                     #if defined(OS_SEM_DEBUG_ENABLE)
                     os_printf("[sem-dbg] push %s\n", thread->name);
@@ -176,5 +179,5 @@ os_err_t os_semaphore_release(os_semaphore_t * semaphore){
         }
     }
     OS_SEMAPHORE_UNLOCK(semaphore);
-    return OS_SCHEDULER_SCHEDULE_YIELD_BACK();
+    return OS_SCHEDULER_SCHEDULE();
 }

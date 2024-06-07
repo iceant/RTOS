@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <bsp_led4.h>
+#include <bsp_led5.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define USARTx                           USART1
@@ -318,11 +319,20 @@ int os_printf_putc(int ch, void* ud)
 static
 //C__SECTION(._D2_Area.os_printf__buffer)
 char os_printf__buffer[OS_PRINTF_BUFFER_SIZE]={0};
-static os_mutex_t os_printf__lock={0};
+
+os_uint_t os_printf__status = 0;
 
 int os_printf(const char* format, ...){
-    LED_YELLOW_Toggle();
-    
+    os_printf__status++;
+    if(os_printf__status <= 100){
+        LED_YELLOW_Off();
+        LED_BLUE_Toggle();
+    }else if(os_printf__status <= 200){
+        LED_BLUE_Off();
+        LED_YELLOW_Toggle();
+    }else{
+        os_printf__status = 0;
+    }
     os_critical_enter();
     va_list args;
     va_start(args, format);
