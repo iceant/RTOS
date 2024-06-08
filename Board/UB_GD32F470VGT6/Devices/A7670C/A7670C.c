@@ -17,6 +17,7 @@
 static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, void* ud){
     if(sdk_ringbuffer_find_str(buffer, 0, "AT\r\r\nOK\r\n")!=-1
         || sdk_ringbuffer_find_str(buffer, 0, "*ATREADY: 1")!=-1){
+        sdk_hex_dump("[AT]", buffer->buffer, sdk_ringbuffer_used(buffer));
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
@@ -25,9 +26,7 @@ static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, voi
 }
 
 A7670C_Result A7670C_AT(os_time_t timeout_ms){
-    A7670C_Result result;
-    result = A7670C_RequestWithCmd(A7670C_AT__Handler, 0, os_tick_from_millisecond(timeout_ms), "AT\r\n");
-    return result;
+    return A7670C_RequestWithCmd(A7670C_AT__Handler, 0, os_tick_from_millisecond(timeout_ms), "AT\r\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,14 +64,14 @@ __A7670C__Boot:
 
     while(1){
         os_printf("A7670C wait for AT ready...\n");
-        result = A7670C_AT(A7670C_DEFAULT_TIMEOUT_MS);
+        result = A7670C_AT(1000);
         if(result==kA7670C_Result_OK){
             break;
         }
         if(nRetry++==10){
             goto __A7670C__Boot;
         }
-        A7670C_NopDelay(DELAY_TIME);
+//        A7670C_NopDelay(DELAY_TIME);
     }
 
     nRetry = 0;
@@ -93,7 +92,7 @@ __A7670C__Boot:
     while(1){
         os_printf("A7670C checking CSQ quality...");
         A7670C_CSQ_Exec_Response CSQ_Exec_Response;
-        result = A7670C_CSQ_Exec(&CSQ_Exec_Response, A7670C_DEFAULT_TIMEOUT_MS);
+        result = A7670C_CSQ_Exec(&CSQ_Exec_Response, 12000);
         if(CSQ_Exec_Response.code == kA7670C_Response_Code_OK){
             os_printf(" rssi: %d, ber: %d\n", CSQ_Exec_Response.rssi, CSQ_Exec_Response.ber);
             if(CSQ_Exec_Response.rssi>0 && CSQ_Exec_Response.rssi<=31){
@@ -151,7 +150,7 @@ __A7670C__Boot:
         while(1){
             os_printf("A7670C PS service(CEREG)...");
             A7670C_CEREG_Read_Response CEREG_Read_Response;
-            result = A7670C_CGREG_Read(&CEREG_Read_Response, 12000);
+            result = A7670C_CEREG_Read(&CEREG_Read_Response, 12000);
             if(CEREG_Read_Response.code == kA7670C_Response_Code_OK){
                 os_printf("n:%d, stat: %d\n",CEREG_Read_Response.n ,CEREG_Read_Response.stat);
                 if(CEREG_Read_Response.stat==1){

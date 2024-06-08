@@ -83,7 +83,9 @@ static void global_set_str(char* dst, char* s){
 int global_init(void){
     if(global__state==GLOBAL_STATE_IDLE){
         memset(&global__instance, 0, sizeof(global__instance));
+        #if defined(ENABLE_SPI_FLASH)
         global_read();
+        #endif
         if(global__instance.meter.std_current_min==-1U){
             printf("[GLOBAL] No Saved Value!\n");
             global__instance.meter.std_current_min = 0;
@@ -135,6 +137,7 @@ global_t* global_get(void){
 }
 
 int global_save(void){
+    #if defined(ENABLE_SPI_FLASH)
     global_save_t save;
     memcpy(&save.meter, &global__instance.meter, sizeof(save.meter));
     int sectors = PAGE(GLOBAL_SAVE_SIZE, sFLASH_SECTOR_SIZE);
@@ -143,10 +146,12 @@ int global_save(void){
     }
 
     sFLASH_WriteBuffer((uint8_t*)&save, GLOBAL_SAVE_ADDRESS_START, GLOBAL_SAVE_SIZE);
+    #endif
     return 0;
 }
 
 int global_read(void){
+    #if defined(ENABLE_SPI_FLASH)
     global_save_t save;
     char buf[32];
     sFLASH_ReadBuffer((uint8_t*)&save, GLOBAL_SAVE_ADDRESS_START, GLOBAL_SAVE_SIZE);
@@ -160,6 +165,7 @@ int global_read(void){
     printf("[GLOBAL] \t voltage_ratio: %s\n", buf);
     sdk_ultoa(save.meter.current_ratio, buf, 10);
     printf("[GLOBAL] \t current_ratio: %s\n", buf);
+    #endif
     return 0;
 }
 

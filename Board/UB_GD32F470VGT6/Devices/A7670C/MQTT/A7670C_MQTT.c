@@ -141,6 +141,12 @@ __skip:
     
 }
 
+static A7670C_RxHandler_Register_T A7670C_MQTT__DownStreamRxHandlerRegister={
+        .handler = A7670C_CMQTTRX_DownstreamHandler,
+        .userdata = 0,
+        .node = {0}
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 void A7670C_MQTT_Init(A7670C_MQTT_Session* session, A7670C_MQTT_RxDataHandler rxDataHandler, void* userdata, void (*OnConnectLost)(void))
@@ -153,10 +159,10 @@ void A7670C_MQTT_Init(A7670C_MQTT_Session* session, A7670C_MQTT_RxDataHandler rx
     session->rx_context.rx_topic_size=0;
     session->OnConnectLost = OnConnectLost;
 
-
     session->rxDataHandlerRecord.rxDataHandler = rxDataHandler;
     session->rxDataHandlerRecord.userdata = userdata;
-    A7670C_SetDefaultRxHandler(A7670C_CMQTTRX_DownstreamHandler, session);
+    
+    A7670C_InsertRxHandlerHead(&A7670C_MQTT__DownStreamRxHandlerRegister);
 
     os_sem_init(&CMQTTRX_DataHandle_Sem, "MQTT_RxSem", 0, OS_QUEUE_FIFO);
     
@@ -209,17 +215,20 @@ A7670C_Result A7670C_MQTT_Connect(
     
     if(session->state == kA7670C_MQTT_State_START){
         nRetry = 3;
-
-        while(1){
-            A7670C_CMQTTACCQ_Read_Response CMQTTACCQ_Response;
+        A7670C_CMQTTACCQ_Read_Response CMQTTACCQ_Response;
+        while(1) {
             printf("MQTT ACCQ Read...\n");
             result = A7670C_CMQTTACCQ_Read(&CMQTTACCQ_Response, 12000);
-            if(CMQTTACCQ_Response.code!=kA7670C_Response_Code_OK){
+            if (CMQTTACCQ_Response.code != kA7670C_Response_Code_OK) {
                 printf("CMQTTACCQ_Response FAILED!\n");
+                if (nRetry-- == 0) {
+                    return kA7670C_Result_ERROR;
+                }
+                continue;
             }else{
-                break;
+                nRetry = 3;
             }
-
+            
             if(strlen(CMQTTACCQ_Response.records[session->client_index].client_id)==0){
                 /*没有获取*/
                 printf("MQTT ACCQ Write...\n");
@@ -229,7 +238,9 @@ A7670C_Result A7670C_MQTT_Connect(
                     /*超时了*/
                     printf("CMQTTACCQ_Write_Response FAILED!\n");
                 }else{
-                    break;
+                    /* 读取获取信息，确认是否获取成功 */
+                    nRetry = 3;
+                    continue;
                 }
             }else{
                 session->state = kA7670C_MQTT_State_ACCQ;
@@ -245,21 +256,39 @@ A7670C_Result A7670C_MQTT_Connect(
     }
     
     if(session->state == kA7670C_MQTT_State_ACCQ){
-        A7670C_CMQTTCFG_Write_Response CMQTTCFG_Write_Response={0};
-        printf("MQTT CFG Write...\n");
-        result = A7670C_CMQTTCFG_SetUTF8(&CMQTTCFG_Write_Response, session->client_index, false, 24000);
-        if(CMQTTCFG_Write_Response.code!=kA7670C_Response_Code_OK){
-            printf("[A7670C_MQTT] CMQTTCFG SetUTF8 Failed!\n");
+        A7670C_CMQTTCFG_Read_Response CMQTTCFG_Read_Response;
+        A7670C_CMQTTCFG_Read(&CMQTTCFG_Read_Response, 12000);
+        if(CMQTTCFG_Read_Response.code==kA7670C_Response_Code_OK){
+            for(int i=0; i< OS_ARRAY_SIZE(CMQTTCFG_Read_Response.records); i++){
+                printf("Client[%d] UTF8=%d, optimeout=%d\n"
+                       , CMQTTCFG_Read_Response.records[i].client_index
+                       , CMQTTCFG_Read_Response.records[i].checkUTF8_flag
+                       , CMQTTCFG_Read_Response.records[i].optimeout_val
+                       );
+            }
         }
-
-        /*设置操作超时*/
-        printf("MQTT CFG Write2...\n");
-        A7670C_CMQTTCFG_Write_Response CMQTTCFG_Write_Response2={0};
-        result = A7670C_CMQTTCFG_SetTimeout(&CMQTTCFG_Write_Response2, session->client_index, 120 /* 20s - 120s */,
-                                            12000);
-        if(CMQTTCFG_Write_Response2.code!=kA7670C_Response_Code_OK){
-            printf("[A7670C_MQTT] CMQTTCFG SetTimeout Failed!\n");
+        
+        if(CMQTTCFG_Read_Response.records[session->client_index].checkUTF8_flag!=0){
+            A7670C_CMQTTCFG_Write_Response CMQTTCFG_Write_Response={0};
+            printf("MQTT CFG Write...\n");
+            result = A7670C_CMQTTCFG_SetUTF8(&CMQTTCFG_Write_Response, session->client_index, false, 12000);
+            if(CMQTTCFG_Write_Response.code!=kA7670C_Response_Code_OK){
+                printf("[A7670C_MQTT] CMQTTCFG SetUTF8 Failed!\n");
+            }
         }
+        
+        if(CMQTTCFG_Read_Response.records[session->client_index].optimeout_val!=120)
+        {
+            /*设置操作超时*/
+            printf("MQTT CFG Write2...\n");
+            A7670C_CMQTTCFG_Write_Response CMQTTCFG_Write_Response2={0};
+            result = A7670C_CMQTTCFG_SetTimeout(&CMQTTCFG_Write_Response2, session->client_index, 120 /* 20s - 120s */,
+                                                12000);
+            if(CMQTTCFG_Write_Response2.code!=kA7670C_Response_Code_OK){
+                printf("[A7670C_MQTT] CMQTTCFG SetTimeout Failed!\n");
+            }
+        }
+        
 
         session->state = kA7670C_MQTT_State_CFG;
     }
@@ -272,7 +301,7 @@ A7670C_Result A7670C_MQTT_Connect(
             result = A7670C_CMQTTCONNECT_Write(&CMQTTCONNECT_Write_Response, session->client_index
                                                , server_addr
                                                , keepalive_time
-                                               , clean_session, username, password, 9000);
+                                               , clean_session, username, password, 12000);
             if(CMQTTCONNECT_Write_Response.err_code==19){
                 break;
             }
@@ -362,7 +391,7 @@ A7670C_Result A7670C_MQTT_SubscribeOneTopic(
     A7670C_CMQTTSUB_Write_Response CMQTTSUB_Write_Response;
 
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
-    result = A7670C_CMQTTSUB_Write2(&CMQTTSUB_Write_Response, session->client_index, topic, qos, dup, 12000);
+        result = A7670C_CMQTTSUB_Write2(&CMQTTSUB_Write_Response, session->client_index, topic, qos, dup, 12000);
         if(CMQTTSUB_Write_Response.code!=kA7670C_Response_Code_OK){
             return kA7670C_Result_ERROR;
         }

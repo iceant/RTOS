@@ -40,7 +40,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
         result->code = kA7670C_Response_Code_OK;
         int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer), "+CMQTTACCQ: ", "\r\n");
         if(find==0){
-//            sdk_hex_dump("CMQTTACCQ", buffer->buffer, sdk_ringbuffer_used(buffer));
+            sdk_hex_dump("CMQTTACCQ", buffer->buffer, sdk_ringbuffer_used(buffer));
             sdk_ringbuffer_iter_t iter;
             sdk_ringbuffer_iter_init(&iter, &find_result);
 //            printf("CMQTTACCQ: \n");
@@ -92,6 +92,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
             return kA7670C_RxHandler_Result_RESET;
         }
     }
+    
 
     return kA7670C_RxHandler_Result_CONTINUE;
 }

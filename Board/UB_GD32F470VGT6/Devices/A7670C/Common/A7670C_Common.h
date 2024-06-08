@@ -34,10 +34,8 @@ typedef struct A7670C_Pin_S{
 }A7670C_Pin_T;
 
 typedef struct A7670C_IO_S{
-    void (*setRxHandler)(void* handler, void* userdata);
-    void (*setDefaultRxHandler)(void* handler, void* userdata);
-    os_err_t (*wait)(os_tick_t tick);
     int (*send)(uint8_t * data, int size);
+    os_err_t (*wait)(os_tick_t tick);
     os_err_t (*notify)(void);
 }A7670C_IO_T;
 
@@ -78,6 +76,11 @@ typedef enum A7670C_Client_Index{
     kA7670C_Client_Index_1=1,
 }A7670C_Client_Index;
 
+typedef struct A7670C_RxHandler_Register_S{
+    os_list_node_t node;
+    A7670C_RxHandler_T handler;
+    void* userdata;
+}A7670C_RxHandler_Register_T;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -91,9 +94,7 @@ C__STATIC_FORCEINLINE void A7670C_NopDelay(uint32_t delay){
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7670C_Pin_T* power_status, A7670C_Pin_T* power_reset, A7670C_IO_T* usart);
-
-void A7670C_ResetBuffer(void);
+A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7670C_Pin_T* power_status, A7670C_Pin_T* power_reset, A7670C_IO_T* IO);
 
 void A7670C_PowerOn(void);
 void A7670C_PowerOff(void);
@@ -103,24 +104,19 @@ void A7670C_Reset(void);
 
 os_size_t A7670C_Send(uint8_t* data, os_size_t size);
 
-void A7670C_SetRxHandler(A7670C_RxHandler_Handle* previousHandle, A7670C_RxHandler_T* rxHandler, void* userdata);
-
-void A7670C_RestoreRxHandler(A7670C_RxHandler_Handle* rxHandlerHandle);
-
-void A7670C_SetDefaultRxHandler(A7670C_RxHandler_T* rxHandler, void* userdata);
-
 void A7670C_Lock(void);
-
 void A7670C_UnLock(void);
-
-os_err_t A7670C_TimedLock(os_tick_t ticks);
 
 A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* fmt, ...);
 A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command);
 A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks);
 
 A7670C_Result A7670C_TimedWait(os_tick_t ticks);
-
 void A7670C_Notify(void);
+
+A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer);
+void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register);
+void A7670C_InsertRxHandlerTail(A7670C_RxHandler_Register_T* Register);
+void A7670C_RemoveRxHandler(A7670C_RxHandler_Register_T* Register);
 
 #endif /* INCLUDED_A7670C_COMMON_H */

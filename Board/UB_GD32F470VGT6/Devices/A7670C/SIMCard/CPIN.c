@@ -28,11 +28,38 @@ A7670C_Result A7670C_CPIN_Test(bool* result, uint32_t timeout_ms)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+C__STATIC_FORCEINLINE void CPIN_Read_Handler__HandleOK(sdk_ringbuffer_t *buffer, void* ud){
+    A7670C_CPIN_Read_Response* result = (A7670C_CPIN_Read_Response*)ud;
+    sdk_ringbuffer_text_t find_result;
+    int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CPIN: ", "\r\n");
+    if(find==0){
+        result->code=kA7670C_Response_Code_OK;
+        if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "READY")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_READY;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PIN")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPIN;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PUK")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPUK;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "PH-SIM PIN")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_PHSIMPIN;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PIN2")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPIN2;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PUK2")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPUK2;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "PH-NET PIN")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_PHNETPIN;
+        }
+        sdk_ringbuffer_reset(buffer);
+        A7670C_Notify();
+    }
+}
+
 static A7670C_RxHandler_Result CPIN_Read_Handler(sdk_ringbuffer_t *buffer, void* ud)
 {
     A7670C_CPIN_Read_Response* result = (A7670C_CPIN_Read_Response*)ud;
     sdk_ringbuffer_text_t find_result;
-
+    
+    #if 0
     if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
         result->code=kA7670C_Response_Code_OK;
         int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CPIN: ", "\r\n");
@@ -60,6 +87,29 @@ static A7670C_RxHandler_Result CPIN_Read_Handler(sdk_ringbuffer_t *buffer, void*
             A7670C_Notify();
             return kA7670C_RxHandler_Result_RESET;
         }
+    }
+    #endif
+    
+    int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CPIN: ", "\r\n");
+    if(find==0){
+        result->code=kA7670C_Response_Code_OK;
+        if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "READY")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_READY;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PIN")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPIN;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PUK")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPUK;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "PH-SIM PIN")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_PHSIMPIN;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PIN2")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPIN2;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "SIM PUK2")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_SIMPUK2;
+        }else if(sdk_ringbuffer_strcmp(buffer, find_result.start, find_result.end, "PH-NET PIN")==0){
+            result->record_code=kA7670C_CPIN_Record_Code_PHNETPIN;
+        }
+        sdk_ringbuffer_reset(buffer);
+        A7670C_Notify();
     }
 
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束*/){

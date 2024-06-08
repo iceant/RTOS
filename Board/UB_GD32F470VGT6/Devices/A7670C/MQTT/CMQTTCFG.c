@@ -160,7 +160,7 @@ static A7670C_RxHandler_Result SetTimeout_Write_Handler(sdk_ringbuffer_t * buffe
     }
 
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束: 错误*/){
-//        sdk_hex_dump("[CMQTTCFG]", buffer->buffer, sdk_ringbuffer_used(buffer));
+        sdk_hex_dump("[CMQTTCFG-TIMEOUT]", buffer->buffer, sdk_ringbuffer_used(buffer));
         if(sdk_ringbuffer_find_str(buffer, 0, "CMQTTCFG=\"optimeout\",0,0")!=-1){
             result->code = kA7670C_Response_Code_ERROR;
             sdk_ringbuffer_reset(buffer);

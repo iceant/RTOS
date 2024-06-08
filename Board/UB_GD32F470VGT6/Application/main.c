@@ -53,28 +53,35 @@ static void BootThread_Entry(void* p){
     global_init();
 
 #if defined(ENABLE_4G)
+    #if defined(ENABLE_MQTT)
     /*启动MQTT*/
     err = MQTT_Init();
     if(err!=0){
         Board_Reboot();
     }
-
+    #endif /*defined(ENABLE_MQTT)*/
+    
     /* 启动网络对时 */
+    #if defined(ENABLE_DS1307)
     Task_TimeSync_Init();
+    #endif
 #endif
 
 #if defined(ENABLE_CAN0)
     USE_CAN0_Init();
 #endif
 
+#if defined(ENABLE_GD32F303)
     /* 与 GD32F303CGT6 通讯 */
     USE_USART2_Init();
     /* 与 GD32F303CGT6 同步时间 */
     Task_MCU_DateTime_Init();
-
+#endif
+  
     /* 更新 GLOBAL 里的时间 */
 
     while(1){
+        #if defined(ENABLE_DS1307)
         uint16_t year = DS1307_GetYear();
         uint8_t month = DS1307_GetMonth();
         uint8_t date = DS1307_GetDate();
@@ -94,8 +101,12 @@ static void BootThread_Entry(void* p){
 
         os_printf("%s\n", time_display_buf);
 
+        #if defined(ENABLE_OLED)
         OLED_ShowString(0, 0, time_display_buf, 12);
-
+        #endif /* defined(ENABLE_OLED) */
+        
+        #endif /* defined(ENABLE_DS1307) */
+        
         os_thread_mdelay(1000);
     }
 

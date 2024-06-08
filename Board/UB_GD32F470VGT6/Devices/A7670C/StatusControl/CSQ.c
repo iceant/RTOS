@@ -32,25 +32,37 @@ static A7670C_RxHandler_Result CSQ_Exec_Handler(sdk_ringbuffer_t *buffer, void* 
 {
     A7670C_CSQ_Exec_Response * result = (A7670C_CSQ_Exec_Response*)ud;
     sdk_ringbuffer_text_t find_result;
-
-    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
-//        sdk_hex_dump("[CSQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
+//
+//    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
+////        sdk_hex_dump("[CSQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
+//        result->code=kA7670C_Response_Code_OK;
+////        int find = text_between(&find_result, data, data_size, "+CSQ: ", "\r\n");
+//        int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CSQ: ", "\r\n");
+//        if(find==0){
+//            int pEnd = 0;
+//            result->rssi = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+//            result->ber = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//
+//            sdk_ringbuffer_reset(buffer);
+//            A7670C_Notify();
+//            return kA7670C_RxHandler_Result_DONE;
+//        }else{
+//            sdk_ringbuffer_reset(buffer);
+//            A7670C_Notify();
+//            return kA7670C_RxHandler_Result_RESET;
+//        }
+//    }
+    
+    int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CSQ: ", "\r\n");
+    if(find==0){
         result->code=kA7670C_Response_Code_OK;
-//        int find = text_between(&find_result, data, data_size, "+CSQ: ", "\r\n");
-        int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CSQ: ", "\r\n");
-        if(find==0){
-            int pEnd = 0;
-            result->rssi = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
-            result->ber = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-
-            sdk_ringbuffer_reset(buffer);
-            A7670C_Notify();
-            return kA7670C_RxHandler_Result_DONE;
-        }else{
-            sdk_ringbuffer_reset(buffer);
-            A7670C_Notify();
-            return kA7670C_RxHandler_Result_RESET;
-        }
+        int pEnd = 0;
+        result->rssi = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+        result->ber = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+        
+        sdk_ringbuffer_reset(buffer);
+        A7670C_Notify();
+        return kA7670C_RxHandler_Result_DONE;
     }
 
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束*/){

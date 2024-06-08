@@ -52,11 +52,12 @@ C__STATIC_FORCEINLINE os_err_t os_mutex_lock(os_mutex_t * mutex){
 C__STATIC_FORCEINLINE os_err_t os_mutex_unlock(os_mutex_t * mutex)
 {
     if(!mutex) return OS_EINVAL;
-    cpu_spinlock_unlock(&mutex->lock);
     mutex->owner = 0;
+
+    cpu_spinlock_unlock(&mutex->lock);
     return OS_EOK;
 }
 
-
-
 #endif /*INCLUDED_OS_MUTEX_H*/
+
+

@@ -8,7 +8,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define TASK_NTP_PERIOD_MS  			(5*60*1000)
+#define TASK_NTP_PERIOD_MS  			(60*60*1000)
+#define TASK_NTP_SHORT_PERIOD_MS  			(60*1000)
 //#define TASK_NTP_PERIOD_MS  			(30*1000)
 
 
@@ -33,7 +34,7 @@ static int Task_TimeSync_Sync(void){
 
     do {
         // 1. 设置 NTP 服务其
-        result = A7670C_CNTP_Write(&CNTP_Write_Response, "cn.ntp.org.cn", 32, 24000);
+        result = A7670C_CNTP_Write(&CNTP_Write_Response, "ntp1.aliyun.com", 32, 24000);
         if (CNTP_Write_Response.code == kA7670C_Response_Code_OK) {
             break;
         }
@@ -80,6 +81,10 @@ static int Task_TimeSync_Sync(void){
     // 4. 转换时间
     A7670C_CCLK_DateTime datetime;
     A7670C_CCLK_ToDateTime(&datetime, &CCLK_Read_Response);
+    
+    if(datetime.year==2070 && datetime.month==1 && datetime.day==1 && datetime.hour==0){
+        return -3;
+    }
 
     // 5. 设置到RTC中
     DS1307_SetYear(datetime.year);
@@ -109,6 +114,8 @@ static void Task_TimeSync_ThreadEntry(void* p){
         err = Task_TimeSync_Sync();
         if(err!=0){
             printf("[TASK_NTC] Sync Failed! Code=%d\n", err);
+            os_thread_mdelay(TASK_NTP_SHORT_PERIOD_MS);
+            continue;
         }
         os_thread_mdelay(TASK_NTP_PERIOD_MS);
     }

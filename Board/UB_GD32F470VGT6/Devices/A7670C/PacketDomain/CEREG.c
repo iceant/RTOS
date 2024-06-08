@@ -31,48 +31,85 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void* ud)
 {
     A7670C_CEREG_Read_Response* result = (A7670C_CEREG_Read_Response*)ud;
     sdk_ringbuffer_text_t find_result;
-
-    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
+//
+//    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
+//        result->code=kA7670C_Response_Code_OK;
+//        int find = sdk_ringbuffer_cut(&find_result,buffer, 0, sdk_ringbuffer_used(buffer),"+CEREG: ", "\r\n");
+//        if(find==0){
+//            int pEnd=0;
+//            int nCount = sdk_ringbuffer_count(buffer, find_result.start, find_result.end, ",");
+////            rt_kprintf("',' count=%d\n", nCount);
+//            switch (nCount) {
+//                case 0:{
+//                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+//                    break;
+//                }
+//                case 1:{
+//                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+//                    result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//                    break;
+//                }
+//                case 2:{
+//                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+//                    result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//                    result->lac = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//                    break;
+//                }
+//                case 3:{
+//                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+//                    result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//                    result->lac = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//                    result->ci = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+//                    break;
+//                }
+//                default:
+//                    break;
+//            }
+//            sdk_ringbuffer_reset(buffer);
+//            A7670C_Notify();
+//            return kA7670C_RxHandler_Result_DONE;
+//        }else{
+//            sdk_ringbuffer_reset(buffer);
+//            A7670C_Notify();
+//            return kA7670C_RxHandler_Result_RESET;
+//        }
+//    }
+    
+    int find = sdk_ringbuffer_cut(&find_result,buffer, 0, sdk_ringbuffer_used(buffer),"+CEREG: ", "\r\n");
+    if(find==0){
         result->code=kA7670C_Response_Code_OK;
-        int find = sdk_ringbuffer_cut(&find_result,buffer, 0, sdk_ringbuffer_used(buffer),"+CEREG: ", "\r\n");
-        if(find==0){
-            int pEnd=0;
-            int nCount = sdk_ringbuffer_count(buffer, find_result.start, find_result.end, ",");
+        int pEnd=0;
+        int nCount = sdk_ringbuffer_count(buffer, find_result.start, find_result.end, ",");
 //            rt_kprintf("',' count=%d\n", nCount);
-            switch (nCount) {
-                case 0:{
-                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
-                    break;
-                }
-                case 1:{
-                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
-                    result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-                    break;
-                }
-                case 2:{
-                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
-                    result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-                    result->lac = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-                    break;
-                }
-                case 3:{
-                    result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
-                    result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-                    result->lac = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-                    result->ci = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
-                    break;
-                }
-                default:
-                    break;
+        switch (nCount) {
+            case 0:{
+                result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+                break;
             }
-            sdk_ringbuffer_reset(buffer);
-            A7670C_Notify();
-            return kA7670C_RxHandler_Result_DONE;
-        }else{
-            sdk_ringbuffer_reset(buffer);
-            A7670C_Notify();
-            return kA7670C_RxHandler_Result_RESET;
+            case 1:{
+                result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+                result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+                break;
+            }
+            case 2:{
+                result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+                result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+                result->lac = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+                break;
+            }
+            case 3:{
+                result->n = sdk_ringbuffer_strtoul(buffer, find_result.start, &pEnd, 0);
+                result->stat= sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+                result->lac = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+                result->ci = sdk_ringbuffer_strtoul(buffer, pEnd+1, &pEnd, 0);
+                break;
+            }
+            default:
+                break;
         }
+        sdk_ringbuffer_reset(buffer);
+        A7670C_Notify();
+        return kA7670C_RxHandler_Result_DONE;
     }
 
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束*/){
@@ -104,7 +141,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CEREG_Read(A7670C_CEREG_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGREG?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG?\r\n");
     return err;
 }
 
