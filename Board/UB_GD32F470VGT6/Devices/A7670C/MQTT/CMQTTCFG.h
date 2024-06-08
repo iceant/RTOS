@@ -32,14 +32,14 @@ typedef struct A7670C_CMQTTCFG_Write_Response{
     A7670C_Response_Code code;
 }A7670C_CMQTTCFG_Write_Response;
 
-A7670C_Result A7670C_CMQTTCFG_Write(A7670C_CMQTTCFG_Write_Response* result
+A7670C_Result A7670C_CMQTTCFG_SetUTF8(A7670C_CMQTTCFG_Write_Response* result
         , int client_index
         , bool checkUTF8_flag
         , uint32_t timeout_ms);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-A7670C_Result A7670C_CMQTTCFG_Write2(A7670C_CMQTTCFG_Write_Response* result
+A7670C_Result A7670C_CMQTTCFG_SetTimeout(A7670C_CMQTTCFG_Write_Response* result
         , int client_index
         , int optimeout_val
         , uint32_t timeout_ms);

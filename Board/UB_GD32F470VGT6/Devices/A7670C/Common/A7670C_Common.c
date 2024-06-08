@@ -48,9 +48,9 @@ A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7
 void A7670C_PowerOn(void)
 {
     A7670C__Instance.power_en->on();
-    A7670C_NopDelay(0x3FFFFF);
+    A7670C_NopDelay(0x3FFFFFF);
     A7670C__Instance.power_key->on();
-    A7670C_NopDelay(0x3FFFFF);
+    A7670C_NopDelay(0x3FFFFFF);
     A7670C__Instance.power_key->off();
 }
 
@@ -68,16 +68,18 @@ os_bool_t A7670C_IsPowerOn(void)
 
 void A7670C_Lock(void){
     os_mutex_lock(&A7670C__mutex);
+//    os_printf("A7670C_Lock\n");
 }
 
 void A7670C_UnLock(void){
+//    os_printf("A7670C_UnLock\n");
     os_mutex_unlock(&A7670C__mutex);
 }
 
 
 void A7670C_Reset(void){
     A7670C__Instance.power_reset->on();
-    A7670C_NopDelay(0x3FFFFF);
+    A7670C_NopDelay(0x3FFFFFF);
     A7670C__Instance.power_reset->off();
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,9 +99,9 @@ A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* user
 {
     A7670C_Lock();
     A7670C__Instance.usart->setRxHandler(rxHandler, userdata);
-    A7670C_UnLock();
-    
     A7670C_Result res = A7670C_TimedWait(ticks);
+    A7670C_UnLock();
+
 
     return (res==OS_ETIMEOUT)?kA7670C_Result_TIMEOUT:kA7670C_Result_OK;;
 }
@@ -123,14 +125,16 @@ A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdat
     va_list ap;
     int err;
 
+    A7670C_Lock();
+
     va_start(ap, fmt);
     memset(A7670C__Printf_Buffer, 0, sizeof(A7670C__Printf_Buffer));
     int size = vsnprintf(A7670C__Printf_Buffer, sizeof(A7670C__Printf_Buffer), fmt, ap);
     va_end(ap);
 
-    A7670C_Lock();
     A7670C__Instance.usart->setRxHandler(rxHandler, userdata);
     A7670C_Send(A7670C__Printf_Buffer, size);
+
     err = A7670C_TimedWait(ticks);
     A7670C__Instance.usart->setRxHandler(0, 0);
     A7670C_UnLock();
@@ -141,6 +145,9 @@ A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdat
 A7670C_Result A7670C_TimedWait(os_tick_t ticks)
 {
     os_err_t  err = A7670C__Instance.usart->wait(ticks);
+    if(err==OS_ETIMEOUT){
+        printf("A7670C_TimedWait Timeout!\n");
+    }
     return (err==OS_ETIMEOUT)?kA7670C_Result_TIMEOUT:kA7670C_Result_OK;
 }
 

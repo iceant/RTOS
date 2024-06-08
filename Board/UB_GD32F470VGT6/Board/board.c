@@ -55,7 +55,6 @@ static void A7670C_GPIO_Init(void){
 
     gpio_mode_set(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,GPIO_PIN_15);
     gpio_output_options_set(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,GPIO_PIN_15);   /* 5V_EN */
-
 }
 /* ======================================================================================================================== */
 
@@ -121,8 +120,8 @@ A7670C_Pin_T A7670C_power_reset={.on=A7670C_PwrRstPin_On, .off=A7670C_PwrRstPin_
 
 static uint8_t A7670C_RxThdStack[A7670C_RXTHREAD_STACK_SIZE];
 static os_thread_t A7670C_RxThread;
-static os_sem_t A7670C_RxSem;
-static os_sem_t A7670C_WaitSem;
+static os_semaphore_t A7670C_RxSem;
+static os_semaphore_t A7670C_WaitSem;
 static uint8_t A7670C_RxBlock[A7670C_RXBLOCK_SIZE];
 static sdk_ringbuffer_t A7670C_RxBuffer;
 static bool A7670C_RxThreadFlag = false;
@@ -136,15 +135,17 @@ static A7670C_RxHandler_T A7670C__DefaultRxHandlerUserdata=0;
 static void A7670C_USART_RxThreadEntry(void* parameter){
     printf("A7670C_USART_RxThreadEntry Startup...\r\n");
 
-    sdk_ringbuffer_init(&A7670C_RxBuffer, A7670C_RxBlock, sizeof(A7670C_RxBlock));
-    os_sem_init(&A7670C_RxSem, "A7670C_RxSem", 0, OS_QUEUE_FIFO);
-    os_sem_init(&A7670C_WaitSem, "A7670C_WaitSem", 0, OS_QUEUE_FIFO);
+//    sdk_ringbuffer_init(&A7670C_RxBuffer, A7670C_RxBlock, sizeof(A7670C_RxBlock));
+//    os_sem_init(&A7670C_RxSem, "A7670C_RxSem", 0, OS_QUEUE_FIFO);
+//    os_sem_init(&A7670C_WaitSem, "A7670C_WaitSem", 0, OS_QUEUE_FIFO);
 
-    A7670C_RxThreadFlag = true;
     A7670C_RxHandler_Result result;
+    A7670C_RxThreadFlag = true;
 
     while(1){
-        os_sem_take(&A7670C_RxSem, OS_WAIT_INFINITY);
+        while(sdk_ringbuffer_used(&A7670C_RxBuffer)==0){
+            os_sem_take(&A7670C_RxSem, OS_WAIT_INFINITY);
+        }
 
 #if 0
         if(sdk_ringbuffer_find_str(&A7670C_RxBuffer, 0, "\r\n")!=-1){
@@ -176,16 +177,19 @@ static void A7670C__SetDefaultRxHandler(void* RxHandler, void* userdata){
     A7670C__DefaultRxHandlerUserdata = userdata;
 }
 
-static os_err_t A7670C_IO_Wait(os_time_t timeout_ms){
-    return os_sem_take(&A7670C_WaitSem, os_tick_from_millisecond(timeout_ms));
+static os_err_t A7670C_IO_Wait(os_tick_t tick){
+//    os_printf("A7670C_IO_Wait[%s]...\n", os_thread_self()->name);
+    return os_semaphore_take(&A7670C_WaitSem, tick);
 }
 
 static os_err_t A7670C_IO_Notify(void){
-    return os_sem_release(&A7670C_WaitSem);
+//    os_printf("A7670C_IO_Notify[%s]...\n", os_thread_self()->name);
+    return os_semaphore_release(&A7670C_WaitSem);
 }
 
 static int A7670C_IO_Send(uint8_t* data, int size){
     BSP_USART1_Lock();
+//    sdk_hex_dump("A7670C_IO_Send", data, size);
     sdk_ringbuffer_reset(&A7670C_RxBuffer);
     BSP_USART1_DMATx(data, size);
 //    BSP_USART1_Send(data, size);
@@ -196,15 +200,14 @@ static int A7670C_IO_Send(uint8_t* data, int size){
 static void A7670C_USART_RxHandler(uint16_t data, void* userdata)
 {
     if(A7670C_RxThreadFlag==true){
-        sdk_ringbuffer_put(&A7670C_RxBuffer, data);
-        //sdk_hex_dump("USART1_RX", A7670C_RxBuffer.buffer, sdk_ringbuffer_used(&A7670C_RxBuffer));
+        sdk_ringbuffer_put(&A7670C_RxBuffer, (char)data);
         os_sem_release(&A7670C_RxSem);
     }
 }
 
 static void A7670C_Reset(void){
     A7670C_power_reset.on();
-    for(int i=0; i<0x3ffff; i++);
+    for(int i=0; i<0x3fffff; i++);
     A7670C_power_reset.off();
 }
 
@@ -257,11 +260,13 @@ static OLED_IO_T OLED_IO = {.send = OLED_Send, .recv = OLED_Recv, .reset = BSP_I
 
 void Board_5V_Enable(void)
 {
-    GPIO_BC(GPIOD) = GPIO_PIN_15;
+//    GPIO_BC(GPIOD) = GPIO_PIN_15;
+    gpio_bit_reset(GPIOD, GPIO_PIN_15);
 }
 
 void Board_5V_Disable(void){
-    GPIO_BOP(GPIOD) = GPIO_PIN_15;
+//    GPIO_BOP(GPIOD) = GPIO_PIN_15;
+    gpio_bit_set(GPIOD, GPIO_PIN_15);
 }
 
 
@@ -338,12 +343,19 @@ void Board_Init(void){
 
 #if defined(ENABLE_4G)
     A7670C_GPIO_Init();
-    os_thread_init(&A7670C_RxThread, "A7670C_RxThd", A7670C_USART_RxThreadEntry, 0
-                   , A7670C_RxThdStack, sizeof(A7670C_RxThdStack)
-                   , 20, 10);
-    os_thread_startup(&A7670C_RxThread);
+
+
+    sdk_ringbuffer_init(&A7670C_RxBuffer, A7670C_RxBlock, sizeof(A7670C_RxBlock));
+    os_sem_init(&A7670C_RxSem, "A7670C_RxSem", 0, OS_QUEUE_FIFO);
+    os_sem_init(&A7670C_WaitSem, "A7670C_WaitSem", 0, OS_QUEUE_FIFO);
 
     A7670C_Init(&A7670C_power_en, &A7670C_power_key, &A7670C_power_status, &A7670C_power_reset, &A7670C_IO);
+
+    os_thread_init(&A7670C_RxThread, "A7670C_RxThd", A7670C_USART_RxThreadEntry, 0
+                   , A7670C_RxThdStack, sizeof(A7670C_RxThdStack)
+                   , 20, 20);
+    os_thread_startup(&A7670C_RxThread);
+
 #endif
 
     /* ------------------------------------------------------------------------------------------ */

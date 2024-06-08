@@ -56,7 +56,7 @@ void sdk_ringbuffer_reset(sdk_ringbuffer_t* buffer);
 
 os_size_t sdk_ringbuffer_try_read(sdk_ringbuffer_t* buffer, int offset, uint8_t* out_buffer, os_size_t out_buffer_size);
 
-os_size_t sdk_ringbuffer_used(sdk_ringbuffer_t* buffer);
+int sdk_ringbuffer_used(sdk_ringbuffer_t* buffer);
 
 uint8_t sdk_ringbuffer_peek(sdk_ringbuffer_t* buffer, int idx);
 

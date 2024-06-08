@@ -159,7 +159,7 @@ os_size_t sdk_ringbuffer_try_read(sdk_ringbuffer_t *buffer, int offset, uint8_t 
     return read_size;
 }
 
-os_size_t sdk_ringbuffer_used(sdk_ringbuffer_t *buffer) {
+int sdk_ringbuffer_used(sdk_ringbuffer_t *buffer) {
     return RB_USED(buffer);
 }
 

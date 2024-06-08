@@ -1,4 +1,5 @@
 #include <CSQ.h>
+#include <sdk_hex.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -33,6 +34,7 @@ static A7670C_RxHandler_Result CSQ_Exec_Handler(sdk_ringbuffer_t *buffer, void* 
     sdk_ringbuffer_text_t find_result;
 
     if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束*/){
+//        sdk_hex_dump("[CSQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
         result->code=kA7670C_Response_Code_OK;
 //        int find = text_between(&find_result, data, data_size, "+CSQ: ", "\r\n");
         int find = sdk_ringbuffer_cut(&find_result, buffer, 0, sdk_ringbuffer_used(buffer),"+CSQ: ", "\r\n");
@@ -52,6 +54,7 @@ static A7670C_RxHandler_Result CSQ_Exec_Handler(sdk_ringbuffer_t *buffer, void* 
     }
 
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束*/){
+        sdk_hex_dump("[CSQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
         result->code=kA7670C_Response_Code_ERROR;
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();

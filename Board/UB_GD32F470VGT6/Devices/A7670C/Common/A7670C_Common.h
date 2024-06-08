@@ -13,6 +13,7 @@
 ////
 #define __OPTIONAL
 
+#define A7670C_DEFAULT_TIMEOUT_MS 12000
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -35,7 +36,7 @@ typedef struct A7670C_Pin_S{
 typedef struct A7670C_IO_S{
     void (*setRxHandler)(void* handler, void* userdata);
     void (*setDefaultRxHandler)(void* handler, void* userdata);
-    os_err_t (*wait)(os_time_t timeout_ms);
+    os_err_t (*wait)(os_tick_t tick);
     int (*send)(uint8_t * data, int size);
     os_err_t (*notify)(void);
 }A7670C_IO_T;

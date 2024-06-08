@@ -1,4 +1,5 @@
 #include <os_tick.h>
+#include "os_printf.h"
 
 os_tick_t os_tick_from_millisecond(uint32_t ms)
 {

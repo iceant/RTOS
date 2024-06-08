@@ -16,7 +16,7 @@
 ////
 
 C__ALIGNED(OS_ALIGN_SIZE)
-static uint8_t BootThread_Stack[2048];
+static uint8_t BootThread_Stack[4096];
 static os_thread_t BootThread;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,6 +26,10 @@ static os_thread_t BootThread;
 static void BootThread_Entry(void* p){
     char time_display_buf[32];
     int err;
+
+    /*初始化终端*/
+    USE_USART0_Init();
+
 #if defined(ENABLE_SPI_FLASH)
     uint32_t FlashID = sFLASH_ReadID();
     os_printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
@@ -37,6 +41,7 @@ static void BootThread_Entry(void* p){
 #endif
 
 #if defined(ENABLE_4G)
+//    A7670C_WaitPBDone(60000);
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){
         cpu_reboot();
@@ -126,12 +131,9 @@ int main(void)
     dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
     dbg_print("CPUID: %s\n", BSP_CPUID_Read());
 
-    /*初始化终端*/
-    USE_USART0_Init();
-
     /*启动*/
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0
-                   , BootThread_Stack, sizeof(BootThread_Stack), 30,10);
+                   , BootThread_Stack, sizeof(BootThread_Stack), 20,10);
     os_thread_startup(&BootThread);
 
 

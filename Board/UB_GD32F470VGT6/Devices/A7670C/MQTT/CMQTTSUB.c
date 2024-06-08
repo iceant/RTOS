@@ -104,10 +104,15 @@ static A7670C_RxHandler_Result Write2_Handler(sdk_ringbuffer_t *buffer, void* ud
     
     if(sdk_ringbuffer_find_str(buffer, 0, ">\r\n")!=-1 /*接收结束: 成功*/ && result->send_flag==false){
         A7670C_Send((uint8_t*)result->topic, result->topic_length);
+//        sdk_ringbuffer_reset(buffer);
         result->send_flag = true;
         return kA7670C_RxHandler_Result_CONTINUE; /*清空buffer*/
     }
-    
+
+//    if(result->send_flag==false){
+//        return kA7670C_RxHandler_Result_CONTINUE;
+//    }
+
     sdk_ringbuffer_text_t find_text;
     int find_status = sdk_ringbuffer_cut(&find_text, buffer, 0, sdk_ringbuffer_used(buffer), "+CMQTTSUB: ", "\r\n");
     if(find_status==0){

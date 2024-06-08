@@ -34,9 +34,12 @@ A7670C_Result A7670C_AT(os_time_t timeout_ms){
 ////
 static A7670C_RxHandler_Result WaitPBDone_Handler(sdk_ringbuffer_t* buffer, void*ud){
     if(sdk_ringbuffer_find_str(buffer, 0, "PB DONE\r\n")!=-1){
+        sdk_hex_dump("[WAIT_PB_DONE]", buffer->buffer, sdk_ringbuffer_used(buffer));
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
+    }else{
+        sdk_hex_dump("[WAIT_PB_DONE]", buffer->buffer, sdk_ringbuffer_used(buffer));
     }
     return kA7670C_RxHandler_Result_CONTINUE;
 }
@@ -62,7 +65,7 @@ __A7670C__Boot:
 
     while(1){
         os_printf("A7670C wait for AT ready...\n");
-        result = A7670C_AT(12000);
+        result = A7670C_AT(A7670C_DEFAULT_TIMEOUT_MS);
         if(result==kA7670C_Result_OK){
             break;
         }
@@ -76,7 +79,7 @@ __A7670C__Boot:
     while(1){
         os_printf("A7670C wait for CPIN ready...\n");
         A7670C_CPIN_Read_Response CPIN_Read_Response;
-        result = A7670C_CPIN_Read(&CPIN_Read_Response, 12000);
+        result = A7670C_CPIN_Read(&CPIN_Read_Response, A7670C_DEFAULT_TIMEOUT_MS);
         if(CPIN_Read_Response.code==kA7670C_Response_Code_OK){
             break;
         }
@@ -90,7 +93,7 @@ __A7670C__Boot:
     while(1){
         os_printf("A7670C checking CSQ quality...");
         A7670C_CSQ_Exec_Response CSQ_Exec_Response;
-        result = A7670C_CSQ_Exec(&CSQ_Exec_Response, 12000);
+        result = A7670C_CSQ_Exec(&CSQ_Exec_Response, A7670C_DEFAULT_TIMEOUT_MS);
         if(CSQ_Exec_Response.code == kA7670C_Response_Code_OK){
             os_printf(" rssi: %d, ber: %d\n", CSQ_Exec_Response.rssi, CSQ_Exec_Response.ber);
             if(CSQ_Exec_Response.rssi>0 && CSQ_Exec_Response.rssi<=31){
@@ -187,7 +190,7 @@ __A7670C__Boot:
     while(1){
         os_printf("A7670C CGATT...");
         A7670C_CGACT_Read_Response CGACT_Read_Response;
-        result = A7670C_CGACT_Read(&CGACT_Read_Response, 12000);
+        result = A7670C_CGACT_Read(&CGACT_Read_Response, A7670C_DEFAULT_TIMEOUT_MS);
         if(CGACT_Read_Response.code == kA7670C_Response_Code_OK){
             os_printf("CGACT Record Count: %d\n", CGACT_Read_Response.record_count);
             break;

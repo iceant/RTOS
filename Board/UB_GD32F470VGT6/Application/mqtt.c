@@ -65,14 +65,16 @@ static void tx_thread_entry(void* p){
     MQTT_TxThreadReady = true;
     while(1){
 
-        os_semaphore_take(&read_lock, OS_WAIT_INFINITY);
+        while(read_idx==write_idx){
+            os_semaphore_take(&read_lock, OS_WAIT_INFINITY);
+        }
 
-        //printf("[MQTT] TX Thread: read_idx=%d, write_idx=%d\r\n", read_idx, write_idx);
+        printf("[MQTT] TX Thread: read_idx=%d, write_idx=%d\r\n", read_idx, write_idx);
 
         while(read_idx!=write_idx){
             mqtt_tx_task_t* task = &tx_tasks[read_idx];
 
-            //printf("MQTT SEND: read_idx = %d, buffer=%08x, size=%d\n", read_idx, (uint32_t)task->tx_buffer, task->tx_data_size);
+            printf("MQTT SEND: read_idx = %d, buffer=%08x, size=%d\n", read_idx, (uint32_t)task->tx_buffer, task->tx_data_size);
 
             int next_read_idx = read_idx+1;
             if(next_read_idx>=TX_TASK_COUNT){
@@ -110,6 +112,8 @@ static void tx_thread_entry(void* p){
                 if(nRetry--==0){
                     break;
                 }
+
+                A7670C_NopDelay(0x3fffff);
             }while(result!=kA7670C_Result_OK);
 
 #if defined(MQTT_RESUB_ON_PUB)
@@ -145,6 +149,15 @@ int MQTT_Init(void)
 
     global_t* global = global_get();
 
+
+
+    os_thread_init(&tx_thread, "MQTT_TX_THD", tx_thread_entry, 0
+            , stack, STACK_SIZE, 10
+            , 50);
+    os_thread_startup(&tx_thread);
+
+
+
     A7670C_MQTT_Init(&session, A7670C_MQTT__RxDataHandler, 0, A7670C_MQTT__OnConnectLost);
     A7670C_Result result = A7670C_MQTT_Connect(&session, global->mqtt.ClientID
                                                , global->mqtt.Server
@@ -153,37 +166,34 @@ int MQTT_Init(void)
                                                , global->mqtt.Password);
     while(result!=kA7670C_Result_OK){
         printf("MQTT Connect Result: %d\n", result);
-        result = A7670C_MQTT_Connect(&session, global->mqtt.ClientID
-                                     , global->mqtt.Server
-                                     ,  64800, true
-                                     , global->mqtt.Username
-                                     , global->mqtt.Password);
         if(nRetry-- ==0){
             return -1;
         }
         A7670C_NopDelay(0x3fffff);
+        result = A7670C_MQTT_Connect(&session, global->mqtt.ClientID
+                , global->mqtt.Server
+                ,  64800, true
+                , global->mqtt.Username
+                , global->mqtt.Password);
     }
 
     nRetry = 3;
-    result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream, kA7670C_Qos_0, kA7670C_Bool_No);
+    printf("[MQTT] Subscribe %s\n", global->mqtt.Topic_Downstream);
+    result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream
+                                           , kA7670C_Qos_0, kA7670C_Bool_Unspecified);
     while(result!=kA7670C_Result_OK){
         printf("MQTT Sub Downstream Topic Result: %d\n", result);
         if(nRetry-- ==0){
             return -2;
         }
         A7670C_NopDelay(0x3fffff);
+        result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream
+                                               , kA7670C_Qos_0, kA7670C_Bool_Unspecified);
     }
 
 
-    os_thread_init(&tx_thread, "MQTT_TX_THD", tx_thread_entry, 0
-                   , stack, STACK_SIZE, GLOBAL_DEFAULT_THREAD_PRIORITY
-                   , GLOBAL_DEFAULT_THREAD_TTICKS);
-    os_thread_startup(&tx_thread);
-
-    while(MQTT_TxThreadReady==false);
-
     MQTT__cmd_info();
-    printf("MQTT Init Done!\n");
+//    printf("MQTT Init Done!\n");
 
     return 0;
 }
