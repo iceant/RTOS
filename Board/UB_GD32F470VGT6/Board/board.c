@@ -99,8 +99,6 @@ void Board_Init(void){
     SCB->CCR|=SCB_CCR_STKALIGN_Msk;
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
-    os_kernel_init();
-
     SystemCoreClock = 240000000U;
 
     /* Configure the NVIC Preemption Priority Bits */
@@ -115,6 +113,19 @@ void Board_Init(void){
     Board_5V_Enable();
     
     /* ------------------------------------------------------------------------------------------ */
+    /* ---- USART0 ----*/
+    #if defined(ENABLE_USART0)
+    BSP_USART0_Init();
+    BSP_USART0_EnableDMATx();
+    BSP_USART0_EnableRxIRQ();
+    #endif
+    
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- OS KERNEL ----*/
+    
+    os_kernel_init();
+    
+    /* ------------------------------------------------------------------------------------------ */
     /* ---- 精确计时器 ----*/
     BSP_TIM6_Init();
     
@@ -126,15 +137,7 @@ void Board_Init(void){
     BSP_LED3_Init();
     BSP_LED4_Init();
     #endif 
-
-    /* ------------------------------------------------------------------------------------------ */
-    /* ---- USART0 ----*/
-    #if defined(ENABLE_USART0)
-    BSP_USART0_Init();
-    BSP_USART0_EnableDMATx();
-    BSP_USART0_EnableRxIRQ();
-    #endif 
-
+    
     /* ------------------------------------------------------------------------------------------ */
     /* ---- I2C0: RTC/OLED ----*/
     #if defined(ENABLE_I2C0) || defined(ENABLE_DS1307) || defined(ENABLE_OLED)

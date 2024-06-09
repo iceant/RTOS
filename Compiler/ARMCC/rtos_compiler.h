@@ -28,4 +28,16 @@
 #define C__PACKED                               __attribute__((__packed__))
 #endif
 
+#define C__CONSTRUCTOR_PRIORITY(f, p) \
+    void f(void) __attribute__((constructor(p))); \
+    void f(void)
+
+#define C__CONSTRUCTOR(f) \
+        void f(void) __attribute__((constructor)); \
+        void f(void)
+
+#define C__DESTRUCTOR(f) \
+        void f(void) __attribute__((destructor)); \
+        void f(void)
+
 #endif /*INCLUDED_RTOS_COMPILER_H*/

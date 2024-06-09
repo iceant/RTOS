@@ -2,6 +2,9 @@
 
 #if defined(RTOS_KERNEL_USE_TLSF)
 #include <tlsf.h>
+#include <stdlib.h>
+#include "os_printf.h"
+
 #else
 #include <stdlib.h>
 #endif
@@ -9,18 +12,17 @@
 #if defined(RTOS_KERNEL_USE_TLSF)
 C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t os_memory__blocks[RTOS_KERNEL_TLSF_POOL_SIZE];
-os_err_t os_memory_init(void)
+
+void os_memory_init(void)
 {
-    os_size_t size = init_memory_pool(RTOS_KERNEL_TLSF_POOL_SIZE, os_memory__blocks);
-    if(size>0){
-        return OS_EOK;
-    }
-    return OS_ERROR;
+    int size = init_memory_pool(RTOS_KERNEL_TLSF_POOL_SIZE, os_memory__blocks);
+    printf("Memory Pool Initialized: %d/%d\n", size, RTOS_KERNEL_TLSF_POOL_SIZE);
 }
 
-void os_memory_destroy(void)
+C__DESTRUCTOR(os_memory_destroy)
 {
     destroy_memory_pool(os_memory__blocks);
+    printf("destroy_memory_pool done!\n");
 }
 
 void * os_memory_malloc(os_size_t nBytes, const char* file, os_size_t line)

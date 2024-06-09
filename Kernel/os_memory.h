@@ -18,7 +18,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-os_err_t os_memory_init(void);
+void os_memory_init(void);
 void os_memory_destroy(void);
 
 void * os_memory_malloc(os_size_t nBytes, const char* file, os_size_t line);
