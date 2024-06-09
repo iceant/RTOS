@@ -91,6 +91,35 @@ C__STATIC_FORCEINLINE void A7670C_NopDelay(uint32_t delay){
     os_critical_leave();
 }
 
+
+#define A7670C_HANDLE_OK \
+do{                              \
+    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){ \
+        response->code = kA7670C_Response_Code_OK;        \
+        sdk_ringbuffer_reset(buffer);                     \
+        A7670C_Notify();         \
+        return kA7670C_RxHandler_Result_DONE;             \
+    }                          \
+}while(0)
+
+#define A7670C_HANDLE_OK_ERROR \
+do{                              \
+    if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){ \
+        response->code = kA7670C_Response_Code_OK;        \
+        sdk_ringbuffer_reset(buffer);                     \
+        A7670C_Notify();         \
+        return kA7670C_RxHandler_Result_DONE;             \
+    }                            \
+                                 \
+    if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1){ \
+        sdk_hex_dump("A7670C_ERROR", buffer->buffer, sdk_ringbuffer_used(buffer)); \
+        response->code = kA7670C_Response_Code_ERROR;     \
+        sdk_ringbuffer_reset(buffer);                     \
+        A7670C_Notify();         \
+        return kA7670C_RxHandler_Result_DONE;             \
+    }                            \
+}while(0)
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
