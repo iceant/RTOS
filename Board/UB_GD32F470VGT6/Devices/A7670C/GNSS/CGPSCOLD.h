@@ -1,0 +1,4 @@
+#ifndef INCLUDED_CGPSCOLD_H
+#define INCLUDED_CGPSCOLD_H
+
+#endif /* INCLUDED_CGPSCOLD_H */

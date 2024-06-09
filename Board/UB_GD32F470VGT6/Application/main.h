@@ -79,6 +79,11 @@ OF SUCH DAMAGE.
 #include <mqtt.h>
 #endif /*INCLUDED_MQTT_H*/
 
+#ifndef INCLUDED_TASK_HEARTBEAT_H
+#include <task_heartbeat.h>
+#endif /*INCLUDED_TASK_HEARTBEAT_H*/
+
+
 
 
 

@@ -111,6 +111,8 @@ int global_init(void){
         snprintf(buf, sizeof(buf), "/DEVICES/%s/DOWNSTREAM", BSP_CPUID_Read());
         global_set_str(global__instance.mqtt.Topic_Downstream, buf);
 
+        global__instance.meter_state = GLOBAL_METER_STATE_IDLE;
+        
         global__state = GLOBAL_STATE_INIT;
     }
 

@@ -65,6 +65,8 @@ static void BootThread_Entry(void* p){
     #if defined(ENABLE_DS1307)
     Task_TimeSync_Init();
     #endif
+    
+    Task_HeartBeat_Init();
 #endif
 
 #if defined(ENABLE_CAN0)

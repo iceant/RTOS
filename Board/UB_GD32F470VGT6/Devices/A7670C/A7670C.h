@@ -82,6 +82,65 @@
 #include <ATE.h>
 #endif /*INCLUDED_ATE_H*/
 
+#ifndef INCLUDED_CAGPS_H
+#include <CAGPS.h>
+#endif /*INCLUDED_CAGPS_H*/
+
+#ifndef INCLUDED_CGNSSCMD_H
+#include <CGNSSCMD.h>
+#endif /*INCLUDED_CGNSSCMD_H*/
+
+#ifndef INCLUDED_CGNSSINFO_H
+#include <CGNSSINFO.h>
+#endif /*INCLUDED_CGNSSINFO_H*/
+
+#ifndef INCLUDED_CGNSSMODE_H
+#include <CGNSSMODE.h>
+#endif /*INCLUDED_CGNSSMODE_H*/
+
+#ifndef INCLUDED_CGNSSNMEA_H
+#include <CGNSSNMEA.h>
+#endif /*INCLUDED_CGNSSNMEA_H*/
+
+#ifndef INCLUDED_CGNSSPORTSWITCH_H
+#include <CGNSSPORTSWITCH.h>
+#endif /*INCLUDED_CGNSSPORTSWITCH_H*/
+
+#ifndef INCLUDED_CGNSSPROD_H
+#include <CGNSSPROD.h>
+#endif /*INCLUDED_CGNSSPROD_H*/
+
+#ifndef INCLUDED_CGNSSPWR_H
+#include <CGNSSPWR.h>
+#endif /*INCLUDED_CGNSSPWR_H*/
+
+#ifndef INCLUDED_CGNSSTST_H
+#include <CGNSSTST.h>
+#endif /*INCLUDED_CGNSSTST_H*/
+
+#ifndef INCLUDED_CGPSCOLD_H
+#include <CGPSCOLD.h>
+#endif /*INCLUDED_CGPSCOLD_H*/
+
+#ifndef INCLUDED_CGPSFTM_H
+#include <CGPSFTM.h>
+#endif /*INCLUDED_CGPSFTM_H*/
+
+
+#ifndef INCLUDED_CGPSHOT_H
+#include <CGPSHOT.h>
+#endif /*INCLUDED_CGPSHOT_H*/
+
+#ifndef INCLUDED_CGPSINFO_H
+#include <CGPSINFO.h>
+#endif /*INCLUDED_CGPSINFO_H*/
+
+#ifndef INCLUDED_CGPSWARM_H
+#include <CGPSWARM.h>
+#endif /*INCLUDED_CGPSWARM_H*/
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

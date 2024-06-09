@@ -166,7 +166,7 @@ static void USE_CAN0__RxThreadEntry(void* p){
                     if(USE_CAN0__State!=USE_CAN0_STATE_CHARGE_IDLE){
                         /* 之前在充电，现在停止了 */
                         USE_CAN0__State = USE_CAN0_STATE_CHARGE_IDLE;
-
+                        global_get()->meter_state = GLOBAL_METER_STATE_IDLE;
                         /*
                          1. 显示最终的电能
                          */
@@ -181,10 +181,13 @@ static void USE_CAN0__RxThreadEntry(void* p){
                     if(USE_CAN0__State==USE_CAN0_STATE_CHARGE_IDLE){
                         /* 第一个数据 */
                         USE_CAN0__State = USE_CAN0_STATE_CHARGE_WIP;
+                        global_get()->meter_state = GLOBAL_METER_STATE_CHARGING;
+                        
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.Power, 0, 0);
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.EnergySum, 0, 0);
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.EnergyWH, 0, 0);
                         nCount = BSP_TIM6__TickCount;
+                        
                     }else
                     if(USE_CAN0__State==USE_CAN0_STATE_CHARGE_WIP){
                         /*充电中, 计算电量

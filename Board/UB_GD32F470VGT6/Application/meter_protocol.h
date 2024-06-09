@@ -33,6 +33,10 @@ typedef struct meter_protocol_s{
     uint8_t lines; /*记录数据包内包含的数据条数，每种数据类型一行的字节数不一样*/
 }meter_protocol_t;
 
+typedef struct meter_protocol_heartbeat_s{
+    uint8_t buffer[73];
+}meter_protocol_heartbeat_t;
+
 typedef struct meter_protocol_datetime_s{
     uint16_t year;
     uint8_t  month;

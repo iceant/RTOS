@@ -46,6 +46,7 @@ typedef struct global_s{
     glboal_mqtt_t mqtt;
     char IMEI[16];
     char ICCID[21];
+    int meter_state;
 }global_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +60,9 @@ typedef struct global_s{
 #define GLOBAL_MQTT_USERNAME            "guest"
 #define GLOBAL_MQTT_PASSWORD            "guest"
 
-
+#define GLOBAL_METER_STATE_IDLE     1
+#define GLOBAL_METER_STATE_CHARGING 2
+#define GLOBAL_METER_STATE_ERROR    3
 ////////////////////////////////////////////////////////////////////////////////
 ////
 

@@ -1,0 +1,4 @@
+#ifndef INCLUDED_CGPSHOT_H
+#define INCLUDED_CGPSHOT_H
+
+#endif /* INCLUDED_CGPSHOT_H */

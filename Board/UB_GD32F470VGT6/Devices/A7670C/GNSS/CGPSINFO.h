@@ -1,0 +1,4 @@
+#ifndef INCLUDED_CGPSINFO_H
+#define INCLUDED_CGPSINFO_H
+
+#endif /* INCLUDED_CGPSINFO_H */
