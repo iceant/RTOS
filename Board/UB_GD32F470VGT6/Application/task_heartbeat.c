@@ -35,41 +35,41 @@ static void Task_HeartBeat_Thread_Entry(void* p){
 //
 //        os_thread_mdelay(1000);
 //    }while(CGNSSPWR_Read_Response.AP_Flash_Status==0);
-    int nRetry = 3;
-    while(1){
-        A7670C_CGPSINFO_Read_Response CGPSINFO_Read_Response;
-        A7670C_CGPSINFO_Read(&CGPSINFO_Read_Response, 9000);
-        if(CGPSINFO_Read_Response.code == kA7670C_Response_Code_OK){
-            printf("[TASK_HB] CGPSINFO.Read.Time=%d\n", CGPSINFO_Read_Response.time);
-        }
-        if(CGPSINFO_Read_Response.time!=10){
-            A7670C_CGPSINFO_Write_Response CGPSINFO_Write_Response;
-            A7670C_CGPSINFO_Write(&CGPSINFO_Write_Response, 10, 9000);
-            if(CGPSINFO_Write_Response.code!=kA7670C_Response_Code_OK){
-                printf("[TASK_HB] CGPSINFO.Write Failed!\n");
-                Task_HeartBeat__GPS_Ready = false;
-                
-                if(nRetry-- == 0){
-                    break;
-                }
-                
-                continue;
-            }else{
-                Task_HeartBeat__GPS_Ready = true;
-                break;
-            }
-        }
-    }
+//    int nRetry = 3;
+//    while(1){
+//        A7670C_CGPSINFO_Read_Response CGPSINFO_Read_Response;
+//        A7670C_CGPSINFO_Read(&CGPSINFO_Read_Response, 9000);
+//        if(CGPSINFO_Read_Response.code == kA7670C_Response_Code_OK){
+//            printf("[TASK_HB] CGPSINFO.Read.Time=%d\n", CGPSINFO_Read_Response.time);
+//        }
+//        if(CGPSINFO_Read_Response.time!=10){
+//            A7670C_CGPSINFO_Write_Response CGPSINFO_Write_Response;
+//            A7670C_CGPSINFO_Write(&CGPSINFO_Write_Response, 10, 9000);
+//            if(CGPSINFO_Write_Response.code!=kA7670C_Response_Code_OK){
+//                printf("[TASK_HB] CGPSINFO.Write Failed!\n");
+//                Task_HeartBeat__GPS_Ready = false;
+//
+//                if(nRetry-- == 0){
+//                    break;
+//                }
+//
+//                continue;
+//            }else{
+//                Task_HeartBeat__GPS_Ready = true;
+//                break;
+//            }
+//        }
+//    }
     
     while(1){
         global_t * global = global_get();
         
-        A7670C_CGPSINFO_Exec_Response CGPSINFO_Exec_Response;
-        A7670C_CGPSINFO_Exec(&CGPSINFO_Exec_Response, 9000);
-        if(CGPSINFO_Exec_Response.code == kA7670C_Response_Code_OK){
-            printf("[TASK_HB] GPSINFO = %s\n", CGPSINFO_Exec_Response.info);
-            METER_PROTOCOL_HB_GPS_SET(&heartbeat_buffer, CGPSINFO_Exec_Response.info, strlen(CGPSINFO_Exec_Response.info));
-        }
+//        A7670C_CGPSINFO_Exec_Response CGPSINFO_Exec_Response;
+//        A7670C_CGPSINFO_Exec(&CGPSINFO_Exec_Response, 9000);
+//        if(CGPSINFO_Exec_Response.code == kA7670C_Response_Code_OK){
+//            printf("[TASK_HB] GPSINFO = %s\n", CGPSINFO_Exec_Response.info);
+//            METER_PROTOCOL_HB_GPS_SET(&heartbeat_buffer, CGPSINFO_Exec_Response.info, strlen(CGPSINFO_Exec_Response.info));
+//        }
         
         METER_PROTOCOL_HB_TYPE_SET(&heartbeat_buffer);
         METER_PROTOCOL_HWID_SET(&heartbeat_buffer, BSP_CPUID_Read(), strlen(BSP_CPUID_Read()));

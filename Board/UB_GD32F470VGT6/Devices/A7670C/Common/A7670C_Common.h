@@ -13,10 +13,15 @@
 ////
 #define __OPTIONAL
 
-#define A7670C_DEFAULT_TIMEOUT_MS 12000
+#define A7670C_DEFAULT_TIMEOUT_MS 9000
+
+#define A7670C_STARTUP_STATE_UNINITIALIZED 0
+#define A7670C_STARTUP_STATE_ERROR         (-1)
+#define A7670C_STARTUP_STATE_READY         1
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
 
 typedef enum A7670C_RxHandler_Result{
     kA7670C_RxHandler_Result_CONTINUE=1,
@@ -128,6 +133,9 @@ A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7
 void A7670C_PowerOn(void);
 void A7670C_PowerOff(void);
 os_bool_t A7670C_IsPowerOn(void);
+
+int A7670C_GetStartupState(void);
+void A7670C_SetStartupState(int state);
 
 void A7670C_Reset(void);
 

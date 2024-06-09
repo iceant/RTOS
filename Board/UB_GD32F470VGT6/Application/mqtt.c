@@ -69,12 +69,12 @@ static void tx_thread_entry(void* p){
             os_semaphore_take(&read_lock, OS_WAIT_INFINITY);
         }
 
-        printf("[MQTT] TX Thread: read_idx=%d, write_idx=%d\r\n", read_idx, write_idx);
+//        printf("[MQTT] TX Thread: read_idx=%d, write_idx=%d\r\n", read_idx, write_idx);
 
         while(read_idx!=write_idx){
             mqtt_tx_task_t* task = &tx_tasks[read_idx];
 
-            printf("MQTT SEND: read_idx = %d, buffer=%08x, size=%d\n", read_idx, (uint32_t)task->tx_buffer, task->tx_data_size);
+            printf("MQTT SEND: read_idx = %d/%d, buffer=%08x, size=%d\n", read_idx, TX_TASK_COUNT, (uint32_t)task->tx_buffer, task->tx_data_size);
 
             int next_read_idx = read_idx+1;
             if(next_read_idx>=TX_TASK_COUNT){
@@ -200,6 +200,8 @@ int MQTT_Init(void)
 
 int MQTT_Publish(void* data, int data_size)
 {
+    while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
+    
     int next_write_idx = write_idx + 1;
     if(next_write_idx>=TX_TASK_COUNT){
         next_write_idx = 0;

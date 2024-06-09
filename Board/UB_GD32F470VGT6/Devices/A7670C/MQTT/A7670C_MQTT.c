@@ -389,7 +389,7 @@ A7670C_Result A7670C_MQTT_SubscribeOneTopic(
 ){
     A7670C_Result result;
     A7670C_CMQTTSUB_Write_Response CMQTTSUB_Write_Response;
-
+    
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
         result = A7670C_CMQTTSUB_Write2(&CMQTTSUB_Write_Response, session->client_index, topic, qos, dup, 12000);
         if(CMQTTSUB_Write_Response.code!=kA7670C_Response_Code_OK){
@@ -552,7 +552,9 @@ A7670C_Result A7670C_MQTT_Publish(
 ){
     A7670C_Result result = kA7670C_Result_ERROR;
     int nRetry;
-
+    
+    while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
+    
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
         nRetry = 10;
         while(1){

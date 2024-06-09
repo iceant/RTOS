@@ -87,7 +87,15 @@ void A7670C_Reset(void){
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////
+static int A7670C_Startup_State=A7670C_STARTUP_STATE_UNINITIALIZED;
 
+int A7670C_GetStartupState(void){
+    return A7670C_Startup_State;
+}
+
+void A7670C_SetStartupState(int state){
+    A7670C_Startup_State = state;
+}
 
 os_size_t A7670C_Send(uint8_t* data, os_size_t size)
 {
@@ -114,8 +122,9 @@ A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* user
 A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command)
 {
     A7670C_Result err;
-    
     A7670C_RxHandler_Register_T Register;
+    
+    
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
@@ -134,8 +143,8 @@ A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdat
 {
     va_list ap;
     A7670C_Result err;
-    
     A7670C_RxHandler_Register_T Register;
+    
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;

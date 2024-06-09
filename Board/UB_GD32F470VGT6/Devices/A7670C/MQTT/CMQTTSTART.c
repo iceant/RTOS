@@ -37,6 +37,7 @@ A7670C_Result A7670C_CMQTTSTART_Exec(A7670C_CMQTTSTART_Exec_Response* result, ui
     A7670C_Result err;
     result->code = -1;
     result->err_code=-1;
+    
     err = A7670C_RequestWithCmd(Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTSTART\r\n");
     return err;
 }

@@ -139,7 +139,8 @@
 #include <CGPSWARM.h>
 #endif /*INCLUDED_CGPSWARM_H*/
 
-
+////////////////////////////////////////////////////////////////////////////////
+////
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,5 +150,7 @@ A7670C_Result A7670C_AT(os_tick_t ticks);
 A7670C_Result A7670C_WaitPBDone(uint32_t timeout_ms);
 
 A7670C_Result A7670C_Startup(void);
+
+
 
 #endif /* INCLUDED_A7670C_H */

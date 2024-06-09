@@ -41,7 +41,6 @@ static void BootThread_Entry(void* p){
 #endif
 
 #if defined(ENABLE_4G)
-//    A7670C_WaitPBDone(60000);
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){
         cpu_reboot();

@@ -10,10 +10,10 @@
 ////
 #define DELAY_TIME 0x3FFFFFF
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
+
 static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, void* ud){
     if(sdk_ringbuffer_find_str(buffer, 0, "AT\r\r\nOK\r\n")!=-1
         || sdk_ringbuffer_find_str(buffer, 0, "*ATREADY: 1")!=-1){
@@ -37,8 +37,6 @@ static A7670C_RxHandler_Result WaitPBDone_Handler(sdk_ringbuffer_t* buffer, void
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
-    }else{
-        sdk_hex_dump("[WAIT_PB_DONE]", buffer->buffer, sdk_ringbuffer_used(buffer));
     }
     return kA7670C_RxHandler_Result_CONTINUE;
 }
@@ -266,7 +264,10 @@ __A7670C__Boot:
         A7670C_NopDelay(DELAY_TIME);
     }
 #endif
-
+    
+    A7670C_SetStartupState(A7670C_STARTUP_STATE_READY);
+    
     return kA7670C_Result_OK;
     
 }
+

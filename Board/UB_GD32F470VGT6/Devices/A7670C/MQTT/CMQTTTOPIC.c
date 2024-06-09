@@ -41,7 +41,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t *buffer, void* ud)
 {
     A7670C_CMQTTTOPIC_Write_Request* result = (A7670C_CMQTTTOPIC_Write_Request*)ud;
 
-    sdk_hex_dump("[CMQTTTOPIC-WRITE0]", buffer->buffer, sdk_ringbuffer_used(buffer));
+//    sdk_hex_dump("[CMQTTTOPIC-WRITE0]", buffer->buffer, sdk_ringbuffer_used(buffer));
 
     if(sdk_ringbuffer_find_str(buffer, 0, ">\r\n")!=-1 /*可以发送 topic 了*/ && (result->send_flag==false)){
         sdk_ringbuffer_reset(buffer);
@@ -52,7 +52,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
     if(result->send_flag==true){
         if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1 /*接收结束: 发送成功*/){
-            sdk_hex_dump("[CMQTTTOPIC-WRITE]", buffer->buffer, sdk_ringbuffer_used(buffer));
+//            sdk_hex_dump("[CMQTTTOPIC-WRITE]", buffer->buffer, sdk_ringbuffer_used(buffer));
             result->response->code = kA7670C_Response_Code_OK;
             sdk_ringbuffer_reset(buffer);
             A7670C_Notify();

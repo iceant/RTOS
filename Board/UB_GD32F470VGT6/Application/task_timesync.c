@@ -31,7 +31,7 @@ static int Task_TimeSync_Sync(void){
     A7670C_CCLK_Read_Response CCLK_Read_Response;
     A7670C_CNTP_Write_Response CNTP_Write_Response;
     A7670C_CNTP_Exec_Response CNTP_Exec_Response;
-
+    while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
     do {
         // 1. 设置 NTP 服务其
         result = A7670C_CNTP_Write(&CNTP_Write_Response, "ntp1.aliyun.com", 32, 24000);
