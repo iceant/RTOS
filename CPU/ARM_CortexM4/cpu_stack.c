@@ -2,6 +2,7 @@
 #include <cpu_functions.h>
 #include <cpu_lock.h>
 #include <os_definitions.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -24,24 +25,25 @@ static cpu_lock_t cpu_stack__lock = {0};
 ////
 
 /*
-17  PSR
-16  PC
-15  LR
-14  R12
-13  R3
-12  R2
-11  R1
-10  R0          <<-- PSP
-09  R11
-08  R10
-07  R9
-06  R8
-05  R7
-04  R6
-03  R5
-02  R4
-01  CONTROL
-00  EXC_RETURN/LR              <<--- PSP_array[0]
+00 0000  EXC_RETURN/LR          <<-- sp; 存放初始返回值
+01 0004  CONTROL                <<-- CONTROL
+02 0008  R4
+03 000C  R5
+04 0010  R6
+05 0014  R7
+06 0018  R8
+07 001C  R9
+08 0020  R10
+09 0024  R11
+10 0028  R0                     << -- Thread Parameter
+11 002C  R1
+12 0030  R2
+13 0034  R3
+14 0038  R12
+15 003C  LR(R14)
+16 0040  PC                     << -- Thread Entry
+17 0044  PSR                    << -- 0x01000000
+ 
 --------------------
  */
 
@@ -50,6 +52,10 @@ int cpu_stack_init(void* thread_entry, void* parameter, uint8_t * stack_addr, in
     if (stack_size < CPU_STACK_INIT_REGISTER_SIZE) return -1;
 
     cpu_uint_t sp = ((cpu_uint_t) stack_addr + stack_size - CPU_STACK_INIT_REGISTER_SIZE);
+    
+    for(int i=0; i<CPU_STACK_REGISTER_COUNT; i++){
+        CPU_REG(sp + (i<<2)) = (cpu_uint_t )0xdeadbeefUL;
+    }
 
     CPU_REG(sp + (17 << 2)) = (cpu_uint_t) 0x01000000; /*xPSR*/
     CPU_REG(sp + (16 << 2)) = (cpu_uint_t) thread_entry; /*PC*/
@@ -64,7 +70,7 @@ int cpu_stack_init(void* thread_entry, void* parameter, uint8_t * stack_addr, in
     if (return_sp) {
         *return_sp = (void *) sp;
     }
-
+    
     return 0;
 
 }
