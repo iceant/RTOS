@@ -3,6 +3,8 @@
 
 os_err_t os_kernel_init(void)
 {
+    cpu_init();
+    
     os_memory_init();
 
     os_priority_init();

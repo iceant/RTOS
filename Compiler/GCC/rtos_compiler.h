@@ -35,16 +35,16 @@
 #endif
 
 #define C__CONSTRUCTOR_PRIORITY(f, p) \
-    static void f(void) __attribute__((constructor[(p)])); \
-    static void f(void)
+    void f(void) __attribute__((constructor[(p)])); \
+    void f(void)
 
 #define C__CONSTRUCTOR(f) \
-        static void f(void) __attribute__((constructor)); \
-        static void f(void)
+        void f(void) __attribute__((constructor)); \
+        void f(void)
 
 #define C__DESTRUCTOR(f) \
-        static void f(void) __attribute__((destructor)); \
-        static void f(void)
+        void f(void) __attribute__((destructor)); \
+        void f(void)
 
 
 

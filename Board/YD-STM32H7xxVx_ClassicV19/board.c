@@ -47,7 +47,8 @@ uint8_t MPU_Set_Protection(uint32_t baseaddr,uint32_t size,uint32_t rnum,uint32_
 //For example, the MCU screen is not displayed, the camera collects data error, etc...
 void MPU_Memory_Protection(void) //Specially set SRAM4 to not allow cache, variables using DMA can be placed here. But pay attention to whether the corresponding DMA can access SRAM4
 {
-    MPU_Set_Protection(0x20000000, MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER1, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 1/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire DTCM, a total of 128K bytes, prohibit sharing, allow cache, allow buffering
+    MPU_Set_Protection(0x80000000, MPU_REGION_SIZE_2MB, MPU_REGION_NUMBER0, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire DTCM, a total of 128K bytes, prohibit sharing, allow cache, allow buffering
+    MPU_Set_Protection(0x20000000, MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER1, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire DTCM, a total of 128K bytes, prohibit sharing, allow cache, allow buffering
     MPU_Set_Protection(0x24000000, MPU_REGION_SIZE_512KB, MPU_REGION_NUMBER2, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire internal SRAM, including SRAM1, SRAM2 and DTCM, a total of 512K bytes
     MPU_Set_Protection(0x30000000, ARM_MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER3, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire SRAM1~SRAM3, a total of 288K bytes, prohibit sharing, allow cache, allow buffering
     MPU_Set_Protection(0x30020000, ARM_MPU_REGION_SIZE_128KB, MPU_REGION_NUMBER4, MPU_REGION_FULL_ACCESS, 0/*share*/, 1/*cache*/, 0/*buffer*/, MPU_TEX_LEVEL0); //Protect the entire SRAM1~SRAM3, a total of 288K bytes, prohibit sharing, allow cache, allow buffering
@@ -239,6 +240,7 @@ PUTCHAR_PROTOTYPE
 void Board_Init(void)
 {
     SCB->CCR|=SCB_CCR_STKALIGN_Msk; // 栈对齐
+    SCB->SHCSR|=SCB_SHCSR_MEMFAULTENA_Msk; // 启用 MEM_FAULT
     
     __HAL_RCC_GPIOH_CLK_ENABLE();
     __HAL_RCC_SYSCFG_CLK_ENABLE();

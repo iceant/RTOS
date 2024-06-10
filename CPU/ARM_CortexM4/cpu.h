@@ -46,8 +46,14 @@
 #include <cpu_lock.h>
 #endif /*INCLUDED_CPU_LOCK_H*/
 
+#ifndef INCLUDED_CPU_MPU_H
+#include <cpu_mpu.h>
+#endif /*INCLUDED_CPU_MPU_H*/
 
+////////////////////////////////////////////////////////////////////////////////
+////
 
+void cpu_init(void);
 
 
 
