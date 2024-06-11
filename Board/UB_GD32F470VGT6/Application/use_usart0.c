@@ -31,6 +31,9 @@ static void USART0_RxThread_Entry(void* p)
     while(1){
         os_sem_take(&USART0_RxSem, OS_WAIT_INFINITY);
 
+        if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "net_reboot")!=-1){
+            A7670C_Reset();
+        }else
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "reboot")!=-1){
             cpu_reboot();
         }

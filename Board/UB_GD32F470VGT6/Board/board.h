@@ -131,4 +131,7 @@ void Board_5V_Enable(void);
 
 void Board_5V_Disable(void);
 
+void Board_4GPower_Enable(void);
+void Board_4GPower_Disable(void);
+
 #endif /*INCLUDED_BOARD_H*/

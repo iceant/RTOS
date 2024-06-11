@@ -114,12 +114,14 @@ static void Board_4GPower_GPIO_Init(void){
     gpio_output_options_set(GPIOE, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,GPIO_PIN_6);   /* 4G PWREN */
 }
 
-void Board_4GPower_Enable(void){
-    gpio_bit_set(GPIOE, GPIO_PIN_6);
+void Board_4GPower_Disable(void){
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_bit_reset(GPIOE, GPIO_PIN_6);
 }
 
-void Board_4GPower_Disable(void){
-    gpio_bit_reset(GPIOE, GPIO_PIN_6);
+void Board_4GPower_Enable(void){
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_bit_set(GPIOE, GPIO_PIN_6);
 }
 
 

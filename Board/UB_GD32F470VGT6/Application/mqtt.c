@@ -228,7 +228,7 @@ int MQTT_Reset(void){
     printf("MQTT Try To Reconnect...\r\n");
     global_t* global = global_get();
 
-//    A7670C_Reset();
+    A7670C_Reset();
 
     /*启动4G模块*/
     A7670C_Result A7670c_result = A7670C_Startup();

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sdk_hex.h>
+#include "board.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -82,7 +83,7 @@ void A7670C_UnLock(void){
 
 void A7670C_Reset(void){
     A7670C__Instance.power_reset->on();
-    A7670C_NopDelay(0x3FFFFFF);
+    A7670C_NopDelay(0x3FFFF);
     A7670C__Instance.power_reset->off();
 }
 ////////////////////////////////////////////////////////////////////////////////
