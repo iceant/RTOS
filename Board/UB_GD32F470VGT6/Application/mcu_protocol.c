@@ -3,7 +3,7 @@
 #include <sdk_hex.h>
 #include <string.h>
 #include <board.h>
-
+#include <meter_protocol.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
@@ -21,6 +21,13 @@ static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
             os_printf("[GD303] CRC ERROR!!!\n");
             break;
         }
+        case kMCU_PROTOCOL_DU_CAN:{
+            int du_size = MCU_PROTOCOL_DU_SIZE_GET(protocol);
+            sdk_hex_dump("CAN", protocol->buffer+5, du_size);
+            break;
+        }
+        default:
+            break;
     }
 }
 

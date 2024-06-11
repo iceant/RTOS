@@ -43,7 +43,7 @@ static void BootThread_Entry(void* p){
 #if defined(ENABLE_4G)
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){
-        cpu_reboot();
+        Board_Reboot();
         return;
     }
 #endif
@@ -102,10 +102,8 @@ static void BootThread_Entry(void* p){
 
         os_printf("%s\n", time_display_buf);
 
-        #if defined(ENABLE_OLED)
         OLED_ShowString(0, 0, time_display_buf, 12);
-        #endif /* defined(ENABLE_OLED) */
-        
+
         #endif /* defined(ENABLE_DS1307) */
         
         os_thread_mdelay(1000);

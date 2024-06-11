@@ -21,6 +21,8 @@ static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, voi
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
+    }else{
+        sdk_hex_dump("AT", buffer->buffer, sdk_ringbuffer_used(buffer));
     }
     return kA7670C_RxHandler_Result_CONTINUE;
 }
@@ -51,11 +53,14 @@ A7670C_Result A7670C_WaitPBDone(uint32_t timeout_ms)
 A7670C_Result A7670C_Startup(void){
     A7670C_Result result;
     int nRetry = 0;
+    printf("[A7670C] A7670C_Startup\n");
+    A7670C_SetStartupState(A7670C_STARTUP_STATE_UNINITIALIZED);
 
 __A7670C__Boot:
     while(!A7670C_IsPowerOn()){
         os_printf("[A7670C] Power is Off!\r\n");
         A7670C_PowerOff();
+        A7670C_NopDelay(DELAY_TIME);
         A7670C_PowerOn();
         A7670C_NopDelay(DELAY_TIME);
     }
@@ -67,9 +72,10 @@ __A7670C__Boot:
             break;
         }
         if(nRetry++==10){
+            printf("Try from Power On...\n");
             goto __A7670C__Boot;
         }
-//        A7670C_NopDelay(DELAY_TIME);
+        A7670C_NopDelay(DELAY_TIME);
     }
 
     nRetry = 0;

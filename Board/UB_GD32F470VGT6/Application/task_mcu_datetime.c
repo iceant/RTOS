@@ -3,6 +3,7 @@
 #include <mcu_protocol.h>
 #include <DS1307.h>
 #include <global.h>
+#include <bsp_cpuid.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define TASK_MCU_DATETIME_STACK_SIZE 1024
@@ -23,7 +24,12 @@ static void Task_MCU_DateTime_Thread_Entry(void* p){
                                  , datetime->hour
                                  , datetime->min
                                  , datetime->sec);
+        mcu_protocol_send(&mcu_protocol_g_tx_protocol);
 
+        /* Send CPUID */
+        printf("[TASK_MCU_DT]Send CPUID:%s\n", BSP_CPUID_Read());
+        mcu_protocol_init(&mcu_protocol_g_tx_protocol, kMCU_PROTOCOL_DU_CPUID, BSP_CPUID_Read(), strlen(BSP_CPUID_Read()));
+        mcu_protocol_crc(&mcu_protocol_g_tx_protocol);
         mcu_protocol_send(&mcu_protocol_g_tx_protocol);
 
         os_thread_mdelay(1000);

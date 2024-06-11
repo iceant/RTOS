@@ -7,6 +7,21 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#define ENABLE_4G
+#define ENABLE_LED
+#define ENABLE_USART0
+#define ENABLE_I2C0
+#define ENABLE_CAN0
+#define ENABLE_SPI_FLASH
+#define ENABLE_DS1307
+//#define ENABLE_TFCARD
+#define ENABLE_OLED
+#define ENABLE_GD32F303
+#define ENABLE_MQTT
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
 
 //#define OS_SEM_DEBUG_ENABLE
 //#define A7670C_IO_DEBUG

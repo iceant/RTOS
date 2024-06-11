@@ -121,26 +121,14 @@
 #endif /*INCLUDED_BSP_A7670C_H*/
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-#define ENABLE_4G
-//#define ENABLE_LED
-#define ENABLE_USART0
-//#define ENABLE_I2C0
-//#define ENABLE_CAN0
-#define ENABLE_SPI_FLASH
-#define ENABLE_DS1307
-//#define ENABLE_TFCARD
-//#define ENABLE_OLED
-//#define ENABLE_GD32F303
-#define ENABLE_MQTT
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 void Board_Init(void);
 
 void Board_Reboot(void);
 
+void Board_5V_Enable(void);
+
+void Board_5V_Disable(void);
 
 #endif /*INCLUDED_BOARD_H*/

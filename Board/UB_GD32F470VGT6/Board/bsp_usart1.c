@@ -78,7 +78,7 @@ void BSP_USART1_SetRxHandler(BSP_USART1_RxHandler rxHandler, void* userdata)
 
 void BSP_USART1_EnableRxIRQ(void)
 {
-	nvic_irq_enable(USARTx_IRQn, 0, 0);
+	nvic_irq_enable(USARTx_IRQn, 0, 1);
 	usart_interrupt_enable(USARTx, USART_INT_RBNE);
 }
 

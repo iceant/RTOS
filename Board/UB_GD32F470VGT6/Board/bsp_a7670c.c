@@ -77,10 +77,12 @@ A7670C_Pin_T A7670C_power_status={.on=A7670C_StatusPin_On, .off=A7670C_StatusPin
 /* ======================================================================================================================== */
 
 static void A7670C_PwrRstPin_On(void){
-    GPIO_BOP(GPIOA) = GPIO_PIN_15;
+//    GPIO_BOP(GPIOA) = GPIO_PIN_15;
+    gpio_bit_set(GPIOA, GPIO_PIN_15);
 }
 static void A7670C_PwrRstPin_Off(void){
-    GPIO_BC(GPIOA) = GPIO_PIN_15;
+//    GPIO_BC(GPIOA) = GPIO_PIN_15;
+    gpio_bit_reset(GPIOA, GPIO_PIN_15);
 }
 static uint8_t A7670C_PwrRstPin_Read(void){
     return gpio_input_bit_get(GPIOA, GPIO_PIN_15);

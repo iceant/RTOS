@@ -215,6 +215,7 @@ void OLED_Display_Off(void)
 //清屏函数,清完屏,整个屏幕是黑色的!和没点亮一样!!!
 void OLED_Clear(void)
 {
+#if defined(ENABLE_OLED)
     uint8_t i,n;
     for(i=0;i<8;i++)
     {
@@ -223,7 +224,7 @@ void OLED_Clear(void)
         OLED_WR_Byte (0x10,OLED_CMD);      //设置显示位置—列高地址
         for(n=0;n<128;n++)OLED_WR_Byte(0,OLED_DATA);
     } //更新显示
-
+#endif
 }
 
 void OLED_On(void)
@@ -303,6 +304,7 @@ void OLED_ShowNum(uint8_t x,uint8_t y,uint32_t num,uint8_t len,uint8_t size2)
 //显示一个字符号串
 void OLED_ShowString(uint8_t x,uint8_t y,uint8_t *chr,uint8_t Char_Size)
 {
+#if defined(ENABLE_OLED)
     unsigned char j=0;
     while (chr[j]!='\0')
     {
@@ -312,6 +314,7 @@ void OLED_ShowString(uint8_t x,uint8_t y,uint8_t *chr,uint8_t Char_Size)
         if(y>8){y=0;}
         j++;
     }
+#endif
 }
 //显示汉字
 void OLED_ShowChinese(uint8_t x,uint8_t y,uint8_t no)

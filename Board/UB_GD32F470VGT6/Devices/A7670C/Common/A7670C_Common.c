@@ -184,7 +184,7 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
 {
     os_list_t * head = &A7670C__RxHandler_List;
     os_list_node_t * node;
-    A7670C_RxHandler_Result result;
+    A7670C_RxHandler_Result result = kA7670C_RxHandler_Result_CONTINUE;
     for(node = OS_LIST_NEXT(head); node!=head; node = OS_LIST_NEXT(node)){
         A7670C_RxHandler_Register_T* Register = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(Register->handler){
@@ -194,6 +194,7 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
             }
         }
     }
+    return result;
 }
 
 void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register){
