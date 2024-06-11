@@ -2,31 +2,29 @@
 #include <board.h>
 #include <os_kernel.h>
 #include <sdk_fmt.h>
-#include <string.h>
-#include <meter_task.h>
 #include <meter_protocol.h>
+#include <mcu_protocol.h>
+#include "global.h"
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t BootThread_Stack[1024];
 static os_thread_t BootThread;
-static char BootThread_Buf[128];
+static char BootThread_Buf[256];
 static void BootThread_Entry(void* p){
 
     /* 等待主控MCU启动 */
-    os_thread_mdelay(1000);
+    os_thread_mdelay(5000);
 
     /* 通知主控，我已经启动了 */
     mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "GD303 Startup", 13);
 
-    /* 用于计算电能 */
-    Meter_Task_Init();
-
     while(1){
         meter_protocol_datetime_t * datetime = meter_protocol_datetime_get();
         /* 每秒发送一次数据，测试TIMER的精度 */
-        int sz = snprintf(BootThread_Buf, sizeof(BootThread_Buf), "Tick:%d, %04d-%02d-%02d %02d:%02d:%02d.%d"
+        int sz = snprintf(BootThread_Buf, sizeof(BootThread_Buf), "Tick:%d, ID:%s, %04d-%02d-%02d %02d:%02d:%02d.%d"
                           , BSP_TIM6__TickCount
+                          , strlen(global_get()->CPUID)?global_get()->CPUID:"N/A"
                           , datetime->year
                           , datetime->month
                           , datetime->date
@@ -55,6 +53,8 @@ int main(void){
 
     /* 用于和 MCU 通讯 */
     USE_USART1_Init();
+
+    USE_CAN0_Init();
 
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0
                    , BootThread_Stack, sizeof(BootThread_Stack), 20, 10);

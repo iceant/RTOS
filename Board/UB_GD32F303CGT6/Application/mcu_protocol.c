@@ -5,7 +5,7 @@
 #include <board.h>
 #include <meter_protocol.h>
 #include <stdio.h>
-
+#include <global.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
@@ -23,25 +23,29 @@ static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
                     SDK_HEX_GET_UINT8(du, 6),/*sec*/
                     (uint16_t)(BSP_TIM6__TickCount % 1000)
                     );
-//            char buf[128];
-//            meter_protocol_datetime_t * datetime = meter_protocol_datetime_get();
-//            int size = snprintf(buf, sizeof(buf), "GOT:%04d-%02d-%02d %02d:%02d:%02d"
-//                     , datetime->year
-//                     , datetime->month
-//                     , datetime->date
-//                     , datetime->hour
-//                     , datetime->min
-//                     , datetime->sec);
-//            mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, buf, size);
+
+            global_get()->datetime.year = SDK_HEX_GET_UINT16_BE(du, 0);
+            global_get()->datetime.month = SDK_HEX_GET_UINT8(du, 2);
+            global_get()->datetime.date = SDK_HEX_GET_UINT8(du, 3);
+            global_get()->datetime.hour = SDK_HEX_GET_UINT8(du, 4);
+            global_get()->datetime.min = SDK_HEX_GET_UINT8(du, 5);
+            global_get()->datetime.sec = SDK_HEX_GET_UINT8(du, 6);
+
             break;
         }
+        case kMCU_PROTOCOL_DU_CPUID:{
+            uint8_t * du = MCU_PROTOCOL_DU_GET(protocol);
+            uint16_t du_size = MCU_PROTOCOL_DU_SIZE_GET(protocol);
+            global_set_cpuid((void*)du, du_size);
+            break;
+        }
+        default:
+            break;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
-
 
 mcu_protocol_handler_t mcu_protocol_g_handler = mcu_protocol__handler;
 
@@ -140,3 +144,16 @@ int mcu_protocol_du_ecrc(mcu_protocol_t * protocol)
     mcu_protocol_crc(protocol);
     return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////
+int mcu_protocol_can_init(mcu_protocol_t * protocol, void* du, int du_size)
+{
+    int err = mcu_protocol_init(protocol, kMCU_PROTOCOL_DU_CAN, du, du_size);
+    if(err!=0){
+        return err;
+    }
+    mcu_protocol_crc(protocol);
+    return 0;
+}
+

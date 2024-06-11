@@ -9,6 +9,10 @@
 #include <use_usart1.h>
 #endif /*INCLUDED_USE_USART1_H*/
 
+#ifndef INCLUDED_USE_CAN0_H
+#include <use_can0.h>
+#endif /*INCLUDED_USE_CAN0_H*/
+
 
 
 
