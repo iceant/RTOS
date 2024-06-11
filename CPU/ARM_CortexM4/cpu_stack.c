@@ -42,7 +42,7 @@ static cpu_lock_t cpu_stack__lock = {0};
 14 0038  R12
 15 003C  LR(R14)
 16 0040  PC                     << -- Thread Entry
-17 0044  PSR                    << -- 0x01000000
+17 0044  PSR                    << --[stack_addr + stack_size] 0x01000000
  
 --------------------
  */
