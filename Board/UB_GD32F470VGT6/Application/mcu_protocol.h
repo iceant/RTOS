@@ -45,6 +45,7 @@ typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_ECRC,
     kMCU_PROTOCOL_DU_DATETIME,
     kMCU_PROTOCOL_DU_CPUID,
+    kMCU_PROTOCOL_DU_CAN,
 }mcu_protocol_du_type_t;
 
 /*
@@ -99,6 +100,11 @@ int mcu_protocol_du_print(mcu_protocol_t * protocol, char* message, uint16_t mes
 int mcu_protocol_du_ecrc(mcu_protocol_t * protocol);
 
 int mcu_protocol_du_datetime(mcu_protocol_t * protocol, uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t min, uint8_t sec);
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+
 
 
 #endif /*INCLUDED_MCU_PROTOCOL_H*/

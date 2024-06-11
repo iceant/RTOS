@@ -113,6 +113,9 @@ extern meter_protocol_t meter_protocol_g_buffers[METER_PROTOCOL_COUNT];
 #define METER_PROTOCOL_DC_ENERGY_DECIMALS   7
 #define METER_PROTOCOL_DC_FACTOR_DECIMALS   2
 
+#define METER_PROTOCOL_DC_LINE_SIZE         33
+#define METER_PROTOCOL_DC_HEAD_SIZE         47
+
 #define METER_PROTOCOL_DC_REP_DATETIME_SET(P, YEAR, MONTH, DATE, HOUR, MIN, SEC, MS) \
     METER_PROTOCOL_DATETIME_SET(P, 31, YEAR, MONTH, DATE, HOUR, MIN, SEC, MS)
 
@@ -152,7 +155,7 @@ extern meter_protocol_t meter_protocol_g_buffers[METER_PROTOCOL_COUNT];
 /*填充一行数据*/
 #define METER_PROTOCOL_DC_LINE_FILL(P, LINE, YEAR, MONTH, DATE, HOUR, MIN, SEC, MS, VOL, CUR, PWR, ENG, FAC, FREQ) \
 do{                                                                                                                \
-    int idx = (LINE) * 33; /*一行的字节数量*/                                                                         \
+    int idx = (LINE) * 33 + 47; /*一行的字节数量*/                                                                         \
     METER_PROTOCOL_DATETIME_SET(P, idx, YEAR, MONTH, DATE, HOUR, MIN, SEC, MS); idx+=9;                            \
     SDK_HEX_SET_UINT32_BE((P)->buffer, idx, VOL); idx+=4;                                                          \
     SDK_HEX_SET_UINT32_BE((P)->buffer, idx, CUR); idx+=4;                                                          \

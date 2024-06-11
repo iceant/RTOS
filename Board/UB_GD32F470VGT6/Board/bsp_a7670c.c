@@ -77,13 +77,18 @@ A7670C_Pin_T A7670C_power_status={.on=A7670C_StatusPin_On, .off=A7670C_StatusPin
 /* ======================================================================================================================== */
 
 static void A7670C_PwrRstPin_On(void){
-    GPIO_BOP(GPIOA) = GPIO_PIN_15;
+//    GPIO_BOP(GPIOA) = GPIO_PIN_15;
+//    gpio_bit_set(GPIOA, GPIO_PIN_15);
+    gpio_bit_set(GPIOE, GPIO_PIN_6);
 }
 static void A7670C_PwrRstPin_Off(void){
-    GPIO_BC(GPIOA) = GPIO_PIN_15;
+//    GPIO_BC(GPIOA) = GPIO_PIN_15;
+//    gpio_bit_reset(GPIOA, GPIO_PIN_15);
+    gpio_bit_reset(GPIOE, GPIO_PIN_6);
 }
 static uint8_t A7670C_PwrRstPin_Read(void){
-    return gpio_input_bit_get(GPIOA, GPIO_PIN_15);
+//    return gpio_input_bit_get(GPIOA, GPIO_PIN_15);
+    return gpio_input_bit_get(GPIOE, GPIO_PIN_6);
 }
 
 A7670C_Pin_T A7670C_power_reset={.on=A7670C_PwrRstPin_On, .off=A7670C_PwrRstPin_Off, .read=A7670C_PwrRstPin_Read};
@@ -150,11 +155,11 @@ static int A7670C_IO_Send(uint8_t* data, int size){
 }
 
 
-static void A7670C_Reset(void){
-    A7670C_power_reset.on();
-    for(int i=0; i<0x3fffff; i++);
-    A7670C_power_reset.off();
-}
+//static void A7670C_Reset(void){
+//    A7670C_power_reset.on();
+//    for(int i=0; i<0x3fffff; i++);
+//    A7670C_power_reset.off();
+//}
 
 static A7670C_IO_T  A7670C_IO={.send=A7670C_IO_Send, .wait=A7670C_IO_Wait, .notify =A7670C_IO_Notify};
 
@@ -181,6 +186,8 @@ void BSP_A7670C_Init(void)
     os_sem_init(&A7670C_WaitSem, "A7670C_WaitSem", 0, OS_QUEUE_FIFO);
     
     A7670C_Init(&A7670C_power_en, &A7670C_power_key, &A7670C_power_status, &A7670C_power_reset, &A7670C_IO);
+
+    A7670C_Reset();
     
     os_thread_init(&A7670C_RxThread, "A7670C_RxThd", A7670C_IO_RxThd, 0
             , A7670C_RxThdStack, sizeof(A7670C_RxThdStack)

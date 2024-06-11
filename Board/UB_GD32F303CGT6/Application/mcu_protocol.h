@@ -36,6 +36,8 @@ typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_PRINT = 0,
     kMCU_PROTOCOL_DU_ECRC,
     kMCU_PROTOCOL_DU_DATETIME,
+    kMCU_PROTOCOL_DU_CPUID,
+    kMCU_PROTOCOL_DU_CAN,
 }mcu_protocol_du_type_t;
 
 /*
@@ -87,5 +89,11 @@ void mcu_protocol_send(mcu_protocol_t * protocol);
 int mcu_protocol_du_print(mcu_protocol_t * protocol, char* message, uint16_t message_size);
 
 int mcu_protocol_du_ecrc(mcu_protocol_t * protocol);
+
+////////////////////////////////////////////////////////////////////////////////
+////
+int mcu_protocol_can_init(mcu_protocol_t * protocol, void* du, int du_size);
+
+
 
 #endif /*INCLUDED_MCU_PROTOCOL_H*/

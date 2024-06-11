@@ -60,9 +60,10 @@ typedef struct global_s{
 #define GLOBAL_MQTT_USERNAME            "guest"
 #define GLOBAL_MQTT_PASSWORD            "guest"
 
-#define GLOBAL_METER_STATE_IDLE     1
-#define GLOBAL_METER_STATE_CHARGING 2
-#define GLOBAL_METER_STATE_ERROR    3
+#define GLOBAL_METER_STATE_IDLE         1
+#define GLOBAL_METER_STATE_START        2
+#define GLOBAL_METER_STATE_CHARGING     3
+#define GLOBAL_METER_STATE_ERROR        4
 ////////////////////////////////////////////////////////////////////////////////
 ////
 

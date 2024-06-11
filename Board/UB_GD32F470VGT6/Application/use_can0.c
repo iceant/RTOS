@@ -7,6 +7,9 @@
 #include <sdk_fmt.h>
 #include <sdk_ultoa.h>
 #include "global.h"
+#include "meter_protocol.h"
+#include <mqtt.h>
+#include <sdk_crc16.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -57,6 +60,9 @@ typedef struct USE_CAN0_Snapshot_S{
 #define HUMAN_VOLTAGE_PRECISION          10000
 #define HUMAN_CURRENT_PRECISION          1000
 #define HUMAN_ENERGY_PRECISION           10000000
+#define HUMAN_POWER_PRECISION            1000
+
+#define HUMAN_POWER_RATIO               ((HUMAN_VOLTAGE_PRECISION * HUMAN_CURRENT_PRECISION)/HUMAN_POWER_PRECISION)
 
 #define HOUR_IN_MS (60 * 60 * 1000)
 #define KWH_UNIT 1000
@@ -76,15 +82,22 @@ static sdk_ring_t USE_CAN0__RxRing;
 
 static USE_CAN0_Snapshot_T USE_CAN0_LatestSnapshot={0};
 static sdk_mp_t USE_CAN0__EnergyRatio;
+static sdk_mp_t Power_Ratio={0};
 static int USE_CAN0__State;
 
 static uint8_t OLED_Buffer[64];
 static char USE_CAN0__ShowBuf[32];
 
 #define USE_CAN0_STATE_CHARGE_IDLE          0
+#define USE_CAN0_STATE_CHARGE_START         1
 #define USE_CAN0_STATE_CHARGE_WIP           2
 ////////////////////////////////////////////////////////////////////////////////
 ////
+static void USE_CAN0__MeterProtocolInit(meter_protocol_t * protocol){
+    meter_protocol_dc_init(protocol);
+    METER_PROTOCOL_HWID_SET(protocol, BSP_CPUID_Read(), strlen(BSP_CPUID_Read()));
+    protocol->lines = 0;
+}
 
 static void USE_CAN0__RxHandler(can_receive_message_struct* rxMsg, void* userdata)
 {
@@ -122,7 +135,138 @@ static uint32_t current_real_value(uint32_t current){
 }
 
 
+
+static bool USE_CAN0__FirstPackageSendFlag = false;
+
+static void USE_CAN0_HandleMeterProtocol(int state){
+    uint32_t tick = BSP_TIM6__TickCount;
+    meter_protocol_t* protocol = meter_protocol_current();
+    uint32_t Current = USE_CAN0_LatestSnapshot.Current;
+    uint32_t Voltage = USE_CAN0_LatestSnapshot.Voltage;
+    uint32_t Power = sdk_mp_tointu(USE_CAN0_LatestSnapshot.Power)/HUMAN_POWER_RATIO;
+    uint32_t Energy = sdk_mp_toint(USE_CAN0_LatestSnapshot.EnergyWH);
+
+    global_t* global = global_get();
+
+    switch (state) {
+        case USE_CAN0_STATE_CHARGE_IDLE:{
+            /* 充电结束 */
+
+            USE_CAN0__FirstPackageSendFlag = false;
+
+            protocol->lines = METER_PROTOCOL_DC_MAX_LINES;
+
+            METER_PROTOCOL_DC_LINE_FILL(protocol, protocol->lines
+            , global->datetime.year
+            , global->datetime.month
+            , global->datetime.date
+            , global->datetime.hour
+            , global->datetime.min
+            , global->datetime.sec
+            , tick
+            , Voltage
+            , Current
+            , Power
+            , Energy
+            , 100
+            , 50
+            );
+
+            protocol->lines+=1;
+
+            if(protocol->lines==METER_PROTOCOL_DC_MAX_LINES+1){
+                /* 一个包完整，发送 */
+                int size = protocol->lines * METER_PROTOCOL_DC_LINE_SIZE + METER_PROTOCOL_DC_HEAD_SIZE;
+
+                METER_PROTOCOL_DC_LINES_SET(protocol, protocol->lines);
+                METER_PROTOCOL_DC_REP_DATETIME_SET(protocol
+                , global->datetime.year
+                , global->datetime.month
+                , global->datetime.date
+                , global->datetime.hour
+                , global->datetime.min
+                , global->datetime.sec
+                , tick);
+
+                uint16_t crc = sdk_crc16(protocol->buffer, size);
+                METER_PROTOCOL_DC_CRC_SET(protocol, crc);
+
+                meter_protocol_t * next_protocol = meter_protocol_next();
+                USE_CAN0__MeterProtocolInit(next_protocol);
+
+                printf("[USE_CAN0] Send DC Data On Charge Done!\n");
+                MQTT_Publish(protocol->buffer, size+2);
+
+            }
+
+
+            break;
+        }
+        case USE_CAN0_STATE_CHARGE_WIP:{
+            /* 充电中 */
+            if(USE_CAN0__FirstPackageSendFlag==false){
+                /* 发送第一条数据 */
+                USE_CAN0__FirstPackageSendFlag = true;
+                protocol->lines = METER_PROTOCOL_DC_MAX_LINES;
+
+                printf("[USE_CAN0] Send DC Data On Start Charge!\n");
+            }
+
+            METER_PROTOCOL_DC_LINE_FILL(protocol, protocol->lines
+            , global->datetime.year
+            , global->datetime.month
+            , global->datetime.date
+            , global->datetime.hour
+            , global->datetime.min
+            , global->datetime.sec
+            , tick
+            , Voltage
+            , Current
+            , Power
+            , Energy
+            , 100
+            , 50
+            );
+
+            protocol->lines+=1;
+
+            if(protocol->lines==METER_PROTOCOL_DC_MAX_LINES+1){
+                /* 一个包完整，发送 */
+                int size = protocol->lines * METER_PROTOCOL_DC_LINE_SIZE + METER_PROTOCOL_DC_HEAD_SIZE;
+
+                METER_PROTOCOL_DC_LINES_SET(protocol, protocol->lines);
+                METER_PROTOCOL_DC_REP_DATETIME_SET(protocol
+                , global->datetime.year
+                , global->datetime.month
+                , global->datetime.date
+                , global->datetime.hour
+                , global->datetime.min
+                , global->datetime.sec
+                , tick);
+
+                uint16_t crc = sdk_crc16(protocol->buffer, size);
+                METER_PROTOCOL_DC_CRC_SET(protocol, crc);
+
+                meter_protocol_t * next_protocol = meter_protocol_next();
+                USE_CAN0__MeterProtocolInit(next_protocol);
+
+                printf("[USE_CAN0] Send DC Data On Charging!\n");
+                MQTT_Publish(protocol->buffer, size+2);
+
+            }
+
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+
 static void USE_CAN0__RxThreadEntry(void* p){
+
+    printf("USE_CAN0__RxThreadEntry Starup...\n");
+
     os_size_t used = 0;
     uint32_t current = 0;
     uint16_t voltage = 0;
@@ -174,6 +318,8 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy: %F", USE_CAN0__ShowBuf, 7);
                         OLED_Clear();
                         OLED_ShowString(1,2, OLED_Buffer, 12);
+
+                        USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_IDLE);
                     }
                 }
 
@@ -187,6 +333,8 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.EnergySum, 0, 0);
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.EnergyWH, 0, 0);
                         nCount = BSP_TIM6__TickCount;
+
+                        USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_START);
                         
                     }else
                     if(USE_CAN0__State==USE_CAN0_STATE_CHARGE_WIP){
@@ -218,9 +366,11 @@ static void USE_CAN0__RxThreadEntry(void* p){
 
                             sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
                             sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy : %F", USE_CAN0__ShowBuf, 7);
-                            OLED_ShowString(1,4, OLED_Buffer, 12);
+                            OLED_ShowString(1,5, OLED_Buffer, 12);
                             os_printf("%s\n", OLED_Buffer);
                         }
+
+                        USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_WIP);
                     }
                 }
 
@@ -241,6 +391,9 @@ static void USE_CAN0__RxThreadEntry(void* p){
 
 void USE_CAN0_Init(void)
 {
+    meter_protocol_t* protocol = meter_protocol_current();
+    USE_CAN0__MeterProtocolInit(protocol);
+
     sdk_fmt_register('M', sdk_mp_fmt);
     sdk_mp_set(128);
 
@@ -255,6 +408,10 @@ void USE_CAN0_Init(void)
     sdk_mp_mului(USE_CAN0__EnergyRatio, USE_CAN0__EnergyRatio, HOUR_IN_MS, &USE_CAN0__EnergyRatio);
     sdk_mp_mului(USE_CAN0__EnergyRatio, USE_CAN0__EnergyRatio, KWH_UNIT, &USE_CAN0__EnergyRatio);
     sdk_mp_divui(USE_CAN0__EnergyRatio, USE_CAN0__EnergyRatio, HUMAN_ENERGY_PRECISION, &USE_CAN0__EnergyRatio);
+
+    sdk_mp_new(HUMAN_CURRENT_PRECISION, &Power_Ratio);                                   /*电流缩放比例*/
+    sdk_mp_mului(Power_Ratio, Power_Ratio, HUMAN_VOLTAGE_PRECISION, &Power_Ratio); /*电压缩放比例*/
+    sdk_mp_divui(Power_Ratio, Power_Ratio, HUMAN_POWER_PRECISION, &Power_Ratio);
 
 
     sdk_ring_init(&USE_CAN0__RxRing, USE_CAN0__RxRingBlock, USE_CAN0_RX_OBJECT_COUNT, USE_CAN0_RX_OBJECT_SIZE);

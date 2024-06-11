@@ -76,6 +76,7 @@ static OLED_IO_T OLED_IO = {.send = OLED_Send, .recv = OLED_Recv, .reset = BSP_I
 ////
 
 static void Board_5V_Init(void){
+    rcu_periph_clock_enable(RCU_GPIOD);
     gpio_mode_set(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,GPIO_PIN_15);
     gpio_output_options_set(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,GPIO_PIN_15);   /* 5V_EN */
 }
@@ -83,13 +84,49 @@ static void Board_5V_Init(void){
 void Board_5V_Enable(void)
 {
 //    GPIO_BC(GPIOD) = GPIO_PIN_15;
+    gpio_bit_set(GPIOD, GPIO_PIN_15);
+}
+
+void Board_5V_Disable(void)
+{
+//    GPIO_BOP(GPIOD) = GPIO_PIN_15;
     gpio_bit_reset(GPIOD, GPIO_PIN_15);
 }
 
-void Board_5V_Disable(void){
-//    GPIO_BOP(GPIOD) = GPIO_PIN_15;
-    gpio_bit_set(GPIOD, GPIO_PIN_15);
+
+static void Board_Metering_GPIO_Init(void){
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_mode_set(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,GPIO_PIN_2);
+    gpio_output_options_set(GPIOE, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,GPIO_PIN_2);   /* METERING EN */
 }
+
+void Board_Metering_Enable(void){
+    gpio_bit_set(GPIOE, GPIO_PIN_2);
+}
+
+void Board_Metering_Disable(void){
+    gpio_bit_reset(GPIOE, GPIO_PIN_2);
+}
+
+static void Board_4GPower_GPIO_Init(void){
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_mode_set(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,GPIO_PIN_6);
+    gpio_output_options_set(GPIOE, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,GPIO_PIN_6);   /* 4G PWREN */
+}
+
+void Board_4GPower_Disable(void){
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_bit_reset(GPIOE, GPIO_PIN_6);
+}
+
+void Board_4GPower_Enable(void){
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_bit_set(GPIOE, GPIO_PIN_6);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
 
 
 
@@ -110,9 +147,15 @@ void Board_Init(void){
     
     /* ------------------------------------------------------------------------------------------ */
     /* ---- 打开 5V 电源 ----*/
-    Board_5V_Init();
-    Board_5V_Enable();
-    
+//    Board_5V_Init();
+//    Board_5V_Disable();
+//    Board_5V_Enable();
+
+//    Board_Metering_GPIO_Init();
+//    Board_Metering_Disable();
+//    for(int i=0; i<0x3fffff;i++);
+//    Board_Metering_Enable();
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- USART0 ----*/
     #if defined(ENABLE_USART0)
@@ -170,7 +213,7 @@ void Board_Init(void){
     BSP_USART1_Init();
     BSP_USART1_EnableRxIRQ();
     BSP_USART1_EnableDMATx();
-    
+
     BSP_A7670C_Init();
 #endif
 

@@ -43,7 +43,7 @@ typedef struct meter_protocol_datetime_s{
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-extern meter_protocol_t meter_protocol_g_buffers[METER_PROTOCOL_COUNT];
+//extern meter_protocol_t meter_protocol_g_buffers[METER_PROTOCOL_COUNT];
 
 
 
@@ -197,6 +197,36 @@ do{                                                                             
 
 #define METER_PROTOCOL_HB_CRC_GET(P) \
     SDK_HEX_GET_UINT16_LE((P)->buffer, 71)
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define METER_PROTOCOL_CAN_INIT(P, HWID) \
+    METER_PROTOCOL_START_SET(P);   \
+    METER_PROTOCOL_CMD_SET(P, 0x03); \
+    METER_PROTOCOL_RESP_SET(P, 0xFE);\
+    METER_PROTOCOL_ENCRYPT_SET(P, 0x01); \
+    SDK_HEX_SET_UINT8((P)->buffer, 40, 0x05); \
+    METER_PROTOCOL_HWID_SET(P, HWID, strlen(HWID))
+
+#define METER_PROTOCOL_CAN_LINES_SET(P, LINES) \
+    SDK_HEX_SET_UINT8((P)->buffer, 41, (LINES))
+
+#define METER_PROTOCOL_CAN_LINE_FILL(P, LINE, YEAR, MONTH, DATE, HOUR, MIN, SEC, MS, FRAME_ID, DL, D) \
+do{                                                                                                   \
+    int idx = (LINE) * 24 + 42;                                                                       \
+    METER_PROTOCOL_DATETIME_SET(P, idx, YEAR, MONTH, DATE, HOUR, MIN, SEC, MS);                       \
+    idx+=9;                                                                                           \
+    SDK_HEX_SET_UINT32_BE((P)->buffer, idx,  (FRAME_ID));                                             \
+    idx+=4;                                                                                           \
+    SDK_HEX_SET_UINT8((P)->buffer, idx, 1);                                                           \
+    idx+=1;                                                                                           \
+    SDK_HEX_SET_UINT8((P)->buffer, idx, 1);                                                           \
+    idx+=1;                                                                                           \
+    SDK_HEX_SET_UINT8((P)->buffer, idx, (DL));                                                        \
+    idx+=1;                                                                                           \
+    memset((P)->buffer+idx, 0, 8);                                                                    \
+    memcpy((P)->buffer+idx, (D), (DL));                                                               \
+}while(0)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
