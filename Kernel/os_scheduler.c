@@ -486,7 +486,6 @@ void os_scheduler_push(os_thread_t * thread)
 
     OS_SCHEDULER_LOCK();
     if(os_interrupt_nest()>0U){
-//        os_scheduler_mark_skipped();
         os_scheduler__pending_list_push_back(thread);
     }else{
         os_scheduler__ready_list_push(thread, kOsSchedulerPushType_BACK);

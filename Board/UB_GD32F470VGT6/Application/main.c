@@ -131,6 +131,10 @@ int main(void)
     /*初始化终端*/
     USE_USART0_Init();
 
+#if defined(ENABLE_KEY)
+    USE_KEY_Init();
+#endif
+
     sdk_fmt_register('F', sdk_float_str_fmt);
 
     dbg_print("__HXTAL: %d\n", HXTAL_VALUE);

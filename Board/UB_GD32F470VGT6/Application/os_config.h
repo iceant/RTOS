@@ -18,6 +18,8 @@
 #define ENABLE_OLED
 #define ENABLE_GD32F303
 #define ENABLE_MQTT
+#define ENABLE_KEY
+#define ENABLE_LOCK
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -242,6 +242,18 @@ void Board_Init(void){
     BSP_USART2_EnableDMATx();
     BSP_USART2_EnableRxIRQ();
     #endif
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- LOCK ----*/
+    #if defined(ENABLE_LOCK)
+    BSP_Lock_Init();
+    #endif
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- KEY ----*/
+    #if defined(ENABLE_KEY)
+    BSP_Key_Init(0);
+    #endif
 }
 
 void Board_Reboot(void){

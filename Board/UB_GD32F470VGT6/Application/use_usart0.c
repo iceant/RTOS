@@ -28,14 +28,23 @@ static void USART0_RxThread_Entry(void* p)
 {
     os_printf("USART0_RxThread_Entry startup\n");
     BSP_USART0_SetRxHandler(USART0__RxHandler, 0);
+    int used = 0;
     while(1){
-        os_sem_take(&USART0_RxSem, OS_WAIT_INFINITY);
+        while((used= sdk_ringbuffer_used(&USART0_RxBuffer))==0){
+            os_semaphore_take(&USART0_RxSem, OS_WAIT_INFINITY);
+        }
 
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "net_reboot")!=-1){
             A7670C_Reset();
         }else
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "reboot")!=-1){
             cpu_reboot();
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "lock_enable")!=-1){
+            BSP_Lock_Enable();
+            printf("[USE_USART0] Lock State:%d\n", BSP_Lock_State());
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "lock_disable")!=-1){
+            BSP_Lock_Disable();
+            printf("[USE_USART0] Lock State:%d\n", BSP_Lock_State());
         }
 
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "\n")!=-1){
