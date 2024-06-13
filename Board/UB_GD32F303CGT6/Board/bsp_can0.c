@@ -45,7 +45,7 @@ static void can_gpio_config(void)
 
 static void nvic_config(void)
 {
-    nvic_irq_enable(CANx_Rx_IRQn,0,1);
+    nvic_irq_enable(CANx_Rx_IRQn,0,0);
     can_interrupt_enable(CANx, CANx_INT_TYPE);
 }
 

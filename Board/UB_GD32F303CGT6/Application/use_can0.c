@@ -16,11 +16,17 @@ typedef struct USE_CAN0_CanRxMessage_S{
     can_receive_message_struct can_msg;
 }USE_CAN0_CanRxMessage_T;
 
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define USE_CAN0_STATE_IDLE 0
+#define USE_CAN0_STATE_WIP  1
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define USE_CAN0_RX_THREAD_STACK_SIZE 1024
 #define OBJECT_SIZE sizeof(USE_CAN0_CanRxMessage_T)
-#define OBJECT_COUNT 50
+#define OBJECT_COUNT 200
 #define BLOCK_SIZE (OBJECT_SIZE * OBJECT_COUNT)
 
 #define USE_CAN0_MAX_METER_PROTOCOL_BUFFER_COUNT 2
@@ -41,6 +47,12 @@ static USE_CAN0_OnTimeout_Handler USE_CAN0__OnTimeoutHandler=0;
 static void* USE_CAN0__OnTimeoutHandler_Userdata=0;
 static mcu_protocol_t mcu_tx_protocol;
 static CAN_Parse_Session_T USE_CAN0__CAN_ParseSession;
+
+static char USE_CAN0__Hex[17]={0};
+static int USE_CAN0__State = USE_CAN0_STATE_IDLE;
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -50,28 +62,51 @@ static meter_protocol_t *USE_CAN0__SendCAN(meter_protocol_t *protocol, const glo
 
 static void USE_CAN0_RxHandler(can_receive_message_struct* rxMsg, void* userdata)
 {
+    if(!rxMsg) return;
+
     uint32_t tick = BSP_TIM6__TickCount;
     USE_CAN0_CanRxMessage_T* msg = sdk_ring_get_write_slot(&USE_CAN0_RxRing);
-    if(!msg){return;}
-    memcpy(&msg->can_msg, rxMsg, sizeof(*rxMsg));
-    msg->tick_stamp = tick;
-    os_semaphore_release(&USE_CAN0_RxSem);
+    if(!msg){
+        os_semaphore_release(&USE_CAN0_RxSem);
+        return;
+    }else{
+        memcpy(&msg->can_msg, rxMsg, sizeof(*rxMsg));
+        msg->tick_stamp = tick;
+        os_semaphore_release(&USE_CAN0_RxSem);
+    }
 }
 
 static void USE_CAN0_RxThread_Entry(void* p){
     BSP_CAN0_SetRxHandler(USE_CAN0_RxHandler, 0);
-    int err = 0;
+    os_err_t err = 0;
     while(1){
-        err = os_semaphore_take(&USE_CAN0_RxSem, USE_CAN0_TIMEOUT_MS);
-        if(err==OS_EOK)
-        {
-            USE_CAN0__HandleRxMessage(false);
-        }else if(err==OS_ETIMEOUT){
+        err = os_semaphore_take(&USE_CAN0_RxSem, os_tick_from_millisecond(USE_CAN0_TIMEOUT_MS));
+        if(err==OS_ETIMEOUT){
             USE_CAN0__HandleRxMessage(true);
+
+            for(int i=0; i<0x3fffff; i++){
+            }
+
+            if(USE_CAN0__State==USE_CAN0_STATE_WIP){
+                USE_CAN0__State=USE_CAN0_STATE_IDLE;
+
+                static const char* TimeOutMsg = "!!!CAN TIMEOUT!!!";
+                mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, TimeOutMsg, strlen(TimeOutMsg));
+            }
+
+        }else{
+            USE_CAN0__HandleRxMessage(false);
+
+            if(USE_CAN0__State==USE_CAN0_STATE_IDLE){
+                USE_CAN0__State=USE_CAN0_STATE_WIP;
+
+                static const char* StartMsg = "!!!CAN START!!!";
+                mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, StartMsg, strlen(StartMsg));
+            }
         }
     }
 }
-static char USE_CAN0__Hex[17]={0};
+
 
 static void USE_CAN0__HandleRxMessage(bool isTimeout) {
     meter_protocol_t* protocol = &USE_CAN0__MeterProtocolBuffers[USE_CAN0_MeterProtocl_WriteIdx];
@@ -159,6 +194,7 @@ static meter_protocol_t *USE_CAN0__SendCAN(meter_protocol_t *protocol, const glo
     }
     USE_CAN0_MeterProtocl_WriteIdx = next_idx;
     protocol = &USE_CAN0__MeterProtocolBuffers[USE_CAN0_MeterProtocl_WriteIdx];
+    memset(protocol->buffer, 0, sizeof(protocol->buffer));
     protocol->lines = 0;
     return protocol;
 }

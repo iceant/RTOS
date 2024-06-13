@@ -73,6 +73,7 @@ C__STATIC_FORCEINLINE void os_scheduler__pending_list_push_back(os_thread_t * th
 //#endif
 //        return;
 //    }
+    thread->state = OS_THREAD_STATE_SUSPEND;
     OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_INSERT_BEFORE(&os_scheduler__pending_list, &thread->ready_node);
 }
