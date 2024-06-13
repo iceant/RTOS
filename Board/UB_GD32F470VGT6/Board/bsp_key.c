@@ -36,10 +36,12 @@ void BSP_Key_Init(BSP_Key_OnKeyDownHandler OnKeyDownHandler)
 void EXTI10_15_IRQHandler(void){
     os_interrupt_enter();
     if(RESET != exti_interrupt_flag_get(BSP_KEY_EXTI_LINE)) {
+        exti_interrupt_flag_clear(BSP_KEY_EXTI_LINE);
+
         if(BSP_KEY__OnKeyDownHandler){
             BSP_KEY__OnKeyDownHandler(BSP_Key_State());
         }
-        exti_interrupt_flag_clear(BSP_KEY_EXTI_LINE);
+
     }
     os_interrupt_exit();
 }
