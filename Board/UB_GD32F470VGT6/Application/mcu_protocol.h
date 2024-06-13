@@ -42,10 +42,10 @@
 
 typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_PRINT = 0,
-    kMCU_PROTOCOL_DU_ECRC,
-    kMCU_PROTOCOL_DU_DATETIME,
-    kMCU_PROTOCOL_DU_CPUID,
-    kMCU_PROTOCOL_DU_CAN,
+    kMCU_PROTOCOL_DU_ECRC=1,
+    kMCU_PROTOCOL_DU_DATETIME=2,
+    kMCU_PROTOCOL_DU_CPUID=3,
+    kMCU_PROTOCOL_DU_CAN=4,
 }mcu_protocol_du_type_t;
 
 /*
