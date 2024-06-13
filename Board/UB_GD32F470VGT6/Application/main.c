@@ -131,6 +131,11 @@ int main(void)
     /*初始化终端*/
     USE_USART0_Init();
 
+
+#if defined(ENABLE_SDCARD)
+    USE_SD_CARD_Init();
+#endif
+
 #if defined(ENABLE_KEY)
     USE_KEY_Init();
 #endif

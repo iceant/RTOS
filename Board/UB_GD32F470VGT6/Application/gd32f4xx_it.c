@@ -72,13 +72,12 @@ void NMI_Handler(void)
 */
 void MemManage_Handler(void)
 {
-    os_interrupt_enter();
-    printf("MemManage_Handler\n");
+
     /* if Memory Manage exception occurs, go to infinite loop */
-//    while(1) {
-//    }
-    HardFault_Handler();
-    os_interrupt_exit();
+    printf("MemManage_Handler\n");
+    while(1) {
+    }
+
 }
 
 /*!

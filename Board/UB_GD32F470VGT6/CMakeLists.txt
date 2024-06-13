@@ -103,6 +103,13 @@ foreach (item IN LISTS SPIFLASH_SOURCES)
     message(STATUS "[${PROJECT_NAME}::Devices::SPIFlash] SOURCE: ${item}")
 endforeach ()
 
+## ---------------------------------------------------------------------------------------------------- ##
+## ---- FS
+file(GLOB FS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/Public/ff15/source/*.c)
+foreach (item IN LISTS FS_SOURCES)
+    message(STATUS "[${PROJECT_NAME}::Public::FF15] SOURCE: ${item}")
+endforeach ()
+
 
 ########################################################################################################################
 ## Application
@@ -130,6 +137,7 @@ add_executable(${PROJECT_NAME} ${APPLICATION_SOURCES}
         ${OLED_SOURCES}
         ${SDCARD_SOURCES}
         ${SPIFLASH_SOURCES}
+        ${FS_SOURCES}
 
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC RTOS_Kernel)
@@ -154,6 +162,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/De
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/OLED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/SDCard)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/SPIFlash)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Public/ff15/source)
 
 
 
