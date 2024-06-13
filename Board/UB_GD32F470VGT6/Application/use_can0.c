@@ -317,11 +317,27 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
                         sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy: %F", USE_CAN0__ShowBuf, 7);
                         OLED_Clear();
-                        OLED_ShowString(1,2, OLED_Buffer, 12);
+                        OLED_ShowString(1,5, OLED_Buffer, 12);
 
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_IDLE);
                     }
                 }
+
+#if 0
+                if(USE_CAN0_LatestSnapshot.Current!=0){
+                    sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
+                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %F", USE_CAN0__ShowBuf, 3);
+                    OLED_ShowString(1, 2, OLED_Buffer, 12);
+                    os_printf("%s ", OLED_Buffer);
+                }
+
+                if(USE_CAN0_LatestSnapshot.Voltage>=5000){
+                    sdk_ultoa(USE_CAN0_LatestSnapshot.Voltage, USE_CAN0__ShowBuf, 10);
+                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %F", USE_CAN0__ShowBuf, 4);
+                    OLED_ShowString(1, 3, OLED_Buffer, 12);
+                    os_printf("%s ", OLED_Buffer);
+                }
+#endif
 
                 if(USE_CAN0_LatestSnapshot.Current!=0 && USE_CAN0_LatestSnapshot.Voltage!=0){
                     if(USE_CAN0__State==USE_CAN0_STATE_CHARGE_IDLE){

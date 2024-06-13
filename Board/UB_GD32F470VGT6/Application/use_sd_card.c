@@ -222,7 +222,6 @@ void USE_SD_CARD_Init(void){
     } else {
         global_get()->fatfs.state = GLOBAL_FATFS_STATE_INIT_FAILED;
         printf("\r\n Card init failed!\r\n");
-        os_thread_mdelay(10000);
     }
 
 }
