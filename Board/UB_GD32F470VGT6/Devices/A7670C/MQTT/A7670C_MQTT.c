@@ -556,10 +556,10 @@ A7670C_Result A7670C_MQTT_Publish(
     while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
     
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
-        nRetry = 10;
+        nRetry = 3;
         while(1){
             A7670C_CMQTTTOPIC_Write_Response CMQTTTOPIC_Write_Response;
-            result = A7670C_CMQTTTOPIC_Write(&CMQTTTOPIC_Write_Response, session->client_index, topic, 24000);
+            result = A7670C_CMQTTTOPIC_Write(&CMQTTTOPIC_Write_Response, session->client_index, topic, 12000);
             if(CMQTTTOPIC_Write_Response.code==kA7670C_Response_Code_OK){
                 break;
             }

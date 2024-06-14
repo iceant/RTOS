@@ -4,6 +4,7 @@
 #include <string.h>
 #include <board.h>
 #include <meter_protocol.h>
+#include <mqtt.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
@@ -23,7 +24,10 @@ static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
         }
         case kMCU_PROTOCOL_DU_CAN:{
             int du_size = MCU_PROTOCOL_DU_SIZE_GET(protocol);
-            sdk_hex_dump("CAN", protocol->buffer+5, du_size);
+//            sdk_hex_dump("[MCU_CAN]", MCU_PROTOCOL_DU_GET(protocol), du_size);
+            MQTT_Publish(MCU_PROTOCOL_DU_GET(protocol), du_size);
+            os_printf("[GD303] PUBLISH CAN!!!\n");
+            for(int i=0; i<0x3ffff; i++);
             break;
         }
         default:

@@ -31,6 +31,10 @@ typedef struct global_meter_s{
                                 */
 }global_meter_t;
 
+typedef struct global_fatfs_s{
+    int state;
+}global_fatfs_t;
+
 typedef struct glboal_mqtt_s{
     char Topic_Upstream[256];
     char Topic_Downstream[256];
@@ -47,6 +51,7 @@ typedef struct global_s{
     char IMEI[16];
     char ICCID[21];
     int meter_state;
+    global_fatfs_t fatfs;
 }global_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +69,13 @@ typedef struct global_s{
 #define GLOBAL_METER_STATE_START        2
 #define GLOBAL_METER_STATE_CHARGING     3
 #define GLOBAL_METER_STATE_ERROR        4
+
+#define GLOBAL_FATFS_STATE_INIT_SUCCESS     (1)
+#define GLOBAL_FATFS_STATE_INIT_FAILED      (-1)
+#define GLOBAL_FATFS_STATE_MOUNT_SUCCESS    (2)
+#define GLOBAL_FATFS_STATE_MOUNT_FAILED     (-2)
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 

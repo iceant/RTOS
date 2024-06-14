@@ -78,17 +78,17 @@ A7670C_Pin_T A7670C_power_status={.on=A7670C_StatusPin_On, .off=A7670C_StatusPin
 
 static void A7670C_PwrRstPin_On(void){
 //    GPIO_BOP(GPIOA) = GPIO_PIN_15;
-//    gpio_bit_set(GPIOA, GPIO_PIN_15);
-    gpio_bit_set(GPIOE, GPIO_PIN_6);
+    gpio_bit_set(GPIOA, GPIO_PIN_15);
+//    gpio_bit_set(GPIOE, GPIO_PIN_6);
 }
 static void A7670C_PwrRstPin_Off(void){
 //    GPIO_BC(GPIOA) = GPIO_PIN_15;
-//    gpio_bit_reset(GPIOA, GPIO_PIN_15);
-    gpio_bit_reset(GPIOE, GPIO_PIN_6);
+    gpio_bit_reset(GPIOA, GPIO_PIN_15);
+//    gpio_bit_reset(GPIOE, GPIO_PIN_6);
 }
 static uint8_t A7670C_PwrRstPin_Read(void){
-//    return gpio_input_bit_get(GPIOA, GPIO_PIN_15);
-    return gpio_input_bit_get(GPIOE, GPIO_PIN_6);
+    return gpio_input_bit_get(GPIOA, GPIO_PIN_15);
+//    return gpio_input_bit_get(GPIOE, GPIO_PIN_6);
 }
 
 A7670C_Pin_T A7670C_power_reset={.on=A7670C_PwrRstPin_On, .off=A7670C_PwrRstPin_Off, .read=A7670C_PwrRstPin_Read};
@@ -187,8 +187,6 @@ void BSP_A7670C_Init(void)
     
     A7670C_Init(&A7670C_power_en, &A7670C_power_key, &A7670C_power_status, &A7670C_power_reset, &A7670C_IO);
 
-    A7670C_Reset();
-    
     os_thread_init(&A7670C_RxThread, "A7670C_RxThd", A7670C_IO_RxThd, 0
             , A7670C_RxThdStack, sizeof(A7670C_RxThdStack)
             , 20, 10);

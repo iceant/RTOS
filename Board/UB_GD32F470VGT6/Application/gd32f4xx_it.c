@@ -46,9 +46,10 @@ void NMI_Handler(void)
 {
     printf("NMI_Handler\n");
     /* if NMI exception occurs, go to infinite loop */
-//    while(1) {
-//    }
-    HardFault_Handler();
+    while(1) {
+    }
+//    NVIC_SystemReset();
+
 }
 
 /*!
@@ -70,16 +71,15 @@ void NMI_Handler(void)
     \param[out] none
     \retval     none
 */
-void MemManage_Handler(void)
-{
-    os_interrupt_enter();
-    printf("MemManage_Handler\n");
-    /* if Memory Manage exception occurs, go to infinite loop */
-//    while(1) {
-//    }
-    HardFault_Handler();
-    os_interrupt_exit();
-}
+//void MemManage_Handler(void)
+//{
+//    os_interrupt_enter();
+//    /* if Memory Manage exception occurs, go to infinite loop */
+//    printf("MemManage_Handler\n");
+//    NVIC_SystemReset();
+//    os_interrupt_exit();
+//
+//}
 
 /*!
     \brief      this function handles BusFault exception
@@ -87,16 +87,17 @@ void MemManage_Handler(void)
     \param[out] none
     \retval     none
 */
-void BusFault_Handler(void)
-{
-    os_interrupt_enter();
-    /* if Bus Fault exception occurs, go to infinite loop */
-//    while(1) {
-//    }
-    printf("BusFault_Handler\n");
-    HardFault_Handler();
-    os_interrupt_exit();
-}
+//void BusFault_Handler(void)
+//{
+//    os_interrupt_enter();
+//    /* if Bus Fault exception occurs, go to infinite loop */
+////    while(1) {
+////    }
+//    printf("BusFault_Handler\n");
+//    NVIC_SystemReset();
+////    HardFault_Handler();
+//    os_interrupt_exit();
+//}
 
 /*!
     \brief      this function handles UsageFault exception
@@ -104,15 +105,15 @@ void BusFault_Handler(void)
     \param[out] none
     \retval     none
 */
-void UsageFault_Handler(void)
-{
-    os_interrupt_enter();
-    /* if Usage Fault exception occurs, go to infinite loop */
-//    while(1) {
-//    }
-    printf("UsageFault_Handler\n");
-    os_interrupt_exit();
-}
+//void UsageFault_Handler(void)
+//{
+//    os_interrupt_enter();
+//    /* if Usage Fault exception occurs, go to infinite loop */
+////    while(1) {
+////    }
+//    printf("UsageFault_Handler\n");
+//    os_interrupt_exit();
+//}
 
 /*!
     \brief      this function handles SVC exception

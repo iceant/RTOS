@@ -18,6 +18,12 @@
 #define ENABLE_OLED
 #define ENABLE_GD32F303
 #define ENABLE_MQTT
+#define ENABLE_KEY
+#define ENABLE_LOCK
+#define ENABLE_SDCARD
+#define ENABLE_SDCARD_INFO
+#define ENABLE_FAT_FILE_SYSTEM
+#define ENABLE_FATFS_TEST
 
 
 ////////////////////////////////////////////////////////////////////////////////

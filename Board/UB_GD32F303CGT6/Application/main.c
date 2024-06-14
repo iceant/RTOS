@@ -34,7 +34,7 @@ static void BootThread_Entry(void* p){
                           , BSP_TIM6__TickCount%1000);
         mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, BootThread_Buf, sz);
 //        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "Hello", 5);
-        os_thread_mdelay(1000);
+        os_thread_mdelay(60000);
     }
 }
 

@@ -6,6 +6,7 @@
 #include <A7670C.h>
 #include <stdio.h>
 #include <sdk_hex.h>
+#include <float.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -86,12 +87,10 @@ int global_init(void){
         #if defined(ENABLE_SPI_FLASH)
         global_read();
         #endif
-        if(global__instance.meter.std_current_min==-1U){
+        if(global__instance.meter.std_current_min==-1U || global__instance.meter.std_voltage_min==-1U){
+            global__instance.meter.current_ratio=1.0f;
+            global__instance.meter.voltage_ratio=1.0f;
             printf("[GLOBAL] No Saved Value!\n");
-            global__instance.meter.std_current_min = 0;
-        }
-        if(global__instance.meter.std_voltage_min==-1U){
-            global__instance.meter.std_voltage_min = 0;
         }
 
 #if defined(ENABLE_4G)
@@ -132,6 +131,13 @@ void global_show(void){
     printf("HWINFO:\n");
     printf("\tIMEI:%s\n", global__instance.IMEI);
     printf("\tICCID:%s\n", global__instance.ICCID);
+    printf("METER:\n");
+    printf("\tstd_voltage_min:%d\n", global__instance.meter.std_voltage_min);
+    printf("\tstd_current_min:%d\n", global__instance.meter.std_current_min);
+    printf("\trd_voltage_min:%d\n", global__instance.meter.rd_voltage_min);
+    printf("\trd_current_min:%d\n", global__instance.meter.rd_current_min);
+    printf("\tcurrent_ratio:%f\n", global__instance.meter.current_ratio);
+    printf("\tvoltage_ratio:%f\n", global__instance.meter.voltage_ratio);
 }
 
 global_t* global_get(void){

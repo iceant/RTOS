@@ -120,6 +120,15 @@
 #include <bsp_a7670c.h>
 #endif /*INCLUDED_BSP_A7670C_H*/
 
+#ifndef INCLUDED_BSP_KEY_H
+#include <bsp_key.h>
+#endif /*INCLUDED_BSP_KEY_H*/
+
+#ifndef INCLUDED_BSP_LOCK_H
+#include <bsp_lock.h>
+#endif /*INCLUDED_BSP_LOCK_H*/
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

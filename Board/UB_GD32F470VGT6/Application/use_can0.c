@@ -31,7 +31,7 @@ typedef struct USE_CAN0_Snapshot_S{
 ////
 #define USE_CAN0_RX_THREAD_STACK_SIZE   1024
 #define USE_CAN0_RX_OBJECT_SIZE         sizeof(USE_CAN0_RxRecord_T)
-#define USE_CAN0_RX_OBJECT_COUNT        100
+#define USE_CAN0_RX_OBJECT_COUNT        500
 #define USE_CAN0_RX_RING_SIZE           (USE_CAN0_RX_OBJECT_COUNT * USE_CAN0_RX_OBJECT_SIZE)
 
 
@@ -317,7 +317,7 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
                         sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy: %F", USE_CAN0__ShowBuf, 7);
                         OLED_Clear();
-                        OLED_ShowString(1,2, OLED_Buffer, 12);
+                        OLED_ShowString(1,5, OLED_Buffer, 12);
 
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_IDLE);
                     }
@@ -350,30 +350,28 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         /*转换为人类可阅读的值*/
                         sdk_mp_div(USE_CAN0_LatestSnapshot.EnergyWH, USE_CAN0_LatestSnapshot.EnergySum, USE_CAN0__EnergyRatio, &USE_CAN0_LatestSnapshot.EnergyWH);
 
-                        if((BSP_TIM6__TickCount-nCount)>=1000){
-                            nCount = BSP_TIM6__TickCount;
-//                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %d", USE_CAN0_LatestSnapshot.Current);
-                            sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
-                            sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %F", USE_CAN0__ShowBuf, 3);
-                            OLED_ShowString(1, 2, OLED_Buffer, 12);
-                            os_printf("%s ", OLED_Buffer);
-
-//                            snprintf((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %d", USE_CAN0_LatestSnapshot.Voltage);
-                            sdk_ultoa(USE_CAN0_LatestSnapshot.Voltage, USE_CAN0__ShowBuf, 10);
-                            sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %F", USE_CAN0__ShowBuf, 4);
-                            OLED_ShowString(1, 3, OLED_Buffer, 12);
-                            os_printf("%s ", OLED_Buffer);
-
-                            sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
-                            sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy : %F", USE_CAN0__ShowBuf, 7);
-                            OLED_ShowString(1,5, OLED_Buffer, 12);
-                            os_printf("%s\n", OLED_Buffer);
-                        }
-
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_WIP);
                     }
                 }
 
+
+                if((BSP_TIM6__TickCount-nCount)>=1000 && (USE_CAN0__State==USE_CAN0_STATE_CHARGE_WIP)){
+                    nCount = BSP_TIM6__TickCount;
+                    sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
+                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %F", USE_CAN0__ShowBuf, 3);
+                    OLED_ShowString(1, 2, OLED_Buffer, 12);
+                    os_printf("%s ", OLED_Buffer);
+
+                    sdk_ultoa(USE_CAN0_LatestSnapshot.Voltage, USE_CAN0__ShowBuf, 10);
+                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %F", USE_CAN0__ShowBuf, 4);
+                    OLED_ShowString(1, 3, OLED_Buffer, 12);
+                    os_printf("%s ", OLED_Buffer);
+
+                    sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
+                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy : %F", USE_CAN0__ShowBuf, 7);
+                    OLED_ShowString(1,5, OLED_Buffer, 12);
+                    os_printf("%s\n", OLED_Buffer);
+                }
 
                 USE_CAN0_LatestSnapshot.Current = rCurrent;
                 USE_CAN0_LatestSnapshot.Voltage = rVoltage;

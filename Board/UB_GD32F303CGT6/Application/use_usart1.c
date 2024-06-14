@@ -25,6 +25,9 @@ static void* USE_USART1__ProtocolHandler_Userdata = 0;
 
 static void USE_USART1__RxHandler(uint16_t data, void* userdata)
 {
+    if(sdk_ringbuffer_is_full(&USE_USART1_RxBuffer)){
+        sdk_ringbuffer_reset(&USE_USART1_RxBuffer);
+    }
     sdk_ringbuffer_put(&USE_USART1_RxBuffer, (char)data);
     os_semaphore_release(&USE_USART1_Sem);
 }
@@ -82,7 +85,7 @@ static void USE_USART1__ThreadEntry(void* p){
         uint16_t chk_crc = sdk_crc16(USE_USART1_RxBuffer.buffer+start_idx, du_size+5);
         if(crc!=chk_crc){
             sdk_ringbuffer_reset(&USE_USART1_RxBuffer);
-            USE_USART1__SendErrorCRC();
+//            USE_USART1__SendErrorCRC();
             continue;
         }
 

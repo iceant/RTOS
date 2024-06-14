@@ -134,7 +134,14 @@ void Board_Init(void){
 
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk;
-    SCB->SHCSR|=SCB_SHCSR_MEMFAULTENA_Msk;
+
+    SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk
+                  |  SCB_CCR_UNALIGN_TRP_Msk;
+
+    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk
+                  |  SCB_SHCSR_BUSFAULTENA_Msk
+                  |  SCB_SHCSR_MEMFAULTENA_Msk; // enable Usage-/Bus-/MPU Fault
+
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
     SystemCoreClock = 240000000U;
@@ -163,16 +170,15 @@ void Board_Init(void){
     BSP_USART0_EnableDMATx();
     BSP_USART0_EnableRxIRQ();
     #endif
-    
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- OS KERNEL ----*/
-    
     os_kernel_init();
-    
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- 精确计时器 ----*/
     BSP_TIM6_Init();
-    
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- LED ----*/
     #if defined(ENABLE_LED)
@@ -192,11 +198,6 @@ void Board_Init(void){
 
     #if defined(ENABLE_OLED)
     OLED_Init(&OLED_IO);
-    #endif
-    /* ------------------------------------------------------------------------------------------ */
-    /* ---- TFCARD ----*/
-    #if defined(ENABLE_TFCARD)
-    sd_init();
     #endif
 
     /* ------------------------------------------------------------------------------------------ */
@@ -241,6 +242,18 @@ void Board_Init(void){
     BSP_USART2_Init();
     BSP_USART2_EnableDMATx();
     BSP_USART2_EnableRxIRQ();
+    #endif
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- LOCK ----*/
+    #if defined(ENABLE_LOCK)
+    BSP_Lock_Init();
+    #endif
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- KEY ----*/
+    #if defined(ENABLE_KEY)
+    BSP_Key_Init(0);
     #endif
 }
 

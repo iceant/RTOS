@@ -90,10 +90,10 @@ static void USE_USART2__RxThread(void* p){
         crc = SDK_HEX_GET_UINT16_LE(USE_USART2__RxBuffer.buffer, start_idx+5+du_size);
         uint16_t chk_crc = sdk_crc16(USE_USART2__RxBuffer.buffer+start_idx, du_size+5);
         if(crc!=chk_crc){
-            sdk_hex_dump("[GD303-CRC]", USE_USART2__RxBuffer.buffer, sdk_ringbuffer_used(&USE_USART2__RxBuffer));
+//            sdk_hex_dump("[GD303-CRC]", USE_USART2__RxBuffer.buffer, sdk_ringbuffer_used(&USE_USART2__RxBuffer));
             os_printf("[GD303] Wrong CRC: %x VS %x\n", crc, chk_crc);
             sdk_ringbuffer_reset(&USE_USART2__RxBuffer);
-            USE_USART2__SendErrorCRC();
+//            USE_USART2__SendErrorCRC(); /* 可能导致异常 */
             continue;
         }
 

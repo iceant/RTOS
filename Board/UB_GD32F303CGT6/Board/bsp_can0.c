@@ -14,13 +14,13 @@
 #define CANx_Rx_GPIO        GPIOA
 #define CANx_Rx_PIN         GPIO_PIN_11
 
-#define CANx_REMAP          GPIO_CAN_FULL_REMAP
+#define CANx_REMAP          GPIO_CAN0_FULL_REMAP
 #define CANx_REMAP_VALUE    ENABLE
 
 #define CANx_Rx_IRQn        USBD_LP_CAN0_RX0_IRQn
 #define CANx_Rx_IRQHandler  USBD_LP_CAN0_RX0_IRQHandler
 #define CANx_FIFOn          CAN_FIFO0
-#define CANx_INT_TYPE       CAN_INTEN_RFNEIE0
+#define CANx_INT_TYPE       CAN_INT_RFNE0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static BSP_CAN0_RxHandler BSP_CAN0__RxHandler=0;
@@ -38,14 +38,14 @@ static void can_gpio_config(void)
     rcu_periph_clock_enable(RCU_AF);
 
     /* configure CAN0 GPIO */
-    gpio_init(CANx_Tx_GPIO,GPIO_MODE_IPU,GPIO_OSPEED_50MHZ,CANx_Tx_PIN);
-    gpio_init(CANx_Rx_GPIO,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,CANx_Rx_PIN);
-    gpio_pin_remap_config(CANx_REMAP,CANx_REMAP_VALUE);
+    gpio_init(CANx_Rx_GPIO,GPIO_MODE_IPU,GPIO_OSPEED_50MHZ,CANx_Rx_PIN);
+    gpio_init(CANx_Tx_GPIO,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,CANx_Tx_PIN);
+//    gpio_pin_remap_config(GPIO_CAN_FULL_REMAP,CANx_REMAP_VALUE);
 }
 
 static void nvic_config(void)
 {
-    nvic_irq_enable(CANx_Rx_IRQn,0,1);
+    nvic_irq_enable(CANx_Rx_IRQn,0,0);
     can_interrupt_enable(CANx, CANx_INT_TYPE);
 }
 
@@ -152,7 +152,7 @@ int BSP_CAN0_Send(can_trasnmit_message_struct* txMsg){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void CAN0_RX0_IRQHandler(void)
+void CANx_Rx_IRQHandler(void)
 {
     can_receive_message_struct rx_message;
 

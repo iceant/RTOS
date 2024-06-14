@@ -57,12 +57,22 @@ A7670C_Result A7670C_Startup(void){
     A7670C_SetStartupState(A7670C_STARTUP_STATE_UNINITIALIZED);
 
 __A7670C__Boot:
-    while(!A7670C_IsPowerOn()){
-        os_printf("[A7670C] Power is Off!\r\n");
-        A7670C_PowerOff();
-        A7670C_NopDelay(DELAY_TIME);
-        A7670C_PowerOn();
-        A7670C_NopDelay(DELAY_TIME);
+//    while(!A7670C_IsPowerOn()){
+//        os_printf("[A7670C] Power is Off!\r\n");
+//        A7670C_PowerOff();
+//        A7670C_NopDelay(DELAY_TIME);
+//        A7670C_PowerOn();
+//        A7670C_NopDelay(DELAY_TIME);
+//    }
+    if(A7670C_IsPowerOn()) {
+        os_printf("[A7670C] Reset!\r\n");
+        A7670C_Reset();
+    }else{
+        while(!A7670C_IsPowerOn()){
+            os_printf("[A7670C] Power is Off!\r\n");
+            A7670C_PowerOn();
+            A7670C_DelayMS(2000);
+        }
     }
 
     while(1){

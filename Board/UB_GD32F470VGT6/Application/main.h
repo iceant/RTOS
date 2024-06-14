@@ -83,7 +83,13 @@ OF SUCH DAMAGE.
 #include <task_heartbeat.h>
 #endif /*INCLUDED_TASK_HEARTBEAT_H*/
 
+#ifndef INCLUDED_USE_KEY_H
+#include <use_key.h>
+#endif /*INCLUDED_USE_KEY_H*/
 
+#ifndef INCLUDED_USE_SD_CARD_H
+#include <use_sd_card.h>
+#endif /*INCLUDED_USE_SD_CARD_H*/
 
 
 

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sdk_float_fmt.h>
 #include <meter_protocol.h>
+#include <exception_test.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -130,6 +131,14 @@ int main(void)
 
     /*初始化终端*/
     USE_USART0_Init();
+
+#if defined(ENABLE_SDCARD)
+    USE_SD_CARD_Init();
+#endif
+
+#if defined(ENABLE_KEY)
+    USE_KEY_Init();
+#endif
 
     sdk_fmt_register('F', sdk_float_str_fmt);
 
