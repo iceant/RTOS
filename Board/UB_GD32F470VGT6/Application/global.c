@@ -88,6 +88,8 @@ int global_init(void){
         global_read();
         #endif
         if(global__instance.meter.std_current_min==-1U || global__instance.meter.std_voltage_min==-1U){
+            global__instance.meter.current_ratio=1.0f;
+            global__instance.meter.voltage_ratio=1.0f;
             printf("[GLOBAL] No Saved Value!\n");
         }
 

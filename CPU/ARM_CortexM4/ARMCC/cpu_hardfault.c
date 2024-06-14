@@ -2,27 +2,7 @@
 #include <stdio.h>
 #include <cpu_types.h>
 #include <cpu_registers.h>
-
-////////////////////////////////////////////////////////////////////////////////
-////
-// System Handler Control and State Register
-#define SYSHND_CTRL (*(volatile unsigned int*) (0xE000ED24u))
-// Memory Management Fault Status Register
-#define NVIC_MFSR (*(volatile unsigned char*) (0xE000ED28u))
-// Bus Fault Status Register
-#define NVIC_BFSR (*(volatile unsigned char*) (0xE000ED29u))
-// Usage Fault Status Register
-#define NVIC_UFSR (*(volatile unsigned short*)(0xE000ED2Au))
-// Hard Fault Status Register
-#define NVIC_HFSR (*(volatile unsigned int*) (0xE000ED2Cu))
-// Debug Fault Status Register
-#define NVIC_DFSR (*(volatile unsigned int*) (0xE000ED30u))
-// Bus Fault Manage Address Register
-#define NVIC_BFAR (*(volatile unsigned int*) (0xE000ED38u))
-// Auxiliary Fault Status Register
-#define NVIC_AFSR (*(volatile unsigned int*) (0xE000ED3Cu))
-
-
+#include "cpu_functions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -41,15 +21,59 @@ __asm void HardFault_Handler(void){
         ALIGN 4
 }
 
+__asm void BusFault_Handler(void){
+
+    IMPORT HardFault_Handler_C
+
+        TST LR, #4
+        ITE EQ
+        MRSEQ R0, MSP
+        MRSNE R0, PSP
+        MOV R1, LR ;/*Second Parameter*/
+        LDR R2, =HardFault_Handler_C
+        BX R2
+        ALIGN 4
+}
+
+__asm void UsageFault_Handler(void){
+
+    IMPORT HardFault_Handler_C
+
+        TST LR, #4
+        ITE EQ
+        MRSEQ R0, MSP
+        MRSNE R0, PSP
+        MOV R1, LR ;/*Second Parameter*/
+        LDR R2, =HardFault_Handler_C
+        BX R2
+        ALIGN 4
+}
+
+__asm void MemManage_Handler(void){
+
+    IMPORT HardFault_Handler_C
+
+        TST LR, #4
+        ITE EQ
+        MRSEQ R0, MSP
+        MRSNE R0, PSP
+        MOV R1, LR ;/*Second Parameter*/
+        LDR R2, =HardFault_Handler_C
+        BX R2
+        ALIGN 4
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define SCB_SHCSR   0xE000ED24u
-#define SCB_CFFAR   0xE000ED28
-#define SCB_HFSR    0xE000ED2C
-#define SCB_DFSR    0xE000ED30
-#define SCB_MMFAR   0xE000ED34
-#define SCB_BFAR    0xE000ED38
-#define SCB_AFSR    0xE000ED3C
+#define REG_SCB_SHCSR  (*(volatile unsigned int*)  (0xE000ED24u))  // System Handler Control and State Register
+#define REG_SCB_MMFSR  (*(volatile unsigned char*) (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_BFSR   (*(volatile unsigned char*) (0xE000ED29u))  // Bus Fault Status Register
+#define REG_SCB_UFSR   (*(volatile unsigned short*)(0xE000ED2Au))  // Usage Fault Status Register
+#define REG_SCB_HFSR   (*(volatile unsigned int*)  (0xE000ED2Cu))  // Hard Fault Status Register
+#define REG_SCB_DFSR   (*(volatile unsigned int*)  (0xE000ED30u))  // Debug Fault Status Register
+#define REG_SCB_MMFAR  (*(volatile unsigned int*)  (0xE000ED34u))  // MemManage Fault Manage Address Register
+#define REG_SCB_BFAR   (*(volatile unsigned int*)  (0xE000ED38u))  // Bus Fault Address Register
+#define REG_SCB_AFSR   (*(volatile unsigned int*)  (0xE000ED3Cu))  // Auxiliary Fault Status Register
 
 #define DEBUG 1
 
@@ -77,117 +101,110 @@ static struct {
             } bits;
         } psr; // Program status register.
     } SavedRegs;
+
     union {
         volatile unsigned int byte;
         struct {
-            unsigned int MEMFAULTACT : 1; // Read as 1 if memory management fault
-            // is active
-            unsigned int BUSFAULTACT : 1; // Read as 1 if bus fault exception is active
-            unsigned int UnusedBits1 : 1;
-            unsigned int USGFAULTACT : 1; // Read as 1 if usage fault exception
-            // is active
-            unsigned int UnusedBits2 : 3;
-            unsigned int SVCALLACT : 1; // Read as 1 if SVC exception is active
-            unsigned int MONITORACT : 1; // Read as 1 if debug monitor exception
-            // is active
-            unsigned int UnusedBits3 : 1;
-            unsigned int PENDSVACT : 1; // Read as 1 if PendSV exception is active
-            unsigned int SYSTICKACT : 1; // Read as 1 if SYSTICK exception is active
-            unsigned int USGFAULTPENDED : 1; // Usage fault pended; usage fault started
-            // but was replaced by a higher-priority
-            // exception
-            unsigned int MEMFAULTPENDED : 1; // Memory management fault pended; memory
-            // management fault started but was
-            // replaced by a higher-priority exception
-            unsigned int BUSFAULTPENDED : 1; // Bus fault pended; bus fault handler was
-            // started but was replaced by a
-            // higher-priority exception
-            unsigned int SVCALLPENDED : 1; // SVC pended; SVC was started but was
-            // replaced by a higher-priority exception
-            unsigned int MEMFAULTENA : 1; // Memory management fault handler enable
-            unsigned int BUSFAULTENA : 1; // Bus fault handler enable
-            unsigned int USGFAULTENA : 1; // Usage fault handler enable
+            unsigned int MEMFAULTACT       :  1;   // [0]  Read as 1 if memory management fault is active
+            unsigned int BUSFAULTACT       :  1;   // [1]  Read as 1 if bus fault exception is active
+            unsigned int HARDFAULTACT      :  1;   // [2]  Read as 1 if hard fault exception is active (ARMv8-M)
+            unsigned int USGFAULTACT       :  1;   // [3]  Read as 1 if usage fault exception is active
+            unsigned int SECUREFAULTACT    :  1;   // [4]  Read as 1 if secure fault exception is active (ARMv8-M)
+            unsigned int NMIACT            :  1;   // [5]  Read as 1 if NMI exception is active (ARMv8-M)
+            unsigned int                   :  1;
+            unsigned int SVCALLACT         :  1;   // [7]  Read as 1 if SVC exception is active
+            unsigned int MONITORACT        :  1;   // [8]  Read as 1 if debug monitor exception is active
+            unsigned int                   :  1;
+            unsigned int PENDSVACT         :  1;   // [10] Read as 1 if PendSV exception is active
+            unsigned int SYSTICKACT        :  1;   // [11] Read as 1 if SYSTICK exception is active
+            unsigned int USGFAULTPENDED    :  1;   // [12] Usage fault pending; higher priority exception active
+            unsigned int MEMFAULTPENDED    :  1;   // [13] Memory management fault pending; higher priority exception active
+            unsigned int BUSFAULTPENDED    :  1;   // [14] Bus fault pending; higher priority exception active
+            unsigned int SVCALLPENDED      :  1;   // [15] SVC pending; higher priority exception active
+            unsigned int MEMFAULTENA       :  1;   // [16] Memory management fault exception enable
+            unsigned int BUSFAULTENA       :  1;   // [17] Bus fault exception enable
+            unsigned int USGFAULTENA       :  1;   // [18] Usage fault exception enable
+            unsigned int SECUREFAULTENA    :  1;   // [19] Secure fault exception enable (ARMv8-M)
+            unsigned int SECUREFAULTPENDED :  1;   // [20] Secure fault exception pending; higher priority exception active (ARMv8-M)
+            unsigned int HARDFAULTPENDED   :  1;   // [21] Hard fault exception pending (ARMv8-M)
+            unsigned int                   : 10;
         } bits;
-    } syshndctrl;       // System Handler Control and State
-                        // Register (0xE000ED24)
+    } syshndctrl;       // System Handler Control and State Register (0xE000ED24)
 
     union {
         volatile unsigned char byte;
         struct {
-            unsigned char IACCVIOL : 1; // Instruction access violation
-            unsigned char DACCVIOL : 1; // Data access violation
-            unsigned char UnusedBits : 1;
-            unsigned char MUNSTKERR : 1; // Unstacking error
-            unsigned char MSTKERR : 1; // Stacking error
-            unsigned char UnusedBits2 : 2;
-            unsigned char MMARVALID : 1; // Indicates the MMAR is valid
+            unsigned int IACCVIOL    :  1;     // [0] Instruction access violation
+            unsigned int DACCVIOL    :  1;     // [1] Data access violation
+            unsigned int             :  1;
+            unsigned int MUNSTKERR   :  1;     // [3] Unstacking error
+            unsigned int MSTKERR     :  1;     // [4] Stacking error
+            unsigned int MLSPERR     :  1;     // [5] MemManage fault during FP lazy state preservation
+            unsigned int             :  1;
+            unsigned int MMARVALID   :  1;     // [7] Indicates the MMAR is valid
+            unsigned int             : 24;
         } bits;
-    } mfsr;         // Memory Management Fault Status
-                    // Register (0xE000ED28)
+    } mmfsr;         // MemManage Fault Status Register  (0xE000ED28)
+
+    volatile unsigned int mmfar;           // MemManage Fault Address Register (0xE000ED34)
 
     union {
         volatile unsigned int byte;
         struct {
-            unsigned int IBUSERR : 1; // Instruction access violation
-            unsigned int PRECISERR : 1; // Precise data access violation
-            unsigned int IMPREISERR : 1; // Imprecise data access violation
-            unsigned int UNSTKERR : 1; // Unstacking error
-            unsigned int STKERR : 1; // Stacking error
-            unsigned int UnusedBits : 2;
-            unsigned int BFARVALID : 1; // Indicates BFAR is valid
+            unsigned int IBUSERR      :  1;      // [0] Instruction access violation
+            unsigned int PRECISERR    :  1;      // [1] Precise data access violation
+            unsigned int IMPRECISERR  :  1;      // [2] Imprecise data access violation
+            unsigned int UNSTKERR     :  1;      // [3] Unstacking error
+            unsigned int STKERR       :  1;      // [4] Stacking error
+            unsigned int LSPERR       :  1;      // [5] Bus fault during FP lazy state preservation
+            unsigned int              :  1;
+            unsigned int BFARVALID    :  1;      // [7] Indicates BFAR is valid
+            unsigned int              : 24;
         } bits;
     } bfsr; // Bus Fault Status Register (0xE000ED29)
 
     volatile unsigned int bfar;     // Bus Fault Manage Address Register
-                                    // (0xE000ED38)
+    // (0xE000ED38)
     union {
         volatile unsigned short byte;
         struct {
-            unsigned short UNDEFINSTR : 1; // Attempts to execute an undefined
-            // instruction
-            unsigned short INVSTATE : 1; // Attempts to switch to an invalid state
-            // (e.g., ARM)
-            unsigned short INVPC : 1; // Attempts to do an exception with a bad
-            // value in the EXC_RETURN number
-            unsigned short NOCP : 1; // Attempts to execute a coprocessor
-            // instruction
-            unsigned short UnusedBits : 4;
-            unsigned short UNALIGNED : 1; // Indicates that an unaligned access fault
-            // has taken place
-            unsigned short DIVBYZERO : 1; // Indicates a divide by zero has taken
-            // place (can be set only if DIV_0_TRP
-            // is set)
+            unsigned int UNDEFINSTR :  1;      // [0] Attempts to execute an undefined instruction
+            unsigned int INVSTATE   :  1;      // [1] Attempts to switch to an invalid state (e.g., ARM)
+            unsigned int INVPC      :  1;      // [2] Attempts to do an exception with a bad value in the EXC_RETURN number
+            unsigned int NOCP       :  1;      // [3] Attempts to execute a coprocessor instruction
+            unsigned int STKOF      :  1;      // [4] Indicates whether a stack overflow error has occurred (ARMv8-M)
+            unsigned int            :  3;
+            unsigned int UNALIGNED  :  1;      // [8] Indicates that an unaligned access fault has taken place
+            unsigned int DIVBYZERO  :  1;      // [9] Indicates a divide by zero has taken place (can be set only if DIV_0_TRP is set)
+            unsigned int            : 22;
         } bits;
     } ufsr; // Usage Fault Status Register (0xE000ED2A)
 
     union {
         volatile unsigned int byte;
         struct {
-            unsigned int UnusedBits : 1;
-            unsigned int VECTBL : 1; // Indicates hard fault is caused by failed
-            // vector fetch
-            unsigned int UnusedBits2 : 28;
-            unsigned int FORCED : 1; // Indicates hard fault is taken because of
-            // bus fault/memory management fault/usage
-            // fault
-            unsigned int DEBUGEVT : 1; // Indicates hard fault is triggered by
-            // debug event
+            unsigned int             :  1;
+            unsigned int VECTTBL     :  1;     // [1] Indicates hard fault is caused by failed vector fetch
+            unsigned int             : 28;
+            unsigned int FORCED      :  1;     // [30] Indicates hard fault is taken because of bus fault/memory management fault/usage fault
+            unsigned int DEBUGEVT    :  1;     // [31] Indicates hard fault is triggered by debug event
         } bits;
     } hfsr; // Hard Fault Status Register (0xE000ED2C)
 
     union {
         volatile unsigned int byte;
         struct {
-            unsigned int HALTED : 1; // Halt requested in NVIC
-            unsigned int BKPT : 1; // BKPT instruction executed
-            unsigned int DWTTRAP : 1; // DWT match occurred
-            unsigned int VCATCH : 1; // Vector fetch occurred
-            unsigned int EXTERNAL : 1; // EDBGRQ signal asserted
+            unsigned int HALTED   :  1;        // [0] Halt requested in NVIC
+            unsigned int BKPT     :  1;        // [1] BKPT instruction executed
+            unsigned int DWTTRAP  :  1;        // [2] DWT match occurred
+            unsigned int VCATCH   :  1;        // [3] Vector fetch occurred
+            unsigned int EXTERNAL :  1;        // [4] EDBGRQ signal asserted
+            unsigned int PMU      :  1;        // [5] PMU counter overflow event has occurred
+            unsigned int          : 26;
         } bits;
     } dfsr; // Debug Fault Status Register (0xE000ED30)
 
-    volatile unsigned int afsr;     // Auxiliary Fault Status Register
-                                    // (0xE000ED3C) Vendor controlled (optional)
+    volatile unsigned int afsr;     // Auxiliary Fault Status Register (0xE000ED3C) Vendor controlled (optional)
 } HardFaultRegs;
 #endif
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +221,7 @@ static void show_dfsr(volatile uint32_t dfsr);
 
 static void show_exc_return(unsigned int value);
 
-void HardFault_Handler_C(unsigned long * hardfault_args, unsigned int lr_value)
+void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
 {
     unsigned long stacked_r0;
     unsigned long stacked_r1;
@@ -217,32 +234,34 @@ void HardFault_Handler_C(unsigned long * hardfault_args, unsigned int lr_value)
     unsigned long cfsr;
     unsigned long bus_fault_address;
     unsigned long memmanage_fault_address;
+    unsigned long MSP;
+    unsigned long PSP;
 
     //
     // In case we received a hard fault because of a breakpoint instruction, we return.
     // This may happen when using semihosting for printf outputs and no debugger
     // is connected, i.e. when running a "Debug" configuration in release mode.
     //
-    if (NVIC_HFSR & (1uL << 31)) {
-        NVIC_HFSR |= (1uL << 31); // Reset Hard Fault status
-        *(hardfault_args + 6u) += 2u; // PC is located on stack at SP + 24 bytes;
-        // increment PC by 2 to skip break instruction.
-        return; // Return to interrupted application
+
+    if (REG_SCB_HFSR & (1u << 31)) {
+        REG_SCB_HFSR |=  (1u << 31);      // Reset Hard Fault status
+        *(stack_p + 6u) += 2u;         // PC is located on stack at SP + 24 bytes. Increment PC by 2 to skip break instruction.
+        return;                       // Return to interrupted application
     }
 
 #if DEBUG
-//
+    //
     // Read NVIC registers
     //
-    HardFaultRegs.syshndctrl.byte = SYSHND_CTRL; // System Handler Control and
-    // State Register
-    HardFaultRegs.mfsr.byte = NVIC_MFSR; // Memory Fault Status Register
-    HardFaultRegs.bfsr.byte = NVIC_BFSR; // Bus Fault Status Register
-    HardFaultRegs.bfar = NVIC_BFAR; // Bus Fault Manage Address Register
-    HardFaultRegs.ufsr.byte = NVIC_UFSR; // Usage Fault Status Register
-    HardFaultRegs.hfsr.byte = NVIC_HFSR; // Hard Fault Status Register
-    HardFaultRegs.dfsr.byte = NVIC_DFSR; // Debug Fault Status Register
-    HardFaultRegs.afsr = NVIC_AFSR; // Auxiliary Fault Status Register
+    HardFaultRegs.syshndctrl.byte   = REG_SCB_SHCSR;  // System Handler Control and State Register
+    HardFaultRegs.mmfsr.byte        = REG_SCB_MMFSR;  // MemManage Fault Status Register
+    HardFaultRegs.mmfar             = REG_SCB_MMFAR;  // MemManage Fault Address Register
+    HardFaultRegs.bfsr.byte         = REG_SCB_BFSR;   // Bus Fault Status Register
+    HardFaultRegs.bfar              = REG_SCB_BFAR;   // Bus Fault Manage Address Register
+    HardFaultRegs.ufsr.byte         = REG_SCB_UFSR;   // Usage Fault Status Register
+    HardFaultRegs.hfsr.byte         = REG_SCB_HFSR;   // Hard Fault Status Register
+    HardFaultRegs.dfsr.byte         = REG_SCB_DFSR;   // Debug Fault Status Register
+    HardFaultRegs.afsr              = REG_SCB_AFSR;   // Auxiliary Fault Status Register
     //
     // Halt execution
     // If NVIC registers indicate readable memory, change the variable value
@@ -254,14 +273,14 @@ void HardFault_Handler_C(unsigned long * hardfault_args, unsigned int lr_value)
     //
     // Read saved registers from the stack
     //
-    HardFaultRegs.SavedRegs.r0 = hardfault_args[0]; // Register R0
-    HardFaultRegs.SavedRegs.r1 = hardfault_args[1]; // Register R1
-    HardFaultRegs.SavedRegs.r2 = hardfault_args[2]; // Register R2
-    HardFaultRegs.SavedRegs.r3 = hardfault_args[3]; // Register R3
-    HardFaultRegs.SavedRegs.r12 = hardfault_args[4]; // Register R12
-    HardFaultRegs.SavedRegs.lr = hardfault_args[5]; // Link register LR
-    HardFaultRegs.SavedRegs.pc = hardfault_args[6]; // Program counter PC
-    HardFaultRegs.SavedRegs.psr.byte = hardfault_args[7]; // Program status word PSR
+    HardFaultRegs.SavedRegs.r0 = stack_p[0]; // Register R0
+    HardFaultRegs.SavedRegs.r1 = stack_p[1]; // Register R1
+    HardFaultRegs.SavedRegs.r2 = stack_p[2]; // Register R2
+    HardFaultRegs.SavedRegs.r3 = stack_p[3]; // Register R3
+    HardFaultRegs.SavedRegs.r12 = stack_p[4]; // Register R12
+    HardFaultRegs.SavedRegs.lr = stack_p[5]; // Link register LR
+    HardFaultRegs.SavedRegs.pc = stack_p[6]; // Program counter PC
+    HardFaultRegs.SavedRegs.psr.byte = stack_p[7]; // Program status word PSR
     //
     // Halt execution
     // To step out of the HardFaultHandler, change the variable value to != 0.
@@ -269,19 +288,20 @@ void HardFault_Handler_C(unsigned long * hardfault_args, unsigned int lr_value)
 //    _Continue = 0u;
 //    while (_Continue == 0u) {
 //    }
+#endif
 
     bus_fault_address = CPU_REG(SCB_BFAR);
     memmanage_fault_address = CPU_REG(SCB_MMFAR);
-    cfsr = CPU_REG(SCB_CFFAR);
+    cfsr = CPU_REG(SCB_CFSR);
 
-    stacked_r0 = ((unsigned long)hardfault_args[0]);
-    stacked_r1 = ((unsigned long)hardfault_args[1]);
-    stacked_r2 = ((unsigned long)hardfault_args[2]);
-    stacked_r3 = ((unsigned long)hardfault_args[3]);
-    stacked_r12 = ((unsigned long)hardfault_args[4]);
-    stacked_lr = ((unsigned long)hardfault_args[5]);
-    stacked_pc = ((unsigned long)hardfault_args[6]);
-    stacked_psr = ((unsigned long)hardfault_args[7]);
+    stacked_r0 = ((unsigned long)stack_p[0]);
+    stacked_r1 = ((unsigned long)stack_p[1]);
+    stacked_r2 = ((unsigned long)stack_p[2]);
+    stacked_r3 = ((unsigned long)stack_p[3]);
+    stacked_r12 = ((unsigned long)stack_p[4]);
+    stacked_lr = ((unsigned long)stack_p[5]);
+    stacked_pc = ((unsigned long)stack_p[6]);
+    stacked_psr = ((unsigned long)stack_p[7]);
 
     printf("[HardFault]\n");
     printf("-- Stack Frame --\n");
@@ -299,52 +319,46 @@ void HardFault_Handler_C(unsigned long * hardfault_args, unsigned int lr_value)
     printf("HFSR = 0x%08lx ", CPU_REG(SCB_HFSR)); show_hfsr(CPU_REG(SCB_HFSR));
     printf("DFSR = 0x%08lx ", CPU_REG(SCB_DFSR)); show_dfsr(CPU_REG(SCB_DFSR));
     printf("AFSR = 0x%08lx\n", CPU_REG(SCB_AFSR));
-    printf("BFAR = 0x%08lx\n", CPU_REG(SCB_BFAR));
-    printf("SHCSR = 0x%08lx\n", CPU_REG(SCB_SHCSR));
     if(cfsr & 0x0080) printf("MMFAR = 0x%08lx\n", memmanage_fault_address);
     if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
     printf("-- MISC --\n");
     printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
+    printf("STACK:0x%p\n", stack_p);
+
+
+
+//    { // Stack Dump
+//        extern void *_estack;
+//        printf("-- Stack Dump --\n");
+//        int i = 0;
+//        uint32_t *p = (uint32_t *)&stack_p[8];
+//        uint32_t *q = (uint32_t *)&_estack;
+//        while((p < q) && (i < 32))
+//        {
+//            if ((i++ & 7) == 0) putchar('\n');
+//            printf(" %08X", *p++);
+//        }
+//        putchar('\n');
+//    }
+//
+//    { // Instruction Dump
+//        printf("-- Instruction Dump --\n");
+//        int i = 8;
+//        uint16_t *p = (uint16_t *)(stack_p[6] - (i*2)); // PC, 8 opcodes earlier
+//        putchar('\n');
+//        while(i--)
+//            printf(" %04X", *p++);
+//        printf("(%04X)", *p++);
+//        i = 5;
+//        while(i--)
+//            printf("%04X ", *p++);
+//        putchar('\n');
+//    }
+
 
     _Continue = 0u;
     while (_Continue == 0u) {
     }
-#else
-    bus_fault_address = CPU_REG(SCB_BFAR);
-    memmanage_fault_address = CPU_REG(SCB_MMFAR);
-    cfsr = CPU_REG(SCB_CFFAR);
-
-    stacked_r0 = ((unsigned long)hardfault_args[0]);
-    stacked_r1 = ((unsigned long)hardfault_args[1]);
-    stacked_r2 = ((unsigned long)hardfault_args[2]);
-    stacked_r3 = ((unsigned long)hardfault_args[3]);
-    stacked_r12 = ((unsigned long)hardfault_args[4]);
-    stacked_lr = ((unsigned long)hardfault_args[5]);
-    stacked_pc = ((unsigned long)hardfault_args[6]);
-    stacked_psr = ((unsigned long)hardfault_args[7]);
-
-    printf("[HardFault]\n");
-    printf("-- Stack Frame --\n");
-    printf("R0  = 0x%08lx\n", stacked_r0);
-    printf("R1  = 0x%08lx\n", stacked_r1);
-    printf("R2  = 0x%08lx\n", stacked_r2);
-    printf("R3  = 0x%08lx\n", stacked_r3);
-    printf("R12 = 0x%08lx\n", stacked_r12);
-    printf("LR  = 0x%08lx\n", stacked_lr);
-    printf("PC  = 0x%08lx\n", stacked_pc);
-    printf("PSR = 0x%08lx\n", stacked_psr);
-
-    printf("-- FSR/FAR --\n");
-    printf("CFSR = 0x%08lx ", cfsr); show_cfsr(cfsr);
-    printf("HFSR = 0x%08lx ", CPU_REG(SCB_HFSR)); show_hfsr(CPU_REG(SCB_HFSR));
-    printf("DFSR = 0x%08lx ", CPU_REG(SCB_DFSR)); show_dfsr(CPU_REG(SCB_DFSR));
-    printf("AFSR = 0x%08lx\n", CPU_REG(SCB_AFSR));
-    if(cfsr & 0x0080) printf("MMFAR = 0x%08lx\n", memmanage_fault_address);
-    if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
-    printf("-- MISC --\n");
-    printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
-    while(1);
-#endif
 }
 
 static void show_exc_return(unsigned int value) {

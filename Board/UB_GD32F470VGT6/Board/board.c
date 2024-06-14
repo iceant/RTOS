@@ -134,7 +134,14 @@ void Board_Init(void){
 
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk;
-    SCB->SHCSR|=SCB_SHCSR_MEMFAULTENA_Msk;
+
+    SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk
+                  |  SCB_CCR_UNALIGN_TRP_Msk;
+
+    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk
+                  |  SCB_SHCSR_BUSFAULTENA_Msk
+                  |  SCB_SHCSR_MEMFAULTENA_Msk; // enable Usage-/Bus-/MPU Fault
+
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
     SystemCoreClock = 240000000U;
