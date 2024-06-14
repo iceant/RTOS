@@ -6,7 +6,7 @@
 #include "global.h"
 ////////////////////////////////////////////////////////////////////////////////
 #define TX_BUFFER_SZ 	(1024*4)
-#define TX_TASK_COUNT	10
+#define TX_TASK_COUNT	50
 
 #define STACK_SIZE 1024
 
@@ -115,7 +115,7 @@ static void tx_thread_entry(void* p){
                     break;
                 }
 
-                A7670C_NopDelay(0x3fffff);
+                A7670C_NopDelay(0x3ffff);
             }while(1);
 
 #if defined(MQTT_RESUB_ON_PUB)
@@ -241,6 +241,7 @@ int MQTT_Reset(void){
     if(A7670c_result!=kA7670C_Result_OK){
         /*启动4G模块失败，直接跳转到应用中*/
         Board_Reboot();
+        return 0;
     }
 
     //A7670C_MQTT_Init(&session, A7670C_MQTT__RxDataHandler, 0, A7670C_MQTT__OnConnectLost);
@@ -260,6 +261,7 @@ int MQTT_Reset(void){
                                      , global->mqtt.Password);
         if(nRetry-- ==0){
             Board_Reboot();
+            return 0;
         }
         os_thread_mdelay(1000);
     }
@@ -271,6 +273,7 @@ int MQTT_Reset(void){
         printf("MQTT Sub Downstream Topic Result: %d\n", result);
         if(nRetry-- ==0){
             Board_Reboot();
+            return 0;
         }
         os_thread_mdelay(1000);
     }

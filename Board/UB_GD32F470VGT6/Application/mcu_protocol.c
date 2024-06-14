@@ -25,8 +25,9 @@ static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
         case kMCU_PROTOCOL_DU_CAN:{
             int du_size = MCU_PROTOCOL_DU_SIZE_GET(protocol);
 //            sdk_hex_dump("[MCU_CAN]", MCU_PROTOCOL_DU_GET(protocol), du_size);
-            os_printf("[GD303] PUBLISH CAN!!!\n");
             MQTT_Publish(MCU_PROTOCOL_DU_GET(protocol), du_size);
+            os_printf("[GD303] PUBLISH CAN!!!\n");
+            for(int i=0; i<0x3ffff; i++);
             break;
         }
         default:

@@ -83,8 +83,9 @@ void A7670C_UnLock(void){
 
 void A7670C_Reset(void){
     A7670C__Instance.power_reset->on();
-    A7670C_NopDelay(0x3FFFF);
+    A7670C_DelayMS(1000);
     A7670C__Instance.power_reset->off();
+    A7670C_DelayMS(2000);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -172,7 +173,7 @@ A7670C_Result A7670C_TimedWait(os_tick_t ticks)
 {
     os_err_t  err = A7670C__Instance.IO->wait(ticks);
     if(err==OS_ETIMEOUT){
-        printf("Thd:%s A7670C_TimedWait Timeout!\n", os_thread_self()->name);
+        printf("[A7670C_COM] Thd:%s A7670C_TimedWait Timeout!\n", os_thread_self()->name);
     }
     return (err==OS_ETIMEOUT)?kA7670C_Result_TIMEOUT:kA7670C_Result_OK;
 }

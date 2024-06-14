@@ -44,11 +44,13 @@ OF SUCH DAMAGE.
 */
 void NMI_Handler(void)
 {
+    os_interrupt_enter();
     printf("NMI_Handler\n");
     /* if NMI exception occurs, go to infinite loop */
 //    while(1) {
 //    }
-    HardFault_Handler();
+    NVIC_SystemReset();
+    os_interrupt_exit();
 }
 
 /*!
@@ -72,11 +74,12 @@ void NMI_Handler(void)
 */
 void MemManage_Handler(void)
 {
-
+    os_interrupt_enter();
     /* if Memory Manage exception occurs, go to infinite loop */
     printf("MemManage_Handler\n");
     while(1) {
     }
+    os_interrupt_exit();
 
 }
 
@@ -93,7 +96,8 @@ void BusFault_Handler(void)
 //    while(1) {
 //    }
     printf("BusFault_Handler\n");
-    HardFault_Handler();
+    NVIC_SystemReset();
+//    HardFault_Handler();
     os_interrupt_exit();
 }
 

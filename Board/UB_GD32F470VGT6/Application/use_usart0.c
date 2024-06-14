@@ -35,7 +35,9 @@ static void USART0_RxThread_Entry(void* p)
         }
 
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "net_reboot")!=-1){
+            printf("[USE_USART0] A7670C Before Reset Power Status:%d\n", A7670C_IsPowerOn());
             A7670C_Reset();
+            printf("[USE_USART0] A7670C After Reset Power Status:%d\n", A7670C_IsPowerOn());
         }else
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "reboot")!=-1){
             cpu_reboot();
