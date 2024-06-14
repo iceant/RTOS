@@ -31,7 +31,7 @@ typedef struct USE_CAN0_Snapshot_S{
 ////
 #define USE_CAN0_RX_THREAD_STACK_SIZE   1024
 #define USE_CAN0_RX_OBJECT_SIZE         sizeof(USE_CAN0_RxRecord_T)
-#define USE_CAN0_RX_OBJECT_COUNT        100
+#define USE_CAN0_RX_OBJECT_COUNT        500
 #define USE_CAN0_RX_RING_SIZE           (USE_CAN0_RX_OBJECT_COUNT * USE_CAN0_RX_OBJECT_SIZE)
 
 

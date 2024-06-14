@@ -77,8 +77,7 @@ void MemManage_Handler(void)
     os_interrupt_enter();
     /* if Memory Manage exception occurs, go to infinite loop */
     printf("MemManage_Handler\n");
-    while(1) {
-    }
+    NVIC_SystemReset();
     os_interrupt_exit();
 
 }

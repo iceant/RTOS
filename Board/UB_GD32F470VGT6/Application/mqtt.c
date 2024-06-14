@@ -65,22 +65,12 @@ static void tx_thread_entry(void* p){
     MQTT_TxThreadReady = true;
     while(1){
 
-        while(read_idx==write_idx){
-            os_semaphore_take(&read_lock, OS_WAIT_INFINITY);
-        }
+        os_semaphore_take(&read_lock, OS_WAIT_INFINITY);
 
 //        printf("[MQTT] TX Thread: read_idx=%d, write_idx=%d\r\n", read_idx, write_idx);
 
         while(read_idx!=write_idx){
             mqtt_tx_task_t* task = &tx_tasks[read_idx];
-
-            int next_read_idx = read_idx+1;
-            if(next_read_idx>=TX_TASK_COUNT){
-                next_read_idx = 0;
-            }
-
-            read_idx = next_read_idx;
-
             global_t* global = global_get();
 
 #if defined(MQTT_RESUB_ON_PUB)
@@ -106,7 +96,14 @@ static void tx_thread_entry(void* p){
                     printf("[MQTT] Publish Failed!\r\n");
                     A7670C_MQTT__OnConnectLost();
                 }else{
-                    printf("MQTT SEND: read_idx = %d/%d, buffer=%08x, size=%d\n", read_idx, TX_TASK_COUNT, (uint32_t)task->tx_buffer, task->tx_data_size);
+                    printf("MQTT SEND SUCCESS: read_idx = %d/%d, buffer=%08x, size=%d\n", read_idx, TX_TASK_COUNT, (uint32_t)task->tx_buffer, task->tx_data_size);
+
+                    int next_read_idx = read_idx+1;
+                    if(next_read_idx>=TX_TASK_COUNT){
+                        next_read_idx = 0;
+                    }
+                    read_idx = next_read_idx;
+
 
                     break;
                 }
@@ -115,7 +112,6 @@ static void tx_thread_entry(void* p){
                     break;
                 }
 
-                A7670C_NopDelay(0x3ffff);
             }while(1);
 
 #if defined(MQTT_RESUB_ON_PUB)
@@ -202,10 +198,12 @@ int MQTT_Init(void)
 
 int MQTT_Publish(void* data, int data_size)
 {
-    if(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY) {
-        printf("[MQTT] A7670C Is Not Ready!!!\n");
-        return -1;
-    }
+//    if(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY) {
+//        printf("[MQTT] A7670C Is Not Ready!!!\n");
+//        return -1;
+//    }
+
+    printf("[MQTT] PUBLISH r_idx:%d, w_idx:%d\n", read_idx, write_idx);
 
     int next_write_idx = write_idx + 1;
     if(next_write_idx>=TX_TASK_COUNT){

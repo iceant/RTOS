@@ -187,8 +187,6 @@ void BSP_A7670C_Init(void)
     
     A7670C_Init(&A7670C_power_en, &A7670C_power_key, &A7670C_power_status, &A7670C_power_reset, &A7670C_IO);
 
-    A7670C_Reset();
-    
     os_thread_init(&A7670C_RxThread, "A7670C_RxThd", A7670C_IO_RxThd, 0
             , A7670C_RxThdStack, sizeof(A7670C_RxThdStack)
             , 20, 10);
