@@ -277,8 +277,6 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     unsigned long cfsr;
     unsigned long bus_fault_address;
     unsigned long memmanage_fault_address;
-    unsigned long MSP;
-    unsigned long PSP;
     
     //
     // In case we received a hard fault because of a breakpoint instruction, we return.
@@ -293,8 +291,6 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     }
     
     #if DEBUG
-    // Read NVIC registers
-    //
     //
     // Read NVIC registers
     //
@@ -347,8 +343,6 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     stacked_lr = ((unsigned long)stack_p[5]);
     stacked_pc = ((unsigned long)stack_p[6]);
     stacked_psr = ((unsigned long)stack_p[7]);
-    MSP = cpu_get_MSP();
-    PSP = cpu_get_PSP();
 
     printf("[HardFault]\n");
     printf("-- Stack Frame --\n");
@@ -370,23 +364,22 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
     printf("-- MISC --\n");
     printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
-    printf("MSP:0x%08lx\n", MSP);
-    printf("PSP:0x%08lx\n", PSP);
+    printf("Stack:0x%p\n", stack_p);
     
     
-    { // Stack Dump
-        extern void *_estack;
-        printf("-- Stack Dump --\n");
-        int i = 0;
-        uint32_t *p = (uint32_t *)&stack_p[8];
-        uint32_t *q = (uint32_t *)&_estack;
-        while((p < q) && (i < 32))
-        {
-            if ((i++ & 7) == 0) putchar('\n');
-            printf(" %08X", *p++);
-        }
-        putchar('\n');
-    }
+//    { // Stack Dump
+//        extern void *_estack;
+//        printf("-- Stack Dump --\n");
+//        int i = 0;
+//        uint32_t *p = (uint32_t *)&stack_p[8];
+//        uint32_t *q = (uint32_t *)&_estack;
+//        while((p < q) && (i < 32))
+//        {
+//            if ((i++ & 7) == 0) putchar('\n');
+//            printf(" %08X", *p++);
+//        }
+//        putchar('\n');
+//    }
 //
 //    { // Instruction Dump
 //        printf("-- Instruction Dump --\n");
