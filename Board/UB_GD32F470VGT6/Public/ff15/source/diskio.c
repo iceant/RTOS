@@ -21,6 +21,13 @@
 
 extern sd_card_info_struct sd_cardinfo;
 
+#if defined(ENABLE_SDCARD_DEBUG)
+#define DEBUG_PRINT printf
+#else
+C__STATIC_FORCEINLINE void dummy_printf(const char* fmt, ...){return;}
+#define DEBUG_PRINT(...) dummy_printf(__VA_ARGS__)
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static int RAM_disk_status(void){
@@ -45,7 +52,7 @@ DSTATUS disk_status (
 	DSTATUS stat = RES_OK;
 	int result;
 
-    printf("[DISK_IO] disk_status drive: %d\n", pdrv);
+    DEBUG_PRINT("[DISK_IO] disk_status drive: %d\n", pdrv);
 
 	switch (pdrv) {
 	case DEV_RAM :
@@ -97,7 +104,7 @@ DSTATUS disk_initialize (
 	DSTATUS stat=RES_OK;
 	int result;
 
-    printf("[DISK_IO] disk_initialize drive: %d\n", pdrv);
+    DEBUG_PRINT("[DISK_IO] disk_initialize drive: %d\n", pdrv);
 
 	switch (pdrv) {
 	case DEV_RAM :
@@ -141,7 +148,7 @@ DRESULT disk_read (
 	int result;
     sd_error_enum SD_stat = SD_OK;
 
-    printf("[DISK_IO] disk_read drive: %d, sector:%d, block_size:%d count:%d\n", pdrv, sector
+    DEBUG_PRINT("[DISK_IO] disk_read drive: %d, sector:%d, block_size:%d count:%d\n", pdrv, sector
            , sd_cardinfo.card_blocksize
            , count);
 
@@ -206,7 +213,7 @@ DRESULT disk_write (
 	int result;
     sd_error_enum SD_stat = SD_OK;
 
-    printf("[DISK_IO] disk_write drive: %d, sector:%d, block_size:%d count:%d\n", pdrv, sector
+    DEBUG_PRINT("[DISK_IO] disk_write drive: %d, sector:%d, block_size:%d count:%d\n", pdrv, sector
             , sd_cardinfo.card_blocksize
             , count);
 
@@ -270,7 +277,7 @@ DRESULT disk_ioctl (
 	DRESULT res;
 	int result;
 
-    printf("[DISK_IO] disk_ioctl drive: %d, CMD:%d\n", pdrv, cmd);
+    DEBUG_PRINT("[DISK_IO] disk_ioctl drive: %d, CMD:%d\n", pdrv, cmd);
 
 	switch (pdrv) {
 	case DEV_RAM :

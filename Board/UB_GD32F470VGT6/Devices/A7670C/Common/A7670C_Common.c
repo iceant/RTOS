@@ -83,7 +83,7 @@ void A7670C_UnLock(void){
 
 void A7670C_Reset(void){
     A7670C__Instance.power_reset->on();
-    A7670C_DelayMS(1000);
+    A7670C_DelayMS(2500);
     A7670C__Instance.power_reset->off();
     A7670C_DelayMS(2000);
 }
