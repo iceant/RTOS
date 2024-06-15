@@ -70,51 +70,51 @@ void NMI_Handler(void)
   * @param  None
   * @retval None
   */
-void MemManage_Handler(void)
-{
-    os_interrupt_enter();
-    os_printf("MemManage_Handler\r\n");
-    os_interrupt_exit();
-    
-    HardFault_Handler();
-    
-  /* Go to infinite loop when Memory Manage exception occurs */
-  while (1)
-  {
-  }
-}
+//void MemManage_Handler(void)
+//{
+//    os_interrupt_enter();
+//    os_printf("MemManage_Handler\r\n");
+//    os_interrupt_exit();
+//
+//    HardFault_Handler();
+//
+//  /* Go to infinite loop when Memory Manage exception occurs */
+//  while (1)
+//  {
+//  }
+//}
 
 /**
   * @brief  This function handles Bus Fault exception.
   * @param  None
   * @retval None
   */
-void BusFault_Handler(void)
-{
-    os_interrupt_enter();
-    os_printf("BusFault_Handler\r\n");
-    os_interrupt_exit();
-  /* Go to infinite loop when Bus Fault exception occurs */
-  while (1)
-  {
-  }
-}
+//void BusFault_Handler(void)
+//{
+//    os_interrupt_enter();
+//    os_printf("BusFault_Handler\r\n");
+//    os_interrupt_exit();
+//  /* Go to infinite loop when Bus Fault exception occurs */
+//  while (1)
+//  {
+//  }
+//}
 
 /**
   * @brief  This function handles Usage Fault exception.
   * @param  None
   * @retval None
   */
-void UsageFault_Handler(void)
-{
-    os_interrupt_enter();
-    os_printf("UsageFault_Handler\r\n");
-    os_interrupt_exit();
-  /* Go to infinite loop when Usage Fault exception occurs */
-  while (1)
-  {
-  }
-}
+//void UsageFault_Handler(void)
+//{
+//    os_interrupt_enter();
+//    os_printf("UsageFault_Handler\r\n");
+//    os_interrupt_exit();
+//  /* Go to infinite loop when Usage Fault exception occurs */
+//  while (1)
+//  {
+//  }
+//}
 
 ///**
 //  * @brief  This function handles SVCall exception.

@@ -13,9 +13,15 @@
 
 
 #define OS_CONTAINER_OF(ptr, type, member) \
-    ((type *)((char *)(ptr) - (size_t)(&((type *)0)->member)))
+    ((type *)((char *)(ptr) - (os_uint_t)(&((type *)0)->member)))
 
 
 #define OS_MIN(a, b) (((a) > (b))?(b):(a))
+
+////////////////////////////////////////////////////////////////////////////////
+//// https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms
+//// http://jhnet.co.uk/articles/cpp_magic/map_working.txt
+
+
 
 #endif /*INCLUDED_OS_MACROS_H*/
