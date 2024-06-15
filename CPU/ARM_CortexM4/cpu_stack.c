@@ -108,6 +108,7 @@ int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
     }else{
         cpu_stack_switch_in_privilege();
     }
+
     return 0;
 }
 

@@ -28,7 +28,6 @@ static os_thread_t Task_TimeSync_Thread;
 static int Task_TimeSync_Sync(void){
     int nRetry = RETRY_MAX;
     A7670C_Result result;
-    A7670C_CCLK_Read_Response CCLK_Read_Response;
     A7670C_CNTP_Write_Response CNTP_Write_Response;
     A7670C_CNTP_Exec_Response CNTP_Exec_Response;
     while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
@@ -42,7 +41,6 @@ static int Task_TimeSync_Sync(void){
         if(nRetry==0) {
             return -1;
         }
-        A7670C_NopDelay(TIME_DELAY);
     }while(nRetry--);
 
     nRetry = RETRY_MAX;
@@ -55,13 +53,13 @@ static int Task_TimeSync_Sync(void){
             if(nRetry==0) {
                 return -2;
             }
-            A7670C_NopDelay(TIME_DELAY);
         }else{
             break;
         }
     } while (nRetry--);
 
 
+    A7670C_CCLK_Read_Response CCLK_Read_Response;
     nRetry=RETRY_MAX;
     do {
         // 3. 读取时间
@@ -71,7 +69,6 @@ static int Task_TimeSync_Sync(void){
             if(nRetry==0) {
                 return -3;
             }
-            A7670C_NopDelay(TIME_DELAY);
         }else{
             break;
         }
@@ -83,7 +80,7 @@ static int Task_TimeSync_Sync(void){
     A7670C_CCLK_ToDateTime(&datetime, &CCLK_Read_Response);
     
     if(datetime.year==2070 && datetime.month==1 && datetime.day==1 && datetime.hour==0){
-        return -3;
+        return -4;
     }
 
     // 5. 设置到RTC中

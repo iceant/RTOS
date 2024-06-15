@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "global.h"
+#include <logger.h>
 ////////////////////////////////////////////////////////////////////////////////
 #define TX_BUFFER_SZ 	(1024*4)
 #define TX_TASK_COUNT	50
@@ -94,6 +95,7 @@ static void tx_thread_entry(void* p){
 
                 if(result!=kA7670C_Result_OK){
                     printf("[MQTT] Publish Failed!\r\n");
+                    LOG_DEBUG("A7670C MQTT Publish Failed, Try to Reconnect!!!");
                     A7670C_MQTT__OnConnectLost();
                 }else{
                     printf("MQTT SEND SUCCESS: read_idx = %d/%d, buffer=%08x, size=%d\n", read_idx, TX_TASK_COUNT, (uint32_t)task->tx_buffer, task->tx_data_size);
@@ -167,7 +169,6 @@ int MQTT_Init(void)
         if(nRetry-- ==0){
             return -1;
         }
-        A7670C_NopDelay(0x3fffff);
         result = A7670C_MQTT_Connect(&session, global->mqtt.ClientID
                 , global->mqtt.Server
                 ,  64800, true
@@ -184,7 +185,6 @@ int MQTT_Init(void)
         if(nRetry-- ==0){
             return -2;
         }
-        A7670C_NopDelay(0x3fffff);
         result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream
                                                , kA7670C_Qos_0, kA7670C_Bool_Unspecified);
     }
@@ -231,7 +231,7 @@ int MQTT_Reset(void){
     printf("MQTT Try To Reconnect...\r\n");
     global_t* global = global_get();
 
-//    A7670C_Reset();
+    A7670C_Reset();
 
     /*启动4G模块*/
     A7670C_Result A7670c_result = A7670C_Startup();

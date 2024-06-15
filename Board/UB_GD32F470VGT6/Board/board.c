@@ -135,8 +135,8 @@ void Board_Init(void){
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk;
 
-    SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk
-                  |  SCB_CCR_UNALIGN_TRP_Msk;
+//    SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk
+//                  |  SCB_CCR_UNALIGN_TRP_Msk;
 
     SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk
                   |  SCB_SHCSR_BUSFAULTENA_Msk

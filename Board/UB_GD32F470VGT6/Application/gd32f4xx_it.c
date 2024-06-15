@@ -42,15 +42,14 @@ OF SUCH DAMAGE.
     \param[out] none
     \retval     none
 */
-void NMI_Handler(void)
-{
-    printf("NMI_Handler\n");
-    /* if NMI exception occurs, go to infinite loop */
-    while(1) {
-    }
+//void NMI_Handler(void)
+//{
+//    printf("NMI_Handler\n");
+//    /* if NMI exception occurs, go to infinite loop */
+////    while(1) {
+////    }
 //    NVIC_SystemReset();
-
-}
+//}
 
 /*!
     \brief      this function handles HardFault exception

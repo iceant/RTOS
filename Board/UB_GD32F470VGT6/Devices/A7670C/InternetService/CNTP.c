@@ -73,8 +73,6 @@ static A7670C_RxHandler_Result CNTP_Exec_Handler(sdk_ringbuffer_t * buffer, void
 {
     A7670C_CNTP_Exec_Response* response = (A7670C_CNTP_Exec_Response*)ud;
 
-    sdk_hex_dump("CNTP_Exec", buffer->buffer, sdk_ringbuffer_used(buffer));
-
     if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
         response->code = kA7670C_Response_Code_OK;
         response->err_code = 0;

@@ -43,6 +43,23 @@
 
 void HardFault_Handler(void){
     C__ASM volatile(
+    "        CPSID I                                    \n"
+    "        TST LR, #4                                 \n"
+    "        ITE EQ                                     \n"
+    "        MRSEQ R0, MSP                              \n"
+    "        MRSNE R0, PSP                              \n"
+    "        MOV R1, LR                                 \n"
+    "        LDR R2, =HardFault_Handler_C               \n"
+    "        BX R2                                      \n"
+    "        .align 4"
+    :
+    :
+    : "r0", "r1", "r2", "memory");
+}
+
+void NMI_Handler(void){
+    C__ASM volatile(
+    "        CPSID I                                    \n"
     "        TST LR, #4                                 \n"
     "        ITE EQ                                     \n"
     "        MRSEQ R0, MSP                              \n"
@@ -59,6 +76,7 @@ void HardFault_Handler(void){
 
 void BusFault_Handler(void){
     C__ASM volatile(
+            "        CPSID I                                    \n"
             "        TST LR, #4                                 \n"
             "        ITE EQ                                     \n"
             "        MRSEQ R0, MSP                              \n"
@@ -74,6 +92,7 @@ void BusFault_Handler(void){
 
 void UsageFault_Handler(void){
     C__ASM volatile(
+            "        CPSID I                                    \n"
             "        TST LR, #4                                 \n"
             "        ITE EQ                                     \n"
             "        MRSEQ R0, MSP                              \n"
@@ -89,6 +108,7 @@ void UsageFault_Handler(void){
 
 void MemManage_Handler(void){
     C__ASM volatile(
+            "        CPSID I                                    \n"
             "        TST LR, #4                                 \n"
             "        ITE EQ                                     \n"
             "        MRSEQ R0, MSP                              \n"

@@ -53,13 +53,11 @@ void SVC_Handler_C(unsigned  int * svc_args)
     unsigned char svc_number;
     svc_number = ((char*)svc_args[6])[-2];
     if(svc_number==0){
-//        printf("svc_0: %x\r\n", svc_exc_return);
         svc0();
     }else{
         cpu_svc_handler_t Function = cpu_svc__table[svc_number];
         if(Function){
             Function();
-            //printf("svc_exc_return: %x\r\n", svc_exc_return);
         }else{
             printf("ERROR: Unknown SVC service number.\n");
             printf(" - SVC number 0x%x\n", svc_number);

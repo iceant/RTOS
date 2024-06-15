@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sdk_float_fmt.h>
 #include <meter_protocol.h>
-#include <exception_test.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -44,12 +43,17 @@ static void BootThread_Entry(void* p){
         Board_Reboot();
         return;
     }
+    global_load_net_info();
 #endif
 
-    /* 加载全局数据, 可能读取 IMEI/ICCID */
-    global_init();
 
 #if defined(ENABLE_4G)
+    /* 启动网络对时 */
+#if defined(ENABLE_DS1307)
+    Task_TimeSync_Init();
+    os_thread_mdelay(2000);
+#endif
+
     #if defined(ENABLE_MQTT)
     /*启动MQTT*/
     err = MQTT_Init();
@@ -57,12 +61,7 @@ static void BootThread_Entry(void* p){
         Board_Reboot();
     }
     #endif /*defined(ENABLE_MQTT)*/
-    
-    /* 启动网络对时 */
-    #if defined(ENABLE_DS1307)
-    Task_TimeSync_Init();
-    #endif
-    
+
     Task_HeartBeat_Init();
 #endif
 
@@ -129,12 +128,16 @@ int main(void)
     /* startup */
     Board_Init();
 
+    /* 加载全局数据 */
+    global_init();
+
     /*初始化终端*/
     USE_USART0_Init();
 
 #if defined(ENABLE_SDCARD)
     USE_SD_CARD_Init();
 #endif
+
 
 #if defined(ENABLE_KEY)
     USE_KEY_Init();

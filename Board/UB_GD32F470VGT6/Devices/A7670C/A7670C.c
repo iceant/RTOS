@@ -64,15 +64,11 @@ __A7670C__Boot:
 //        A7670C_PowerOn();
 //        A7670C_NopDelay(DELAY_TIME);
 //    }
-    if(A7670C_IsPowerOn()) {
-        os_printf("[A7670C] Reset!\r\n");
-        A7670C_Reset();
-    }else{
-        while(!A7670C_IsPowerOn()){
-            os_printf("[A7670C] Power is Off!\r\n");
-            A7670C_PowerOn();
-            A7670C_DelayMS(2000);
-        }
+
+
+    while(!A7670C_IsPowerOn()){
+        os_printf("[A7670C] Power is Off!\r\n");
+        A7670C_PowerOn();
     }
 
     while(1){

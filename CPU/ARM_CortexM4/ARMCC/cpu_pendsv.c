@@ -46,16 +46,16 @@ __PendSV_SwitchTo
         LDMIA R0!, {R2-R11}
         MOV LR, R2
         MSR CONTROL, R3
-        dmb
-        isb
+        DMB
+        ISB
 #ifdef __FPU_PRESENT
         TST LR, #0x10
         IT EQ
         VLDMIAEQ R0!, {S16-S31}
 #endif
         MSR PSP, R0
-        dmb
-        isb
+        DMB
+        ISB
 
 __PendSV_Exit
         MSR PRIMASK, R1

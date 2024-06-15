@@ -556,7 +556,7 @@ A7670C_Result A7670C_MQTT_Publish(
     while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
     
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
-        nRetry = 3;
+        nRetry = 1;
         while(1){
             A7670C_CMQTTTOPIC_Write_Response CMQTTTOPIC_Write_Response;
             result = A7670C_CMQTTTOPIC_Write(&CMQTTTOPIC_Write_Response, session->client_index, topic, 12000);
@@ -575,7 +575,7 @@ A7670C_Result A7670C_MQTT_Publish(
         }
         session->state = kA7670C_MQTT_State_TOPIC;
         
-        nRetry = 3;
+        nRetry = 1;
         while(1){
             A7670C_CMQTTPAYLOAD_Write_Response CMQTTPAYLOAD_Write_Response;
             result = A7670C_CMQTTPAYLOAD_Write(&CMQTTPAYLOAD_Write_Response, session->client_index, data, data_size, 24000);
@@ -594,7 +594,7 @@ A7670C_Result A7670C_MQTT_Publish(
         }
         session->state = kA7670C_MQTT_State_PAYLOAD;
         
-        nRetry = 3;
+        nRetry = 1;
         while(1){
             A7670C_CMQTTPUB_Write_Response CMQTTPUB_Write_Response;
             result = A7670C_CMQTTPUB_Write(&CMQTTPUB_Write_Response, session->client_index, qos, pub_timeout, retained, dup, 24000);

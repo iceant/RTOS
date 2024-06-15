@@ -51,17 +51,19 @@ A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7
 
 void A7670C_PowerOn(void)
 {
-    A7670C__Instance.power_en->on();
-    A7670C_NopDelay(0x3FFFFFF);
+
+//    A7670C__Instance.power_key->off();
+//    A7670C_DelayMS(2000);
+
     A7670C__Instance.power_key->on();
-    A7670C_NopDelay(0x3FFFFFF);
-    A7670C__Instance.power_key->off();
+    A7670C_DelayMS(2000);
 }
 
 void A7670C_PowerOff(void)
 {
-    A7670C__Instance.power_en->off();
+//    A7670C__Instance.power_en->off();
     A7670C__Instance.power_key->off();
+    A7670C_DelayMS(2000);
 }
 
 os_bool_t A7670C_IsPowerOn(void)

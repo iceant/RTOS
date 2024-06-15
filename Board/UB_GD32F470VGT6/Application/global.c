@@ -79,7 +79,12 @@ static void global_set_str(char* dst, char* s){
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
+int global_load_net_info(void){
+#if defined(ENABLE_4G)
+    global__fetch_IMEI_ICCID();
+#endif
+    return 0;
+}
 
 int global_init(void){
     if(global__state==GLOBAL_STATE_IDLE){
@@ -92,10 +97,6 @@ int global_init(void){
             global__instance.meter.voltage_ratio=1.0f;
             printf("[GLOBAL] No Saved Value!\n");
         }
-
-#if defined(ENABLE_4G)
-        global__fetch_IMEI_ICCID();
-#endif
 
         global_set_str(global__instance.mqtt.ClientID, BSP_CPUID_Read());
         global_set_str(global__instance.mqtt.Server, GLOBAL_MQTT_SERVER);

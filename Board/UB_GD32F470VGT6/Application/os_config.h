@@ -24,6 +24,7 @@
 #define ENABLE_SDCARD_INFO
 #define ENABLE_FAT_FILE_SYSTEM
 #define ENABLE_FATFS_TEST
+//#define ENABLE_LOGGER
 
 
 ////////////////////////////////////////////////////////////////////////////////

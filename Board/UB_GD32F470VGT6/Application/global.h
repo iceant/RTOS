@@ -79,6 +79,8 @@ typedef struct global_s{
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+int global_load_net_info(void);
+
 int global_init(void);
 
 void global_show(void);
