@@ -37,6 +37,7 @@ static void BootThread_Entry(void* p){
     OLED_ShowString(0, 0, "System Booting...", 12);
 #endif
 
+
 #if defined(ENABLE_4G)
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){

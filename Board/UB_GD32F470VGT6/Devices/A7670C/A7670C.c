@@ -54,7 +54,7 @@ A7670C_Result A7670C_Startup(void){
     A7670C_Result result;
     int nRetry = 0;
     printf("[A7670C] A7670C_Startup\n");
-    A7670C_SetStartupState(A7670C_STARTUP_STATE_UNINITIALIZED);
+
 
 __A7670C__Boot:
 //    while(!A7670C_IsPowerOn()){
@@ -65,10 +65,31 @@ __A7670C__Boot:
 //        A7670C_NopDelay(DELAY_TIME);
 //    }
 
-
     while(!A7670C_IsPowerOn()){
         os_printf("[A7670C] Power is Off!\r\n");
         A7670C_PowerOn();
+    }
+
+    if(A7670C_GetStartupState()==A7670C_STARTUP_STATE_UNINITIALIZED){
+        /*这是重启*/
+        while(1){
+            os_printf("A7670C wait for AT ready...\n");
+            result = A7670C_AT(1000);
+            if(result==kA7670C_Result_OK){
+                break;
+            }
+            if(nRetry++==10){
+                printf("Try from Power On...\n");
+                goto __A7670C__Boot;
+            }
+            A7670C_DelayMS(2000);
+        }
+
+    }else{
+        if(A7670C_IsPowerOn()){
+            printf("[A7670C] Reset...");
+            A7670C_Reset();
+        }
     }
 
     while(1){
@@ -81,8 +102,11 @@ __A7670C__Boot:
             printf("Try from Power On...\n");
             goto __A7670C__Boot;
         }
-        A7670C_NopDelay(DELAY_TIME);
+        A7670C_DelayMS(2000);
     }
+
+
+    A7670C_SetStartupState(A7670C_STARTUP_STATE_UNINITIALIZED);
 
     nRetry = 0;
     while(1){

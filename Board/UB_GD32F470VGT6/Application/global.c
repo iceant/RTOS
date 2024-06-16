@@ -83,6 +83,7 @@ int global_load_net_info(void){
 #if defined(ENABLE_4G)
     global__fetch_IMEI_ICCID();
 #endif
+    global_show();
     return 0;
 }
 
@@ -116,7 +117,7 @@ int global_init(void){
         global__state = GLOBAL_STATE_INIT;
     }
 
-    global_show();
+//    global_show();
 
     return 0;
 }

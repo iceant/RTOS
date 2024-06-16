@@ -24,7 +24,7 @@ static os_mutex_t A7670C__mutex;
 static char A7670C__Printf_Buffer[256];
 
 static os_list_t A7670C__RxHandler_List;
-
+static int A7670C_Startup_State=A7670C_STARTUP_STATE_UNINITIALIZED;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -52,8 +52,8 @@ A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7
 void A7670C_PowerOn(void)
 {
 
-//    A7670C__Instance.power_key->off();
-//    A7670C_DelayMS(2000);
+    A7670C__Instance.power_key->off();
+    A7670C_DelayMS(2000);
 
     A7670C__Instance.power_key->on();
     A7670C_DelayMS(2000);
@@ -91,7 +91,7 @@ void A7670C_Reset(void){
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static int A7670C_Startup_State=A7670C_STARTUP_STATE_UNINITIALIZED;
+
 
 int A7670C_GetStartupState(void){
     return A7670C_Startup_State;
@@ -184,21 +184,29 @@ void A7670C_Notify(void){
     A7670C__Instance.IO->notify();
 }
 
+static int A7670C__LatestBufferSize = 0;
+static int A7670C__SameSizeCount = 0;
+
 A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
 {
+//    sdk_hex_dump("[A7670C_HREQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
     os_list_t * head = &A7670C__RxHandler_List;
     os_list_node_t * node;
-    A7670C_RxHandler_Result result = kA7670C_RxHandler_Result_CONTINUE;
+
+    A7670C_RxHandler_Result result = kA7670C_RxHandler_Result_SKIP;
     for(node = OS_LIST_NEXT(head); node!=head; node = OS_LIST_NEXT(node)){
         A7670C_RxHandler_Register_T* Register = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(Register->handler){
             result = Register->handler(buffer, Register->userdata);
-            if(result!=kA7670C_RxHandler_Result_SKIP && result!=kA7670C_RxHandler_Result_CONTINUE /* 需要更多信息来处理 */){
+            if(result==kA7670C_RxHandler_Result_DONE){
+                sdk_ringbuffer_reset(buffer);
                 return result;
             }
         }
     }
+
     return result;
+
 }
 
 void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register){

@@ -44,11 +44,14 @@ OF SUCH DAMAGE.
 */
 //void NMI_Handler(void)
 //{
+//    cpu_disable_irq();
 //    printf("NMI_Handler\n");
 //    /* if NMI exception occurs, go to infinite loop */
 ////    while(1) {
 ////    }
-//    NVIC_SystemReset();
+//    while(1);
+//
+////    NVIC_SystemReset();
 //}
 
 /*!
@@ -70,15 +73,14 @@ OF SUCH DAMAGE.
     \param[out] none
     \retval     none
 */
-//void MemManage_Handler(void)
-//{
-//    os_interrupt_enter();
-//    /* if Memory Manage exception occurs, go to infinite loop */
-//    printf("MemManage_Handler\n");
-//    NVIC_SystemReset();
-//    os_interrupt_exit();
-//
-//}
+void MemManage_Handler(void)
+{
+    cpu_disable_irq();
+
+    /* if Memory Manage exception occurs, go to infinite loop */
+    printf("MemManage_Handler\n");
+    while(1);
+}
 
 /*!
     \brief      this function handles BusFault exception
@@ -86,17 +88,12 @@ OF SUCH DAMAGE.
     \param[out] none
     \retval     none
 */
-//void BusFault_Handler(void)
-//{
-//    os_interrupt_enter();
-//    /* if Bus Fault exception occurs, go to infinite loop */
-////    while(1) {
-////    }
-//    printf("BusFault_Handler\n");
-//    NVIC_SystemReset();
-////    HardFault_Handler();
-//    os_interrupt_exit();
-//}
+void BusFault_Handler(void)
+{
+    cpu_disable_irq();
+    printf("BusFault_Handler\n");
+    while(1);
+}
 
 /*!
     \brief      this function handles UsageFault exception
@@ -104,15 +101,12 @@ OF SUCH DAMAGE.
     \param[out] none
     \retval     none
 */
-//void UsageFault_Handler(void)
-//{
-//    os_interrupt_enter();
-//    /* if Usage Fault exception occurs, go to infinite loop */
-////    while(1) {
-////    }
-//    printf("UsageFault_Handler\n");
-//    os_interrupt_exit();
-//}
+void UsageFault_Handler(void)
+{
+    cpu_disable_irq();
+    printf("UsageFault_Handler\n");
+    while(1);
+}
 
 /*!
     \brief      this function handles SVC exception
@@ -135,10 +129,9 @@ OF SUCH DAMAGE.
 */
 void DebugMon_Handler(void)
 {
-    os_interrupt_enter();
     printf("DebugMon_Handler\n");
     /* if DebugMon exception occurs, go to infinite loop */
-    os_interrupt_exit();
+    while(1);
 }
 
 /*!

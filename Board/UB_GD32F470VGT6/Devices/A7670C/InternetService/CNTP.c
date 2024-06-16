@@ -73,6 +73,20 @@ static A7670C_RxHandler_Result CNTP_Exec_Handler(sdk_ringbuffer_t * buffer, void
 {
     A7670C_CNTP_Exec_Response* response = (A7670C_CNTP_Exec_Response*)ud;
 
+    sdk_ringbuffer_text_t err_code_text;
+    int res = sdk_ringbuffer_cut(&err_code_text, buffer, 0, sdk_ringbuffer_used(buffer), "+CNTP:", "\r\n");
+    if(res==0){
+        sdk_hex_dump("CNTP_Exec", buffer->buffer, sdk_ringbuffer_used(buffer));
+
+        response->code = kA7670C_Response_Code_OK;
+        response->err_code = sdk_ringbuffer_strtoul(buffer, err_code_text.start+6, 0, 10);
+
+        sdk_ringbuffer_reset(buffer);
+        A7670C_Notify();
+        return kA7670C_RxHandler_Result_DONE;
+    }
+
+
     if(sdk_ringbuffer_find_str(buffer, 0, "OK\r\n")!=-1){
         response->code = kA7670C_Response_Code_OK;
         response->err_code = 0;
@@ -81,18 +95,6 @@ static A7670C_RxHandler_Result CNTP_Exec_Handler(sdk_ringbuffer_t * buffer, void
         return kA7670C_RxHandler_Result_DONE;
     }
 
-    sdk_ringbuffer_text_t err_code_text;
-    int res = sdk_ringbuffer_cut(&err_code_text, buffer, 0, sdk_ringbuffer_used(buffer), "+CNTP: ", "\r\n");
-    if(res==0){
-        sdk_hex_dump("CNTP_Exec", buffer->buffer, sdk_ringbuffer_used(buffer));
-
-        response->code = kA7670C_Response_Code_OK;
-        response->err_code = sdk_ringbuffer_strtoul(buffer, err_code_text.start, 0, 10);
-
-        sdk_ringbuffer_reset(buffer);
-        A7670C_Notify();
-        return kA7670C_RxHandler_Result_DONE;
-    }
 
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1 /*接收结束: 错误*/){
         sdk_hex_dump("CNTP_Exec", buffer->buffer, sdk_ringbuffer_used(buffer));

@@ -23,6 +23,7 @@ typedef struct mqtt_tx_task_s{
 
 ////////////////////////////////////////////////////////////////////////////////
 static A7670C_MQTT_Session session;
+C__ALIGNED(OS_ALIGN_SIZE)
 static mqtt_tx_task_t tx_tasks[TX_TASK_COUNT];
 static volatile int write_idx;
 static volatile int read_idx;
@@ -72,6 +73,7 @@ static void tx_thread_entry(void* p){
 
         while(read_idx!=write_idx){
             mqtt_tx_task_t* task = &tx_tasks[read_idx];
+
             global_t* global = global_get();
 
 #if defined(MQTT_RESUB_ON_PUB)
@@ -98,14 +100,15 @@ static void tx_thread_entry(void* p){
                     LOG_DEBUG("A7670C MQTT Publish Failed, Try to Reconnect!!!");
                     A7670C_MQTT__OnConnectLost();
                 }else{
-                    printf("MQTT SEND SUCCESS: read_idx = %d/%d, buffer=%08x, size=%d\n", read_idx, TX_TASK_COUNT, (uint32_t)task->tx_buffer, task->tx_data_size);
+                    printf("MQTT SEND SUCCESS: read_idx = %d/%d, size=%d\n", read_idx, TX_TASK_COUNT, task->tx_data_size);
 
+                    os_critical_enter();
                     int next_read_idx = read_idx+1;
                     if(next_read_idx>=TX_TASK_COUNT){
                         next_read_idx = 0;
                     }
                     read_idx = next_read_idx;
-
+                    os_critical_leave();
 
                     break;
                 }
@@ -134,7 +137,18 @@ static void tx_thread_entry(void* p){
     }
 }
 
-
+//static A7670C_RxHandler_Result MQTT__CheckBootStatus(sdk_ringbuffer_t * buffer, void* ud){
+//    if(sdk_ringbuffer_find_str(buffer, 0, "+CGEV: EPS PDN ACT 1\r\n")!=-1){
+//        A7670C_Reset();
+//    }
+//    return kA7670C_RxHandler_Result_SKIP;
+//}
+//
+//static A7670C_RxHandler_Register_T BootStatusHandler={
+//        .handler=MQTT__CheckBootStatus,
+//        .userdata = 0,
+//        .node={0}
+//};
 ////////////////////////////////////////////////////////////////////////////////
 
 int MQTT_Init(void)
@@ -150,15 +164,10 @@ int MQTT_Init(void)
     global_t* global = global_get();
 
 
-
-    os_thread_init(&tx_thread, "MQTT_TX_THD", tx_thread_entry, 0
-            , stack, STACK_SIZE, 10
-            , 50);
-    os_thread_startup(&tx_thread);
-
-
-
     A7670C_MQTT_Init(&session, A7670C_MQTT__RxDataHandler, 0, A7670C_MQTT__OnConnectLost);
+
+//    A7670C_InsertRxHandlerTail(&BootStatusHandler);
+
     A7670C_Result result = A7670C_MQTT_Connect(&session, global->mqtt.ClientID
                                                , global->mqtt.Server
                                                ,  64800, true
@@ -191,7 +200,11 @@ int MQTT_Init(void)
 
 
     MQTT__cmd_info();
-//    printf("MQTT Init Done!\n");
+
+    os_thread_init(&tx_thread, "MQTT_TX_THD", tx_thread_entry, 0
+            , stack, STACK_SIZE, 20
+            , 20);
+    os_thread_startup(&tx_thread);
 
     return 0;
 }
@@ -203,8 +216,6 @@ int MQTT_Publish(void* data, int data_size)
 //        return -1;
 //    }
 
-    printf("[MQTT] PUBLISH r_idx:%d, w_idx:%d\n", read_idx, write_idx);
-
     int next_write_idx = write_idx + 1;
     if(next_write_idx>=TX_TASK_COUNT){
         next_write_idx = 0;
@@ -215,12 +226,14 @@ int MQTT_Publish(void* data, int data_size)
         os_semaphore_take(&write_lock, OS_WAIT_INFINITY);
     }
 
+    os_critical_enter();
     mqtt_tx_task_t* task = &tx_tasks[write_idx];
     memcpy(task->tx_buffer, data, data_size);
     task->tx_data_size = data_size;
-
     write_idx = next_write_idx;
+    os_critical_leave();
 
+    printf("[MQTT] PUBLISH r_idx:%d, w_idx:%d\n", read_idx, write_idx);
     os_semaphore_release(&read_lock);
 
     return 0;
@@ -230,8 +243,6 @@ int MQTT_Reset(void){
     int nRetry = 3;
     printf("MQTT Try To Reconnect...\r\n");
     global_t* global = global_get();
-
-    A7670C_Reset();
 
     /*启动4G模块*/
     A7670C_Result A7670c_result = A7670C_Startup();
