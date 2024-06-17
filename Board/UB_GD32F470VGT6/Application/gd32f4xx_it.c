@@ -73,14 +73,14 @@ OF SUCH DAMAGE.
     \param[out] none
     \retval     none
 */
-void MemManage_Handler(void)
-{
-    cpu_disable_irq();
-
-    /* if Memory Manage exception occurs, go to infinite loop */
-    printf("MemManage_Handler\n");
-    while(1);
-}
+//void MemManage_Handler(void)
+//{
+//    cpu_disable_irq();
+//
+//    /* if Memory Manage exception occurs, go to infinite loop */
+//    printf("MemManage_Handler\n");
+//    while(1);
+//}
 
 /*!
     \brief      this function handles BusFault exception
@@ -88,12 +88,12 @@ void MemManage_Handler(void)
     \param[out] none
     \retval     none
 */
-void BusFault_Handler(void)
-{
-    cpu_disable_irq();
-    printf("BusFault_Handler\n");
-    while(1);
-}
+//void BusFault_Handler(void)
+//{
+//    cpu_disable_irq();
+//    printf("BusFault_Handler\n");
+//    while(1);
+//}
 
 /*!
     \brief      this function handles UsageFault exception
@@ -101,12 +101,12 @@ void BusFault_Handler(void)
     \param[out] none
     \retval     none
 */
-void UsageFault_Handler(void)
-{
-    cpu_disable_irq();
-    printf("UsageFault_Handler\n");
-    while(1);
-}
+//void UsageFault_Handler(void)
+//{
+//    cpu_disable_irq();
+//    printf("UsageFault_Handler\n");
+//    while(1);
+//}
 
 /*!
     \brief      this function handles SVC exception

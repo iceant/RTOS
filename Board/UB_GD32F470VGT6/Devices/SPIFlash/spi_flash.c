@@ -21,8 +21,14 @@ void sFLASH_DeInit(void)
 void sFLASH_Init(sFLASH_IO_T* IO)
 {
     sFLASH__IO = IO;
-    sFLASH__IO->DeInit();
-    sFLASH__IO->Init();    
+    if(IO){
+        if(IO->DeInit){
+            IO->DeInit();
+        }
+        if(IO->Init){
+            IO->Init();
+        }
+    }
 }
 
 void sFLASH_EraseSector(uint32_t SectorAddr)

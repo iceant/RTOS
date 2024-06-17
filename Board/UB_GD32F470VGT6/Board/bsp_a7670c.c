@@ -96,12 +96,15 @@ A7670C_Pin_T A7670C_power_reset={.on=A7670C_PwrRstPin_On, .off=A7670C_PwrRstPin_
 /* ======================================================================================================================== */
 
 C__ALIGNED(OS_ALIGN_SIZE)
-static uint8_t A7670C_RxThdStack[A7670C_RXTHREAD_STACK_SIZE];
-static uint8_t A7670C_RxBlock[A7670C_RXBLOCK_SIZE];
-static os_thread_t A7670C_RxThread;
-static os_semaphore_t A7670C_IO_RxSem;
-static os_semaphore_t A7670C_WaitSem;
-static sdk_ringbuffer_t A7670C_RxBuffer;
+static uint8_t A7670C_RxThdStack[A7670C_RXTHREAD_STACK_SIZE]={0};
+
+C__ALIGNED(OS_ALIGN_SIZE)
+static uint8_t A7670C_RxBlock[A7670C_RXBLOCK_SIZE]={0};
+
+static os_thread_t A7670C_RxThread={0};
+static os_semaphore_t A7670C_IO_RxSem={0};
+static os_semaphore_t A7670C_WaitSem={0};
+static sdk_ringbuffer_t A7670C_RxBuffer={0};
 static bool A7670C_RxThreadFlag = false;
 
 ////////////////////////////////////////////////////////////////////////////////

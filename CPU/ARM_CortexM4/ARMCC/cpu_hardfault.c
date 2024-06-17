@@ -37,7 +37,23 @@ __asm void NMI_Handler(void){
         ALIGN 4
 }
 
-#if 0
+
+__asm void MemManage_Handler(void){
+
+        IMPORT HardFault_Handler_C
+
+        CPSID I
+        TST LR, #4
+        ITE EQ
+        MRSEQ R0, MSP
+        MRSNE R0, PSP
+        MOV R1, LR ;/*Second Parameter*/
+        LDR R2, =HardFault_Handler_C
+        BX R2
+        ALIGN 4
+}
+
+#if 1
 __asm void BusFault_Handler(void){
 
     IMPORT HardFault_Handler_C
@@ -68,20 +84,6 @@ __asm void UsageFault_Handler(void){
         ALIGN 4
 }
 
-__asm void MemManage_Handler(void){
-
-    IMPORT HardFault_Handler_C
-
-        CPSID I
-        TST LR, #4
-        ITE EQ
-        MRSEQ R0, MSP
-        MRSNE R0, PSP
-        MOV R1, LR ;/*Second Parameter*/
-        LDR R2, =HardFault_Handler_C
-        BX R2
-        ALIGN 4
-}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,6 +99,15 @@ __asm void MemManage_Handler(void){
 #define REG_SCB_AFSR   (*(volatile unsigned int*)  (0xE000ED3Cu))  // Auxiliary Fault Status Register
 
 #define DEBUG 1
+
+// NOTE: If you are using CMSIS, the registers can also be
+// accessed through CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk
+#define HALT_IF_DEBUGGING()                              \
+  do {                                                   \
+    if ((*(volatile uint32_t *)0xE000EDF0) & (1 << 0)) { \
+      __asm("bkpt 1");                                   \
+    }                                                    \
+} while (0)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -231,7 +242,16 @@ static struct {
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-
+typedef struct __attribute__((packed)) ContextStateFrame {
+    uint32_t r0;
+    uint32_t r1;
+    uint32_t r2;
+    uint32_t r3;
+    uint32_t r12;
+    uint32_t lr;
+    uint32_t pc;
+    uint32_t xpsr;
+} sContextStateFrame;
 
 
 static void show_cfsr(unsigned long cfsr);
@@ -242,21 +262,19 @@ static void show_dfsr(volatile uint32_t dfsr);
 
 static void show_exc_return(unsigned int value);
 
-void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
+void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
 {
-    unsigned long stacked_r0;
-    unsigned long stacked_r1;
-    unsigned long stacked_r2;
-    unsigned long stacked_r3;
-    unsigned long stacked_r12;
-    unsigned long stacked_lr;
-    unsigned long stacked_pc;
-    unsigned long stacked_psr;
+//    unsigned long stacked_r0;
+//    unsigned long stacked_r1;
+//    unsigned long stacked_r2;
+//    unsigned long stacked_r3;
+//    unsigned long stacked_r12;
+//    unsigned long stacked_lr;
+//    unsigned long stacked_pc;
+//    unsigned long stacked_psr;
     unsigned long cfsr;
     unsigned long bus_fault_address;
     unsigned long memmanage_fault_address;
-    unsigned long MSP;
-    unsigned long PSP;
 
     //
     // In case we received a hard fault because of a breakpoint instruction, we return.
@@ -266,9 +284,10 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
 
     if (REG_SCB_HFSR & (1u << 31)) {
         REG_SCB_HFSR |=  (1u << 31);      // Reset Hard Fault status
-        *(stack_p + 6u) += 2u;         // PC is located on stack at SP + 24 bytes. Increment PC by 2 to skip break instruction.
+        *((unsigned long *)frame + 6u) += 2u;         // PC is located on stack at SP + 24 bytes. Increment PC by 2 to skip break instruction.
         return;                       // Return to interrupted application
     }
+
 
 #if DEBUG
     //
@@ -294,14 +313,14 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     //
     // Read saved registers from the stack
     //
-    HardFaultRegs.SavedRegs.r0 = stack_p[0]; // Register R0
-    HardFaultRegs.SavedRegs.r1 = stack_p[1]; // Register R1
-    HardFaultRegs.SavedRegs.r2 = stack_p[2]; // Register R2
-    HardFaultRegs.SavedRegs.r3 = stack_p[3]; // Register R3
-    HardFaultRegs.SavedRegs.r12 = stack_p[4]; // Register R12
-    HardFaultRegs.SavedRegs.lr = stack_p[5]; // Link register LR
-    HardFaultRegs.SavedRegs.pc = stack_p[6]; // Program counter PC
-    HardFaultRegs.SavedRegs.psr.byte = stack_p[7]; // Program status word PSR
+    HardFaultRegs.SavedRegs.r0 = frame->r0; // Register R0
+    HardFaultRegs.SavedRegs.r1 = frame->r1; // Register R1
+    HardFaultRegs.SavedRegs.r2 = frame->r2; // Register R2
+    HardFaultRegs.SavedRegs.r3 = frame->r3; // Register R3
+    HardFaultRegs.SavedRegs.r12 = frame->r12; // Register R12
+    HardFaultRegs.SavedRegs.lr = frame->lr; // Link register LR
+    HardFaultRegs.SavedRegs.pc = frame->pc; // Program counter PC
+    HardFaultRegs.SavedRegs.psr.byte = frame->xpsr; // Program status word PSR
     //
     // Halt execution
     // To step out of the HardFaultHandler, change the variable value to != 0.
@@ -315,25 +334,16 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     memmanage_fault_address = CPU_REG(SCB_MMFAR);
     cfsr = CPU_REG(SCB_CFSR);
 
-    stacked_r0 = ((unsigned long)stack_p[0]);
-    stacked_r1 = ((unsigned long)stack_p[1]);
-    stacked_r2 = ((unsigned long)stack_p[2]);
-    stacked_r3 = ((unsigned long)stack_p[3]);
-    stacked_r12 = ((unsigned long)stack_p[4]);
-    stacked_lr = ((unsigned long)stack_p[5]);
-    stacked_pc = ((unsigned long)stack_p[6]);
-    stacked_psr = ((unsigned long)stack_p[7]);
-
     printf("[HardFault]\n");
     printf("-- Stack Frame --\n");
-    printf("R0  = 0x%08lx\n", stacked_r0);
-    printf("R1  = 0x%08lx\n", stacked_r1);
-    printf("R2  = 0x%08lx\n", stacked_r2);
-    printf("R3  = 0x%08lx\n", stacked_r3);
-    printf("R12 = 0x%08lx\n", stacked_r12);
-    printf("LR  = 0x%08lx\n", stacked_lr);
-    printf("PC  = 0x%08lx\n", stacked_pc);
-    printf("PSR = 0x%08lx\n", stacked_psr);
+    printf("R0  = 0x%08lx\n", frame->r0);
+    printf("R1  = 0x%08lx\n", frame->r1);
+    printf("R2  = 0x%08lx\n", frame->r2);
+    printf("R3  = 0x%08lx\n", frame->r3);
+    printf("R12 = 0x%08lx\n", frame->r12);
+    printf("LR  = 0x%08lx\n", frame->lr);
+    printf("PC  = 0x%08lx\n", frame->pc);
+    printf("PSR = 0x%08lx\n", frame->xpsr);
 
     printf("-- FSR/FAR --\n");
     printf("CFSR = 0x%08lx ", cfsr); show_cfsr(cfsr);
@@ -344,9 +354,25 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
     printf("-- MISC --\n");
     printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
-    printf("STACK:0x%p\n", stack_p);
+    printf("STACK:0x%p\n", (unsigned long*)frame);
 
+    /* 尝试自动处理 */
 
+//    uint32_t usage_fault_mask = 0xffff0000;
+//    int non_usage_fault_occurred = ((cfsr & ~usage_fault_mask) != 0);
+//    // the bottom 8 bits of the xpsr hold the exception number of the
+//    // executing exception or 0 if the processor is in Thread mode
+//    int faulted_from_exception = ((stacked_psr & 0xFF) != 0);
+//
+//    if (faulted_from_exception || non_usage_fault_occurred) {
+//        // For any fault within an ISR or non-usage faults
+//        // let's reboot the system
+//        volatile uint32_t *aircr = (volatile uint32_t *)0xE000ED0C;
+//        *aircr = (0x05FA << 16) | 0x1 << 2;
+//        while (1) { } // should be unreachable
+//    }
+
+    HALT_IF_DEBUGGING();
 
 //    { // Stack Dump
 //        extern void *_estack;

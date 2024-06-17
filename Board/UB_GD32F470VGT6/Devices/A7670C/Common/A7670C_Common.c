@@ -4,8 +4,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <sdk_hex.h>
-#include "board.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -17,15 +15,17 @@ struct A7670C_Device_S{
     A7670C_IO_T * IO;
 };
 
-static A7670C_Device_T A7670C__Instance;
+static A7670C_Device_T A7670C__Instance={0};
 
-static os_sem_t rx_handler_lock;
-static os_mutex_t A7670C__mutex;
+static os_sem_t rx_handler_lock={0};
+static os_mutex_t A7670C__mutex={0};
 static char A7670C__Printf_Buffer[256];
 
-static os_list_t A7670C__RxHandler_List;
+static os_list_t A7670C__RxHandler_List={.prev=&A7670C__RxHandler_List, .next=&A7670C__RxHandler_List};
 static int A7670C_Startup_State=A7670C_STARTUP_STATE_UNINITIALIZED;
 
+//static int A7670C__LatestBufferSize = 0;
+//static int A7670C__SameSizeCount = 0;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7670C_Pin_T* power_status, A7670C_Pin_T* power_reset, A7670C_IO_T* uart)
@@ -184,8 +184,6 @@ void A7670C_Notify(void){
     A7670C__Instance.IO->notify();
 }
 
-static int A7670C__LatestBufferSize = 0;
-static int A7670C__SameSizeCount = 0;
 
 A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
 {

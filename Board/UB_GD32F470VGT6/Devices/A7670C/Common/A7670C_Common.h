@@ -97,7 +97,7 @@ C__STATIC_FORCEINLINE void A7670C_NopDelay(uint32_t delay){
 }
 
 C__STATIC_FORCEINLINE void A7670C_DelayMS(uint32_t ms){
-    os_critical_enter();
+//    os_critical_enter();
     for(uint32_t m=0; m<ms; m++){
         for(int i=0; i<1000; i++){
             for(int j=0; j<60; j++){
@@ -105,7 +105,7 @@ C__STATIC_FORCEINLINE void A7670C_DelayMS(uint32_t ms){
         }
     }
 
-    os_critical_leave();
+//    os_critical_leave();
 }
 
 #define A7670C_HANDLE_OK \

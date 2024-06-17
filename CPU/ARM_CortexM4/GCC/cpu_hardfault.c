@@ -135,6 +135,14 @@ void MemManage_Handler(void){
 #define REG_SCB_BFAR   (*(volatile unsigned int*)  (0xE000ED38u))  // Bus Fault Address Register
 #define REG_SCB_AFSR   (*(volatile unsigned int*)  (0xE000ED3Cu))  // Auxiliary Fault Status Register
 
+// NOTE: If you are using CMSIS, the registers can also be
+// accessed through CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk
+#define HALT_IF_DEBUGGING()                              \
+  do {                                                   \
+    if ((*(volatile uint32_t *)0xE000EDF0) & (1 << 0)) { \
+      __asm("bkpt 1");                                   \
+    }                                                    \
+} while (0)
 
 #define DEBUG 1
 
@@ -415,6 +423,7 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
 //        putchar('\n');
 //    }
 
+    HALT_IF_DEBUGGING();
 
     _Continue = 0u;
     while (_Continue == 0u) {
