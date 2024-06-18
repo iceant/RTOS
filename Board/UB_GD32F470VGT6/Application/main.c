@@ -55,7 +55,7 @@ static void BootThread_Entry(void* p){
     os_thread_mdelay(2000);
 #endif
 
-    #if defined(ENABLE_MQTT)
+#if defined(ENABLE_MQTT)
     /*启动MQTT*/
     err = MQTT_Init();
     if(err!=0){
@@ -66,17 +66,18 @@ static void BootThread_Entry(void* p){
     Task_HeartBeat_Init();
 #endif
 
-#if defined(ENABLE_CAN0)
-    USE_CAN0_Init();
-#endif
-
 #if defined(ENABLE_GD32F303)
     /* 与 GD32F303CGT6 通讯 */
     USE_USART2_Init();
     /* 与 GD32F303CGT6 同步时间 */
     Task_MCU_DateTime_Init();
 #endif
-  
+
+
+#if defined(ENABLE_CAN0)
+    USE_CAN0_Init();
+#endif
+
     /* 更新 GLOBAL 里的时间 */
 
     while(1){

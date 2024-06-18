@@ -52,16 +52,18 @@ A7670C_Device_T* A7670C_Init(A7670C_Pin_T* power_en, A7670C_Pin_T* power_key, A7
 void A7670C_PowerOn(void)
 {
 
-    A7670C__Instance.power_key->off();
+    A7670C__Instance.power_key->on();
     A7670C_DelayMS(2000);
 
-    A7670C__Instance.power_key->on();
+    A7670C__Instance.power_key->off();
     A7670C_DelayMS(2000);
 }
 
 void A7670C_PowerOff(void)
 {
-//    A7670C__Instance.power_en->off();
+//    A7670C__Instance.power_en->on();
+//    A7670C_DelayMS(2000);
+//
     A7670C__Instance.power_key->off();
     A7670C_DelayMS(2000);
 }
@@ -109,14 +111,15 @@ os_size_t A7670C_Send(uint8_t* data, os_size_t size)
 A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks)
 {
     A7670C_RxHandler_Register_T Register;
-    
+    A7670C_Result res = kA7670C_Result_ERROR;
+
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
     
     A7670C_Lock();
-    OS_LIST_INSERT_BEFORE(&A7670C__RxHandler_List, &Register.node);
-    A7670C_Result res = A7670C_TimedWait(ticks);
+    A7670C_InsertRxHandlerHead(&Register);
+    res = A7670C_TimedWait(ticks);
     OS_LIST_REMOVE(&Register.node);
     A7670C_UnLock();
     
@@ -125,16 +128,15 @@ A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* user
 
 A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command)
 {
-    A7670C_Result err;
+    A7670C_Result err = kA7670C_Result_ERROR;
     A7670C_RxHandler_Register_T Register;
-    
-    
+
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
     
     A7670C_Lock();
-    OS_LIST_INSERT_BEFORE(&A7670C__RxHandler_List, &Register.node);
+    A7670C_InsertRxHandlerHead(&Register);
     A7670C_Send((uint8_t*)command, strlen(command));
     err = A7670C_TimedWait(ticks);
     OS_LIST_REMOVE(&Register.node);
@@ -146,7 +148,7 @@ A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata
 A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* fmt, ...)
 {
     va_list ap;
-    A7670C_Result err;
+    A7670C_Result err=kA7670C_Result_ERROR;
     A7670C_RxHandler_Register_T Register;
     
     OS_LIST_INIT(&Register.node);
@@ -159,8 +161,8 @@ A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdat
         memset(A7670C__Printf_Buffer, 0, sizeof(A7670C__Printf_Buffer));
         int size = vsnprintf(A7670C__Printf_Buffer, sizeof(A7670C__Printf_Buffer), fmt, ap);
         va_end(ap);
-        
-        OS_LIST_INSERT_BEFORE(&A7670C__RxHandler_List, &Register.node);
+
+        A7670C_InsertRxHandlerHead(&Register);
         A7670C_Send((uint8_t*)A7670C__Printf_Buffer, size);
         err = A7670C_TimedWait(ticks);
         OS_LIST_REMOVE(&Register.node);
@@ -196,7 +198,7 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
         A7670C_RxHandler_Register_T* Register = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(Register->handler){
             result = Register->handler(buffer, Register->userdata);
-            if(result==kA7670C_RxHandler_Result_DONE){
+            if(kA7670C_RxHandler_Result_DONE==result){
                 sdk_ringbuffer_reset(buffer);
                 return result;
             }
@@ -209,11 +211,27 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
 
 void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register){
     OS_LIST_INIT(&Register->node);
+    os_list_node_t * node;
+    os_list_t * head = &A7670C__RxHandler_List;
+    for(node = OS_LIST_NEXT(head); node!=head; node= OS_LIST_NEXT(node)){
+        A7670C_RxHandler_Register_T* register_p = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
+        if(register_p==Register || register_p->handler==Register->handler){
+            return;
+        }
+    }
     OS_LIST_INSERT_AFTER(&A7670C__RxHandler_List, &Register->node);
 }
 
 void A7670C_InsertRxHandlerTail(A7670C_RxHandler_Register_T* Register){
     OS_LIST_INIT(&Register->node);
+    os_list_node_t * node;
+    os_list_t * head = &A7670C__RxHandler_List;
+    for(node = OS_LIST_NEXT(head); node!=head; node= OS_LIST_NEXT(node)){
+        A7670C_RxHandler_Register_T* register_p = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
+        if(register_p==Register || register_p->handler==Register->handler){
+            return;
+        }
+    }
     OS_LIST_INSERT_BEFORE(&A7670C__RxHandler_List, &Register->node);
 }
 

@@ -52,6 +52,7 @@ typedef struct global_s{
     char ICCID[21];
     int meter_state;
     global_fatfs_t fatfs;
+    int network_state;
 }global_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,9 +72,15 @@ typedef struct global_s{
 #define GLOBAL_METER_STATE_ERROR        4
 
 #define GLOBAL_FATFS_STATE_INIT_SUCCESS     (1)
-#define GLOBAL_FATFS_STATE_INIT_FAILED      (-1)
 #define GLOBAL_FATFS_STATE_MOUNT_SUCCESS    (2)
+
+#define GLOBAL_FATFS_STATE_INIT_FAILED      (-1)
 #define GLOBAL_FATFS_STATE_MOUNT_FAILED     (-2)
+
+#define GLOBAL_NETWORK_STATE_IDLE                               0
+#define GLOBAL_NETWORK_STATE_INITIALIZED                        1
+#define GLOBAL_NETWORK_STATE_MQTT_INITIALIZED                   2
+#define GLOBAL_NETWORK_STATE_MQTT_DOWNSTREAM_TOPIC_SUBSCRIBED   3
 
 
 ////////////////////////////////////////////////////////////////////////////////
