@@ -31,7 +31,7 @@
 
 #define TxDMAx_CLOCK                RCU_DMA1
 #define TxDMAx                      DMA1
-#define TxDMAx_CHn                  DMA_CH5
+#define TxDMAx_CHn                  DMA_CH7
 #define TxDMA_SUBPERI               DMA_SUBPERI5
 
 #define RS485_DE_Enable()           (GPIO_BOP(RS485_DE_GPIOX) = RS485_DE_PIN)

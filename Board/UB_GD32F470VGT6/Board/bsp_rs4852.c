@@ -29,10 +29,10 @@
 #define USARTx_IRQn                 UART3_IRQn
 #define USARTx_IRQHandler           UART3_IRQHandler
 
-#define TxDMAx_CLOCK                RCU_DMA1
-#define TxDMAx                      DMA1
-#define TxDMAx_CHn                  DMA_CH3
-#define TxDMA_SUBPERI               DMA_SUBPERI3
+#define TxDMAx_CLOCK                RCU_DMA0
+#define TxDMAx                      DMA0
+#define TxDMAx_CHn                  DMA_CH4
+#define TxDMA_SUBPERI               DMA_SUBPERI4
 
 #define RS485_DE_Enable()           (GPIO_BOP(RS485_DE_GPIOX) = RS485_DE_PIN)
 #define RS485_DE_Disable()          (GPIO_BC(RS485_DE_GPIOX) = RS485_DE_PIN)

@@ -18,13 +18,20 @@
 #define USART_RX_PIN 				GPIO_PIN_10
 
 #define USARTx						USART0
-#define USART0_DATA_ADDRESS         ((uint32_t)&USART_DATA(USART0))
+#define USARTx_DATA_ADDRESS         ((uint32_t)&USART_DATA(USARTx))
+
+#define USART_TX_DMA_CLOCK          RCU_DMA1
+#define USART_TX_DMAx               DMA1
+#define USART_TX_DMA_CHn            DMA_CH7
+#define USART_TX_SUBPERIx           DMA_SUBPERI4
+
+#define USARTx_IRQn                 USART0_IRQn
+#define USARTx_IRQHandler           USART0_IRQHandler
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 static BSP_USART0_RxHandler BSP_USART0__RxHandler = 0;
 static void* BSP_USART0__RxHandlerUserdata = 0;
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -71,14 +78,14 @@ void BSP_USART0_SetRxHandler(BSP_USART0_RxHandler rxHandler, void* userdata)
 
 void BSP_USART0_EnableRxIRQ(void)
 {
-    nvic_irq_enable(USART0_IRQn, 0, 1);
-    usart_interrupt_enable(USART0, USART_INT_RBNE);
+    nvic_irq_enable(USARTx_IRQn, 0, 1);
+    usart_interrupt_enable(USARTx, USART_INT_RBNE);
 }
 
 void BSP_USART0_EnableDMATx(void)
 {
     /* enable DMA1 */
-    rcu_periph_clock_enable(RCU_DMA1);
+    rcu_periph_clock_enable(USART_TX_DMA_CLOCK);
 }
 
 void BSP_USART0_DMATx(uint8_t* txBuffer, uint32_t size)
@@ -86,35 +93,36 @@ void BSP_USART0_DMATx(uint8_t* txBuffer, uint32_t size)
     dma_single_data_parameter_struct dma_init_struct;
 
     /* deinitialize DMA channel7(USART0 TX) */
-    dma_deinit(DMA1, DMA_CH7);
+    dma_deinit(USART_TX_DMAx, USART_TX_DMA_CHn);
     dma_init_struct.direction = DMA_MEMORY_TO_PERIPH;
     dma_init_struct.memory0_addr = (uint32_t)txBuffer;
     dma_init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
     dma_init_struct.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
     dma_init_struct.number = size;
-    dma_init_struct.periph_addr = USART0_DATA_ADDRESS;
+    dma_init_struct.periph_addr = USARTx_DATA_ADDRESS;
     dma_init_struct.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
     dma_init_struct.priority = DMA_PRIORITY_ULTRA_HIGH;
-    dma_single_data_mode_init(DMA1, DMA_CH7, &dma_init_struct);
+    dma_single_data_mode_init(USART_TX_DMAx, USART_TX_DMA_CHn, &dma_init_struct);
     /* configure DMA mode */
-    dma_circulation_disable(DMA1, DMA_CH7);
-    dma_channel_subperipheral_select(DMA1, DMA_CH7, DMA_SUBPERI4);
+    dma_circulation_disable(USART_TX_DMAx, USART_TX_DMA_CHn);
+    dma_channel_subperipheral_select(USART_TX_DMAx, USART_TX_DMA_CHn, USART_TX_SUBPERIx);
     /* enable DMA channel7 */
-    dma_channel_enable(DMA1, DMA_CH7);
+    dma_channel_enable(USART_TX_DMAx, USART_TX_DMA_CHn);
 
     /* USART DMA enable for transmission and reception */
-    usart_dma_transmit_config(USART0, USART_TRANSMIT_DMA_ENABLE);
+    usart_dma_transmit_config(USARTx, USART_TRANSMIT_DMA_ENABLE);
     //usart_dma_receive_config(USART0, USART_RECEIVE_DMA_ENABLE);
 
     /* wait DMA channel transfer complete */
-    while(RESET == dma_flag_get(DMA1, DMA_CH7, DMA_FLAG_FTF));
+    while(RESET == dma_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_FLAG_FTF));
+
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 
-void USART0_IRQHandler(void)
+void USARTx_IRQHandler(void)
 {
     os_interrupt_enter();
     if((RESET != usart_interrupt_flag_get(USARTx, USART_INT_FLAG_RBNE)) &&
