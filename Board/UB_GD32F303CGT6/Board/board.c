@@ -9,8 +9,9 @@
 void Board_Init(void)
 {
 #if OS_ENABLE
+    nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x010000);
+    __enable_irq();
 
-    nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x0000);
     SCB->CCR|=SCB_CCR_STKALIGN_Msk;
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
@@ -46,14 +47,14 @@ int fputc(int ch, FILE *f)
     return ch;
 }
 
-int os_printf_putc(int ch, void* ud)
-{
-    ((void)(ud));
-
-    usart_data_transmit(USART0, (uint8_t)ch);
-    while(RESET == usart_flag_get(USART0, USART_FLAG_TBE));
-    return ch;
-}
-
+//int os_printf_putc(int ch, void* ud)
+//{
+//    ((void)(ud));
+//
+//    usart_data_transmit(USART0, (uint8_t)ch);
+//    while(RESET == usart_flag_get(USART0, USART_FLAG_TBE));
+//    return ch;
+//}
+//
 
 

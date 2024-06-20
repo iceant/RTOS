@@ -124,15 +124,18 @@ void Board_4GPower_Enable(void){
     gpio_bit_set(GPIOE, GPIO_PIN_6);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+////
+
 void Board_Init(void){
 
-    nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x0000);
+    nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x010000);
+    __enable_irq();
     SCB->CCR|=SCB_CCR_STKALIGN_Msk;
 
 //    SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk
@@ -149,7 +152,7 @@ void Board_Init(void){
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */
-    NVIC_SetPriority(SysTick_IRQn, 0xFE);
+//    NVIC_SetPriority(SysTick_IRQn, 0xFE);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
     
     /* ------------------------------------------------------------------------------------------ */
@@ -258,10 +261,10 @@ void Board_Init(void){
 }
 
 void Board_Reboot(void){
+    __disable_irq();  // 可以使用这个函数 关闭总中断
+    __set_FAULTMASK(1);        //关闭中断,确保跳转过程中 不会进入中断,导致跳转失败
     cpu_reboot();
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

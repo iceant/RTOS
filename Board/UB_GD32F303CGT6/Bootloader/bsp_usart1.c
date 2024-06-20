@@ -34,6 +34,16 @@ static os_mutex_t BSP_USART1__Mutex;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 
+void BSP_USART1_DeInit(void)
+{
+    usart_deinit(USARTx);
+
+    rcu_periph_clock_disable(USART_CLOCK);
+    rcu_periph_clock_disable(USART_TX_GPIO_CLOCK);
+    rcu_periph_clock_disable(USART_RX_GPIO_CLOCK);
+    rcu_periph_clock_disable(RCU_AF);
+}
+
 void BSP_USART1_Init(void)
 {
 
@@ -164,6 +174,7 @@ void USARTx_IRQHandler(void)
     os_interrupt_exit();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C__ALIGNED(OS_ALIGN_SIZE)
@@ -207,7 +218,3 @@ int os_printf(const char* fmt, ...){
 
     return len;
 }
-
-
-
-
