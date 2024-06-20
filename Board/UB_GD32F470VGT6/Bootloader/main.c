@@ -34,6 +34,8 @@ static void bootloader_jump(void* address){
         printf("Jump To: 0x%p\n", address);
         delay_ms(100);
 
+        __disable_irq();
+
         /* Jump to user application */
         uint32_t JumpAddress = HW32_ADDR(address + 4);
         pFunction JumpToApplication = (pFunction) JumpAddress;

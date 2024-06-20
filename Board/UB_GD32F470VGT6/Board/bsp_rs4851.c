@@ -42,7 +42,13 @@
 static BSP_RS4851_RxHandler BSP_RS4851__RxHandler = 0;
 static void* BSP_RS4851__RxHandlerUserdata = 0;
 
+C__STATIC_FORCEINLINE void rs485_receive_enable(){
+    gpio_bit_set(RS485_DE_GPIOX,  RS485_DE_PIN);
+}
 
+C__STATIC_FORCEINLINE void rs485_send_enable(){
+    gpio_bit_reset(RS485_DE_GPIOX,  RS485_DE_PIN);
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -88,8 +94,8 @@ void BSP_RS4851_Init(int BaudRate)
     gpio_output_options_set(RS485_DE_GPIOX, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, RS485_DE_PIN);
 
     uart_config(BaudRate, USART_WL_8BIT, USART_STB_1BIT, USART_PM_NONE);
-    
-    RS485_DE_Disable();
+
+    rs485_receive_enable();
 }
 
 void BSP_RS4851_SetRxHandler(BSP_RS4851_RxHandler rxHandler, void* userdata)
@@ -124,8 +130,8 @@ void rs485_send_dma(uint8_t* buffer, uint16_t len)
 void BSP_RS4851_DMATx(uint8_t* txBuffer, uint32_t size)
 {
     dma_single_data_parameter_struct dma_init_struct;
-    
-    RS485_DE_Enable();
+
+    rs485_send_enable();
     
     /* deinitialize DMA channel7(USART0 TX) */
     dma_deinit(TxDMAx, TxDMAx_CHn);
@@ -150,19 +156,19 @@ void BSP_RS4851_DMATx(uint8_t* txBuffer, uint32_t size)
     
     /* wait DMA channel transfer complete */
     while(RESET == dma_flag_get(TxDMAx, TxDMAx_CHn, DMA_FLAG_FTF));
-    
-    RS485_DE_Disable();
+
+    rs485_receive_enable();
 }
 
 void BSP_RS4851_Send(uint8_t* data, size_t size)
 {
     size_t i;
-    RS485_DE_Enable();
+    rs485_send_enable();
     for(i=0; i<size; i++){
         usart_data_transmit(USARTx, (uint8_t)*data++);    
         while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE)){}    
     }
-    RS485_DE_Disable();
+    rs485_receive_enable();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
