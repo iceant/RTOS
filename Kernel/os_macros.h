@@ -18,6 +18,8 @@
 
 #define OS_MIN(a, b) (((a) > (b))?(b):(a))
 
+#define OS_PAGE(T, SZ) (((T) + (SZ) - 1)/(SZ))
+
 ////////////////////////////////////////////////////////////////////////////////
 //// https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms
 //// http://jhnet.co.uk/articles/cpp_magic/map_working.txt

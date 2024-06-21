@@ -41,8 +41,8 @@ typedef enum mcu_protocol_du_type_enum{
 }mcu_protocol_du_type_t;
 
 /*
- * START: 0xBE, 0xEF
- * DU_SIZE: uint16_t BE
+ * START:   0xBE, 0xEF
+ * DU_SIZE: uint16_t - Big Endian
  * DU_TYPE: uint8_t
  * DU     : uint8_t[MCU_PROTOCOL_DU_MAX_SIZE]
  * CRC    : uint16_t LE
