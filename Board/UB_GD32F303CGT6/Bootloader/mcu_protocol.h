@@ -88,6 +88,8 @@ void mcu_protocol_send(mcu_protocol_t * protocol);
 ////
 int mcu_protocol_du_print(mcu_protocol_t * protocol, char* message, uint16_t message_size);
 
+int mcu_protocol_du_printf(mcu_protocol_t* protocol, char* fmt, ...);
+
 int mcu_protocol_du_ecrc(mcu_protocol_t * protocol);
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <board.h>
 #include <stdio.h>
-
+#include <stdarg.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
@@ -102,6 +102,24 @@ int mcu_protocol_du_print(mcu_protocol_t * protocol, char* message, uint16_t mes
     mcu_protocol_crc(protocol);
     mcu_protocol_send(protocol);
 //    os_mutex_unlock(&mcu_protocol_lock);
+    return 0;
+}
+
+#define MCU_PROTOCOL_PRINTF_BUFFER_SIZE 1024
+C__ALIGNED(OS_ALIGN_SIZE)
+static char mcu_protocol_printf_buffer[MCU_PROTOCOL_PRINTF_BUFFER_SIZE];
+int mcu_protocol_du_printf(mcu_protocol_t* protocol, char* fmt, ...)
+{
+    va_list ap;
+    size_t size = 0;
+    va_start(ap, fmt);
+    size = vsnprintf(mcu_protocol_printf_buffer, MCU_PROTOCOL_PRINTF_BUFFER_SIZE, fmt, ap);
+    va_end(ap);
+    if(size > MCU_PROTOCOL_PRINTF_BUFFER_SIZE){
+        return -1;
+    }
+    mcu_protocol_du_print(protocol, mcu_protocol_printf_buffer, size);
+
     return 0;
 }
 

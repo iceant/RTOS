@@ -13,6 +13,10 @@
 #include <bsp_usart1.h>
 #endif /*INCLUDED_BSP_USART1_H*/
 
+#ifndef INCLUDED_BSP_CPUID_H
+#include <bsp_cpuid.h>
+#endif /*INCLUDED_BSP_CPUID_H*/
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

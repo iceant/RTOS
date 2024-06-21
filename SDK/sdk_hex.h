@@ -24,8 +24,8 @@ os_size_t sdk_hex_encode(char* buffer, uint32_t offset, os_size_t buffer_size, c
 os_size_t sdk_hex_decode(uint8_t *buffer, os_size_t buffer_offset, os_size_t buffer_size
                         , const char* hex, os_size_t hex_offset, os_size_t hex_size);
 
-#define SDK_HEX_ENCODE_BE(result, result_size, data, data_size) sdk_hex_encode((result), 0, (result_size), (data), 0, (data_size), false, kSDK_ByteOrder_BigEndian)
-#define SDK_HEX_ENCODE_LE(result, result_size, data, data_size) sdk_hex_encode((result), 0, (result_size), (data), 0, (data_size), false, kSDK_ByteOrder_LittleEndian)
+#define SDK_HEX_ENCODE_BE(result, result_size, data, data_size) sdk_hex_encode((result), 0, (result_size), (data), 0, (data_size), true, kSDK_ByteOrder_BigEndian)
+#define SDK_HEX_ENCODE_LE(result, result_size, data, data_size) sdk_hex_encode((result), 0, (result_size), (data), 0, (data_size), true, kSDK_ByteOrder_LittleEndian)
 
 #define SDK_HEX_DECODE(buffer, buffer_size, hex_string, hex_string_length) sdk_hex_decode((uint8_t*)(buffer), 0, (buffer_size), (const char*)(hex_string), 0, (hex_string_length))
 

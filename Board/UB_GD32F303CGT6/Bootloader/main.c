@@ -1,6 +1,8 @@
 #include "main.h"
 #include "board.h"
 #include "mcu_protocol.h"
+#include <sdk_hex.h>
+#include <sdk_fmt.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define HW32_ADDR(ADDR) (*(volatile uint32_t*)(ADDR))
@@ -38,23 +40,20 @@ static void bootloader_jump(void* address){
         __set_MSP(HW32_ADDR(address));
 
         BSP_USART1_DeInit();
+        __disable_irq();
 
         JumpToApplication();
     }
 }
 
-static void show_msg(const char* msg){
-    mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, msg, strlen(msg));
-}
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
 
 int main(void){
 
     Board_Init();
 
-    show_msg("==== BOOTLOADER ====");
+    mcu_protocol_du_printf(&mcu_protocol_g_tx_protocol, "==== BOOTLOADER:%s ====", BSP_CPUID_Read());
     delay_ms(100);
 
     if(bootloader_need_upgrade()){
