@@ -44,80 +44,15 @@ static A7670C_RxHandler_Result A7670C_CMQTTRX_DownstreamHandler(sdk_ringbuffer_t
     int find = sdk_ringbuffer_cut(&find_result, buffer, 0, (int)buffer_used, (const char*)"+CMQTTRXEND: ", "\r\n");
     if(find==0){
         sdk_hex_dump("CMQTTRXEND", buffer->buffer, buffer_used);
-        find = sdk_ringbuffer_cut(&find_result, buffer, 0, (int)buffer_used, (const char*)"+CMQTTRXSTART: ", "\r\n");
-        if(find!=0) {
-            sdk_ringbuffer_reset(buffer);
-            os_sem_release(&CMQTTRX_DataHandle_Sem);
-            res = kA7670C_RxHandler_Result_RESET;
-            /*数据不正常，清除*/
-            goto __skip;
-        }
-        sdk_ringbuffer_iter_init(&iter, &find_result);
-        sdk_ringbuffer_iter(&iter, ",");/*client_index*/
-        sdk_ringbuffer_iter(&iter, ",");/*topic_total_len*/
-        session->rx_context.rx_topic_size = (int)sdk_ringbuffer_strtoul(buffer, iter.start, 0, 0);
-        sdk_ringbuffer_iter(&iter, ",");/*payload_total_len*/
-        session->rx_context.rx_payload_size = (int)sdk_ringbuffer_strtoul(buffer, iter.start, 0, 0);
-    
-        write_idx = 0;
-        int find_start = find_result.end;
-        for(;;){
-            /*topic*/
-            find = sdk_ringbuffer_cut(&find_result, buffer, find_start, buffer_used, "+CMQTTRXTOPIC: ", "\r\n");
-            if(find!=0){
-                sdk_ringbuffer_reset(buffer);
-                os_sem_release(&CMQTTRX_DataHandle_Sem);
-                res = kA7670C_RxHandler_Result_RESET;
-                goto __skip;
-            }
-            
-            sdk_ringbuffer_iter_init(&iter, &find_result);
-            sdk_ringbuffer_iter(&iter, ",");/*client_index*/
-            sdk_ringbuffer_iter(&iter, ",");/*sub_topic_len*/
-            int sub_topic_len = (int)sdk_ringbuffer_strtoul(buffer, iter.start, 0,0);
 
-            find = sdk_ringbuffer_cut(&find_result, buffer, find_result.end, buffer_used, "\r\n", "\r\n");
-            if(find!=0){
-                sdk_ringbuffer_reset(buffer);
-                os_sem_release(&CMQTTRX_DataHandle_Sem);
-                res = kA7670C_RxHandler_Result_RESET;
-                goto __skip;
-            }
-
-            /*topic text*/
-            sdk_ringbuffer_try_read(buffer, find_result.start, session->rx_context.rx_topic+write_idx, sub_topic_len);
-            write_idx += sub_topic_len;
-            if(write_idx==session->rx_context.rx_topic_size){
-                session->rx_context.rx_topic[session->rx_context.rx_topic_size]='\0';
-                break;
-            }
-            find_start = find_result.end;
-        }
-        find_start = find_result.end;
-        write_idx = 0;
-        
-        for(;;){
-            /*payload*/
-            find = sdk_ringbuffer_cut(&find_result, buffer, find_start, buffer_used, "+CMQTTRXPAYLOAD: ", "\r\n");
-            if(find!=0){
-                sdk_ringbuffer_reset(buffer);
-                os_sem_release(&CMQTTRX_DataHandle_Sem);
-                res = kA7670C_RxHandler_Result_RESET;
-                goto __skip;
-            }
-            sdk_ringbuffer_iter_init(&iter, &find_result);
-            
-            sdk_ringbuffer_iter(&iter, ",");/*client_index*/
-            sdk_ringbuffer_iter(&iter, ",");/*sub_payload_len*/
-            int sub_payload_len = sdk_ringbuffer_strtoul(buffer, iter.start, 0, 0);
-
-            sdk_ringbuffer_try_read(buffer, iter.end+2, session->rx_context.rx_payload+write_idx, sub_payload_len);
-            write_idx+=sub_payload_len;
-
-            if(write_idx==session->rx_context.rx_payload_size){
-                break;
-            }
-            find_start = find_result.end+2;
+        find = sdk_ringbuffer_find_str(buffer, 0, "+CMQTTRXSTART:");
+        if(find!=-1){
+            int size = find_result.end+2 - find;
+//            printf("CMQTTRXSTART.find=%d, size=%d\n", find, size);
+            memcpy((void*)session->rx_context.rx_payload, buffer->buffer+find, size);
+            session->rx_context.rx_payload_size = size;
+            session->rx_context.rx_payload[size]='\0';
+//            sdk_hex_dump("CMQTTRXSTART", session->rx_context.rx_payload, size);
         }
 
         sdk_ringbuffer_reset(buffer);
@@ -150,17 +85,18 @@ void A7670C_MQTT_Init(A7670C_MQTT_Session* session, A7670C_MQTT_RxDataHandler rx
 {
     session->client_index = kA7670C_Client_Index_0;
     session->state = kA7670C_MQTT_State_IDLE;
-    session->rx_context.rx_payload[0]='\0';
+    memset(session->rx_context.rx_payload, 0, sizeof(session->rx_context.rx_payload));
     session->rx_context.rx_payload_size=0;
     session->rx_context.rx_topic[0]='\0';
     session->rx_context.rx_topic_size=0;
     session->OnConnectLost = OnConnectLost;
 
     session->rxDataHandlerRecord.rxDataHandler = rxDataHandler;
-    session->rxDataHandlerRecord.userdata = userdata;
+    session->rxDataHandlerRecord.userdata = session;
     
     os_sem_init(&CMQTTRX_DataHandle_Sem, "MQTT_RxSem", 0, OS_QUEUE_FIFO);
 
+    A7670C_MQTT__DownStreamRxHandlerRegister.userdata = session;
     A7670C_InsertRxHandlerHead(&A7670C_MQTT__DownStreamRxHandlerRegister);
     
     os_thread_init(&CMQTTRX_DataHandle_Thread

@@ -286,6 +286,7 @@ static A7670C_Result MQTT__cmd_info(void){
 
 static void A7670C_MQTT__RxDataHandler(void* data, int data_size, void* userdata)
 {
+    sdk_hex_dump("A7670C_MQTT__RxDataHandler", data, data_size);
     if(strstr((char*)data, "reboot")){
         Board_Reboot();
     }else if(strstr((char*)data, "cpuid")){
