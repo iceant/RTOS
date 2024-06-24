@@ -29,6 +29,12 @@
 #endif
 
 #define MCU_PROTOCOL_START 0xBEEF
+
+#define MCU_PROTOCOL_STATE_UNKNOWN  0
+#define MCU_PROTOCOL_STATE_SEND     1
+#define MCU_PROTOCOL_STATE_RECV_OK  2
+#define MCU_PROTOCOL_STATE_RECV_ERR 3
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -38,6 +44,8 @@ typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_DATETIME=2,
     kMCU_PROTOCOL_DU_CPUID=3,
     kMCU_PROTOCOL_DU_CAN=4,
+    kMCU_PROTOCOL_DU_RECVOK=0xD0,
+    kMCU_PROTOCOL_DU_RECVERR=0xDE,
 }mcu_protocol_du_type_t;
 
 /*
@@ -78,6 +86,12 @@ extern mcu_protocol_t mcu_protocol_g_tx_protocol;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+int mcu_protocol_module_init(void);
+
+void mcu_protocol_wait(void);
+os_err_t mcu_protocol_timed_wait(uint32_t ms);
+void mcu_protocol_release(void);
+
 int mcu_protocol_init(mcu_protocol_t * protocol, mcu_protocol_du_type_t type, void * data_unit, uint16_t du_size);
 
 void mcu_protocol_crc(mcu_protocol_t * protocol);

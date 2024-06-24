@@ -6,9 +6,11 @@
 #include <meter_protocol.h>
 #include <stdio.h>
 #include <global.h>
+#include <os_kernel.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static os_mutex_t mcu_protocol_lock={.lock=0};
+static int mcu_protocol_state = MCU_PROTOCOL_STATE_UNKNOWN;
 
 static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
     switch(MCU_PROTOCOL_DU_TYPE_GET(protocol)){
@@ -39,6 +41,33 @@ static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
             global_set_cpuid((void*)du, du_size);
             break;
         }
+        case kMCU_PROTOCOL_DU_RECVOK:{
+            if(mcu_protocol_state == MCU_PROTOCOL_STATE_SEND){
+                mcu_protocol_state = MCU_PROTOCOL_STATE_RECV_OK;
+                mcu_protocol_release();
+            }else{
+                mcu_protocol_state = MCU_PROTOCOL_STATE_RECV_OK;
+            }
+            break;
+        }
+        case kMCU_PROTOCOL_DU_RECVERR:{
+            if(mcu_protocol_state == MCU_PROTOCOL_STATE_SEND){
+                mcu_protocol_state = MCU_PROTOCOL_STATE_RECV_ERR;
+                mcu_protocol_release();
+            }else{
+                mcu_protocol_state = MCU_PROTOCOL_STATE_RECV_ERR;
+            }
+            break;
+        }
+        case kMCU_PROTOCOL_DU_ECRC:{
+            if(mcu_protocol_state == MCU_PROTOCOL_STATE_SEND){
+                mcu_protocol_state = MCU_PROTOCOL_STATE_RECV_ERR;
+                mcu_protocol_release();
+            }else{
+                mcu_protocol_state = MCU_PROTOCOL_STATE_RECV_ERR;
+            }
+            break;
+        }
         default:
             break;
     }
@@ -52,10 +81,26 @@ mcu_protocol_handler_t mcu_protocol_g_handler = mcu_protocol__handler;
 mcu_protocol_t mcu_protocol_g_rx_protocol;
 mcu_protocol_t mcu_protocol_g_tx_protocol;
 
+static os_semaphore_t mcu_protocol__sem;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+int mcu_protocol_module_init(void){
+    os_semaphore_init(&mcu_protocol__sem, "mcu_pro_sem", 0, OS_QUEUE_FIFO);
+    return 0;
+}
 
+void mcu_protocol_wait(void){
+    os_semaphore_take(&mcu_protocol__sem, OS_WAIT_INFINITY);
+}
+
+os_err_t mcu_protocol_timed_wait(uint32_t ms){
+    return os_semaphore_take(&mcu_protocol__sem, os_tick_from_millisecond(ms));
+}
+
+void mcu_protocol_release(void){
+    os_semaphore_release(&mcu_protocol__sem);
+}
 
 int mcu_protocol_init(mcu_protocol_t * protocol, mcu_protocol_du_type_t type, void * data_unit, uint16_t du_size)
 {
@@ -107,6 +152,7 @@ void mcu_protocol_send(mcu_protocol_t * protocol){
     MCU_PROTOCOL_SEND(protocol->crc, 2);
 #else
 //    BSP_USART1_Send("HELLO!!!", 8);
+    mcu_protocol_state = MCU_PROTOCOL_STATE_SEND;
     MCU_PROTOCOL_SEND(protocol->buffer, MCU_PROTOCOL_DU_SIZE_GET(protocol) + 7);
 #endif
 

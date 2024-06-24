@@ -16,6 +16,8 @@ static void BootThread_Entry(void* p){
     /* 等待主控MCU启动 */
     os_thread_mdelay(5000);
 
+    mcu_protocol_module_init();
+
     /* 通知主控，我已经启动了 */
     mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "GD303 Startup", 13);
 

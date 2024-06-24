@@ -27,7 +27,7 @@ static void mcu_protocol__handler(mcu_protocol_t * protocol, void* ud){
 //            sdk_hex_dump("[MCU_CAN]", MCU_PROTOCOL_DU_GET(protocol), du_size);
             MQTT_Publish(MCU_PROTOCOL_DU_GET(protocol), du_size);
             os_printf("[GD303] PUBLISH CAN!!!\n");
-            for(int i=0; i<0x3ffff; i++);
+            mcu_protocol_du_recv_ok(&mcu_protocol_g_tx_protocol);
             break;
         }
         default:
@@ -171,3 +171,14 @@ int mcu_protocol_du_hwid(mcu_protocol_t * protocol, char* hwid, int hwid_size)
     return 0;
 }
 
+int mcu_protocol_du_recv_ok(mcu_protocol_t * protocol)
+{
+    int err = mcu_protocol_init(protocol, kMCU_PROTOCOL_DU_RECVOK, 0, 0);
+    if(err!=0){
+        return err;
+    }
+    mcu_protocol_crc(protocol);
+    mcu_protocol_send(protocol);
+
+    return 0;
+}
