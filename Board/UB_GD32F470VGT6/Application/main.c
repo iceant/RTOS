@@ -180,7 +180,7 @@ int main(void)
 //    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
 //    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
 //    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
-    dbg_print("CPUID: %s\n", BSP_CPUID_Read());
+    dbg_print("[CPUID] %s\n", BSP_CPUID_Read());
 
     /*启动*/
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0

@@ -59,8 +59,8 @@ static A7670C_Result global__fetch_IMEI_ICCID(void){
         result = A7670C_ICCID_Read(&ICCID_Read_Response, 12000);
 
         if(ICCID_Read_Response.code == kA7670C_Response_Code_OK){
-            os_printf("CCID: %s\n", ICCID_Read_Response.ICCID);
-            sdk_hex_dump("ICCID", ICCID_Read_Response.ICCID, sizeof(ICCID_Read_Response.ICCID));
+//            os_printf("CCID: %s\n", ICCID_Read_Response.ICCID);
+//            sdk_hex_dump("ICCID", ICCID_Read_Response.ICCID, sizeof(ICCID_Read_Response.ICCID));
             memcpy(global__instance.ICCID, ICCID_Read_Response.ICCID, sizeof(ICCID_Read_Response.ICCID));
             break;
         }

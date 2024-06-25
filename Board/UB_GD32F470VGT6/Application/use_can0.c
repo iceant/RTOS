@@ -265,7 +265,7 @@ static void USE_CAN0_HandleMeterProtocol(int state){
 
 static void USE_CAN0__RxThreadEntry(void* p){
 
-    printf("USE_CAN0__RxThreadEntry Starup...\n");
+    printf("[USE_CAN0] OK\n");
 
     os_size_t used = 0;
     uint32_t current = 0;

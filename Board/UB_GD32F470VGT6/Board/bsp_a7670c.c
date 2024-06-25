@@ -114,7 +114,7 @@ static bool A7670C_RxThreadFlag = false;
 ////
 
 static void A7670C_IO_RxThd(void* parameter){
-    printf("A7670C_IO_RxThd Startup...\r\n");
+    printf("[BSP_A7670C] OK\r\n");
     #if defined(A7670C_IO_DEBUG)
     int latest_used = 0;
     #endif

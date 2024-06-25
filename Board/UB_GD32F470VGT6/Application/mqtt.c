@@ -286,7 +286,7 @@ static A7670C_Result MQTT__cmd_info(void){
 
 static void A7670C_MQTT__RxDataHandler(void* data, int data_size, void* userdata)
 {
-    sdk_hex_dump("A7670C_MQTT__RxDataHandler", data, data_size);
+//    sdk_hex_dump("A7670C_MQTT__RxDataHandler", data, data_size);
     if(strstr((char*)data, "reboot")){
         Board_Reboot();
     }else if(strstr((char*)data, "cpuid")){
@@ -323,7 +323,7 @@ static void tx_thread_entry(void* p){
 
                         A7670C_MQTT__OnConnectLost();
                     }else{
-                        printf("MQTT SEND SUCCESS: read_idx = %d/%d, size=%d\n", tx_queue.read_idx-1, TX_TASK_COUNT, task->tx_data_size);
+                        printf("[MQTT] SEND SUCCESS: read_idx = %d/%d, size=%d\n", tx_queue.read_idx-1, TX_TASK_COUNT, task->tx_data_size);
                         break;
                     }
 
@@ -358,7 +358,7 @@ int MQTT_Init(void)
                                                , global->mqtt.Username
                                                , global->mqtt.Password);
     while(result!=kA7670C_Result_OK){
-        printf("MQTT Connect Result: %d\n", result);
+        printf("[MQTT] Connect Result: %d\n", result);
         if(nRetry-- ==0){
             return -1;
         }
@@ -408,7 +408,7 @@ int MQTT_Publish(void* data, int data_size)
 
 int MQTT_Reset(void){
     int nRetry = 3;
-    printf("MQTT Try To Reconnect...\r\n");
+    printf("[MQTT] Try To Reconnect...\r\n");
     global_t* global = global_get();
     global->network_state = GLOBAL_NETWORK_STATE_IDLE;
 
@@ -431,7 +431,7 @@ int MQTT_Reset(void){
                                                , global->mqtt.Username
                                                , global->mqtt.Password);
     while(result!=kA7670C_Result_OK){
-        printf("MQTT Connect Result: %d\n", result);
+        printf("[MQTT] Connect Result: %d\n", result);
         result = A7670C_MQTT_Connect(&session, global->mqtt.ClientID
                                      , global->mqtt.Server
                                      ,  64800, true
@@ -450,7 +450,7 @@ int MQTT_Reset(void){
     result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream
                                            , kA7670C_Qos_0, kA7670C_Bool_No);
     while(result!=kA7670C_Result_OK){
-        printf("MQTT Sub Downstream Topic Result: %d\n", result);
+        printf("[MQTT] Sub Downstream Topic Result: %d\n", result);
         if(nRetry-- ==0){
             Board_Reboot();
             return 0;

@@ -17,7 +17,7 @@
 static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, void* ud){
     if(sdk_ringbuffer_find_str(buffer, 0, "AT\r\r\nOK\r\n")!=-1
         || sdk_ringbuffer_find_str(buffer, 0, "*ATREADY: 1")!=-1){
-        sdk_hex_dump("[AT]", buffer->buffer, sdk_ringbuffer_used(buffer));
+//        sdk_hex_dump("[AT]", buffer->buffer, sdk_ringbuffer_used(buffer));
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
@@ -53,7 +53,7 @@ A7670C_Result A7670C_WaitPBDone(uint32_t timeout_ms)
 A7670C_Result A7670C_Startup(void){
     A7670C_Result result;
     int nRetry = 0;
-    printf("[A7670C] A7670C_Startup\n");
+//    printf("[A7670C] Startup\n");
 
 
 __A7670C__Boot:
@@ -73,7 +73,7 @@ __A7670C__Boot:
     if(A7670C_GetStartupState()==A7670C_STARTUP_STATE_UNINITIALIZED){
         /*这是重启*/
         while(1){
-            os_printf("A7670C wait for AT ready...\n");
+            os_printf("[A7670C] wait for AT ready...\n");
             result = A7670C_AT(1000);
             if(result==kA7670C_Result_OK){
                 break;
@@ -93,7 +93,7 @@ __A7670C__Boot:
     }
 
     while(1){
-        os_printf("A7670C wait for AT ready...\n");
+        os_printf("[A7670C] wait for AT ready...\n");
         result = A7670C_AT(1000);
         if(result==kA7670C_Result_OK){
             break;
@@ -110,7 +110,7 @@ __A7670C__Boot:
 
     nRetry = 0;
     while(1){
-        os_printf("A7670C wait for CPIN ready...\n");
+        os_printf("[A7670C] wait for CPIN ready...\n");
         A7670C_CPIN_Read_Response CPIN_Read_Response;
         result = A7670C_CPIN_Read(&CPIN_Read_Response, A7670C_DEFAULT_TIMEOUT_MS);
         if(CPIN_Read_Response.code==kA7670C_Response_Code_OK){
@@ -124,7 +124,7 @@ __A7670C__Boot:
     
     nRetry = 0;
     while(1){
-        os_printf("A7670C checking CSQ quality...");
+        os_printf("[A7670C] checking CSQ quality...");
         A7670C_CSQ_Exec_Response CSQ_Exec_Response;
         result = A7670C_CSQ_Exec(&CSQ_Exec_Response, 12000);
         if(CSQ_Exec_Response.code == kA7670C_Response_Code_OK){
@@ -162,7 +162,7 @@ __A7670C__Boot:
     int  A7670C_PS_Flag = 0;
     nRetry = 0;
     while(1){
-        os_printf("A7670C PS service(CGREG)...");
+        os_printf("[A7670C] PS service(CGREG)...");
         A7670C_CGREG_Read_Response CGREG_Read_Response;
         result = A7670C_CGREG_Read(&CGREG_Read_Response, 12000);
         if(CGREG_Read_Response.code == kA7670C_Response_Code_OK){
@@ -182,7 +182,7 @@ __A7670C__Boot:
 //    if(A7670C_PS_Flag==0){
         nRetry = 0;
         while(1){
-            os_printf("A7670C PS service(CEREG)...");
+            os_printf("[A7670C] PS service(CEREG)...");
             A7670C_CEREG_Read_Response CEREG_Read_Response;
             result = A7670C_CEREG_Read(&CEREG_Read_Response, 12000);
             if(CEREG_Read_Response.code == kA7670C_Response_Code_OK){
@@ -203,7 +203,7 @@ __A7670C__Boot:
     
     nRetry = 0;
     while(1){
-        os_printf("A7670C UE system info...");
+        os_printf("[A7670C] UE system info...");
         A7670C_CPSI_Read_Response CPSI_Read_Response;
         result = A7670C_CPSI_Read(&CPSI_Read_Response, 12000);
         if(CPSI_Read_Response.code == kA7670C_Response_Code_OK){
@@ -221,7 +221,7 @@ __A7670C__Boot:
 
     nRetry = 0;
     while(1){
-        os_printf("A7670C CGATT...");
+        os_printf("[A7670C] CGATT...");
         A7670C_CGACT_Read_Response CGACT_Read_Response;
         result = A7670C_CGACT_Read(&CGACT_Read_Response, A7670C_DEFAULT_TIMEOUT_MS);
         if(CGACT_Read_Response.code == kA7670C_Response_Code_OK){
