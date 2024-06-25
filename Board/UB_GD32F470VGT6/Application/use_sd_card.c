@@ -180,7 +180,7 @@ void USE_SD_CARD_Init(void){
     } while((SD_OK != sd_error) && (--i));
 
     if(i) {
-        printf("\r\n Card init success!\r\n");
+        printf("[SD_CARD] OK\r\n");
 
         global_get()->fatfs.state = GLOBAL_FATFS_STATE_INIT_SUCCESS;
 
@@ -221,7 +221,7 @@ void USE_SD_CARD_Init(void){
 
     } else {
         global_get()->fatfs.state = GLOBAL_FATFS_STATE_INIT_FAILED;
-        printf("\r\n Card init failed!\r\n");
+        printf("[SD_CARD] ERROR \r\n");
     }
 
 }

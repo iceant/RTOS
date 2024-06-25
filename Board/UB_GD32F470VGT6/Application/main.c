@@ -27,16 +27,21 @@ static void BootThread_Entry(void* p){
     char time_display_buf[32];
     int err;
 
+
+#if defined(ENABLE_OLED)
+    int OLED__line = 0;
+    OLED_TurnOn();
+    OLED_ShowString(0, OLED__line++, "[OLED] OK        ", 12);
+#endif
+
+
 #if defined(ENABLE_SPI_FLASH)
     uint32_t FlashID = sFLASH_ReadID();
     os_printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
-#endif
-
 #if defined(ENABLE_OLED)
-    OLED_TurnOn();
-    OLED_ShowString(0, 0, "System Booting...", 12);
+    OLED_ShowString(0, OLED__line++, "[EXT_FLASH] OK   ", 12);
 #endif
-
+#endif
 
 #if defined(ENABLE_4G)
     A7670C_Result result = A7670C_Startup();
@@ -44,6 +49,9 @@ static void BootThread_Entry(void* p){
         Board_Reboot();
         return;
     }
+#if defined(ENABLE_OLED)
+    OLED_ShowString(0, OLED__line++, "[4G] OK          ", 12);
+#endif
     global_load_net_info();
 #endif
 
@@ -53,6 +61,9 @@ static void BootThread_Entry(void* p){
 #if defined(ENABLE_DS1307)
     Task_TimeSync_Init();
     os_thread_mdelay(2000);
+#if defined(ENABLE_OLED)
+    OLED_ShowString(0, OLED__line++, "[NTP] OK          ", 12);
+#endif
 #endif
 
 #if defined(ENABLE_MQTT)
@@ -63,6 +74,10 @@ static void BootThread_Entry(void* p){
     }
     #endif /*defined(ENABLE_MQTT)*/
 
+#if defined(ENABLE_OLED)
+    OLED_ShowString(0, OLED__line++, "[MQTT] OK          ", 12);
+#endif
+
     Task_HeartBeat_Init();
 #endif
 
@@ -71,14 +86,26 @@ static void BootThread_Entry(void* p){
     USE_USART2_Init();
     /* 与 GD32F303CGT6 同步时间 */
     Task_MCU_DateTime_Init();
+
+#if defined(ENABLE_OLED)
+    OLED_ShowString(0, OLED__line++, "[CAN] OK          ", 12);
+#endif
+
 #endif
 
 
 #if defined(ENABLE_CAN0)
     USE_CAN0_Init();
+#if defined(ENABLE_OLED)
+    OLED_ShowString(0, OLED__line++, "[METER] OK          ", 12);
+#endif
+
 #endif
 
     /* 更新 GLOBAL 里的时间 */
+#if defined(ENABLE_OLED)
+    OLED_Clear();
+#endif
 
     while(1){
         #if defined(ENABLE_DS1307)
@@ -100,9 +127,9 @@ static void BootThread_Entry(void* p){
                 , sec);
 
         os_printf("%s\n", time_display_buf);
-
+#if defined(ENABLE_OLED)
         OLED_ShowString(0, 0, time_display_buf, 12);
-
+#endif
         #endif /* defined(ENABLE_DS1307) */
         
         os_thread_mdelay(1000);
@@ -147,12 +174,12 @@ int main(void)
 
     sdk_fmt_register('F', sdk_float_str_fmt);
 
-    dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
-    dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
-    dbg_print("CK_SYS: %d\n", rcu_clock_freq_get(CK_SYS));
-    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
-    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
-    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
+//    dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
+//    dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
+//    dbg_print("CK_SYS: %d\n", rcu_clock_freq_get(CK_SYS));
+//    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
+//    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
+//    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
     dbg_print("CPUID: %s\n", BSP_CPUID_Read());
 
     /*启动*/

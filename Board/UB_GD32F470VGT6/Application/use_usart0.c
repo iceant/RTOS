@@ -26,7 +26,7 @@ static void USART0__RxHandler(uint16_t ch, void* userdata){
 
 static void USART0_RxThread_Entry(void* p)
 {
-    os_printf("USART0_RxThread_Entry startup\n");
+    os_printf("[USE_USART0] OK\n");
     BSP_USART0_SetRxHandler(USART0__RxHandler, 0);
     int used = 0;
     while(1){

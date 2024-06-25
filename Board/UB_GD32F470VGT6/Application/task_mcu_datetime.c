@@ -27,7 +27,7 @@ static void Task_MCU_DateTime_Thread_Entry(void* p){
         mcu_protocol_send(&mcu_protocol_g_tx_protocol);
 
         /* Send CPUID */
-        printf("[TASK_MCU_DT]Send CPUID:%s\n", BSP_CPUID_Read());
+        //printf("[TASK_MCU_DT]Send CPUID:%s\n", BSP_CPUID_Read());
         mcu_protocol_init(&mcu_protocol_g_tx_protocol, kMCU_PROTOCOL_DU_CPUID, BSP_CPUID_Read(), strlen(BSP_CPUID_Read()));
         mcu_protocol_crc(&mcu_protocol_g_tx_protocol);
         mcu_protocol_send(&mcu_protocol_g_tx_protocol);
