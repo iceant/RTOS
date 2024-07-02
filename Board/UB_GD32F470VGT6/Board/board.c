@@ -133,28 +133,29 @@ void Board_4GPower_Enable(void){
 ////
 
 void Board_Init(void){
-
+    cpu_uint_t level = cpu_interrupt_disable();
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x010000);
-    __enable_irq();
-    SCB->CCR|=SCB_CCR_STKALIGN_Msk;
+
+//    SCB->CCR|=SCB_CCR_STKALIGN_Msk;
 
 //    SCB->CCR   |= SCB_CCR_DIV_0_TRP_Msk
 //                  |  SCB_CCR_UNALIGN_TRP_Msk;
 
-    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk
-                  |  SCB_SHCSR_BUSFAULTENA_Msk
-                  |  SCB_SHCSR_MEMFAULTENA_Msk; // enable Usage-/Bus-/MPU Fault
+//    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk
+//                  |  SCB_SHCSR_BUSFAULTENA_Msk
+//                  |  SCB_SHCSR_MEMFAULTENA_Msk; // enable Usage-/Bus-/MPU Fault
 
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
-    SystemCoreClock = 240000000U;
+//    SystemCoreClock = 240000000U;
 
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */
 //    NVIC_SetPriority(SysTick_IRQn, 0xFE);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
-    
+
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- 打开 5V 电源 ----*/
 //    Board_5V_Init();
@@ -174,6 +175,7 @@ void Board_Init(void){
     BSP_USART0_EnableRxIRQ();
     #endif
 
+    cpu_interrupt_enable(level);
     /* ------------------------------------------------------------------------------------------ */
     /* ---- OS KERNEL ----*/
     os_kernel_init();
@@ -258,6 +260,10 @@ void Board_Init(void){
     #if defined(ENABLE_KEY)
     BSP_Key_Init(0);
     #endif
+
+
+    /* ------------------------------------------------------------------------------------------ */
+
 }
 
 void Board_Reboot(void){

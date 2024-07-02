@@ -27,6 +27,7 @@ static void BootThread_Entry(void* p){
     char time_display_buf[32];
     int err;
 
+    printf("[APP] Boot Thread Startup...\n");
 
 #if defined(ENABLE_OLED)
     int OLED__line = 0;
@@ -150,10 +151,6 @@ static void BootThread_Entry(void* p){
 */
 int main(void)
 {
-    /* delay */
-    int i;
-    for(i=0; i<0x3ffff; i++);
-
     /* startup */
     Board_Init();
 
@@ -174,12 +171,12 @@ int main(void)
 
     sdk_fmt_register('F', sdk_float_str_fmt);
 
-//    dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
-//    dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
-//    dbg_print("CK_SYS: %d\n", rcu_clock_freq_get(CK_SYS));
-//    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
-//    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
-//    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
+    dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
+    dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
+    dbg_print("CK_SYS: %d\n", rcu_clock_freq_get(CK_SYS));
+    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
+    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
+    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
     dbg_print("[CPUID] %s\n", BSP_CPUID_Read());
 
     /*启动*/
@@ -189,6 +186,7 @@ int main(void)
 
 
     os_kernel_startup();
+
 
     ////////////////////////////////////////////////////////////////////////////////
     //// 不应该运行以下代码

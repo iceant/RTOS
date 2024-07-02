@@ -24,8 +24,14 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t * buffer, void* ud
             A7670C_Notify();
             return kA7670C_RxHandler_Result_RESET;
         }
-        
-        //sdk_ringbuffer_iter(&iter, ","); /*datalen*/
+
+        if(sdk_ringbuffer_iter(&iter, ",")==0) /*datalen*/
+        {
+            response->data_length = sdk_ringbuffer_iter_strtoul(&iter, 10);
+        }else{
+            response->data_length = -1;
+        }
+
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
     }

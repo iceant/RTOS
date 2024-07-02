@@ -8,4 +8,12 @@
 #define OS_PRINTF_USE_DEFAULT_IMPLEMENTATION 1
 #define OS_PRINTF_BUFFER_SIZE 1024
 
+#define CPU_STACK_INIT_WITH_PRIVILEGE 1
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define ENABLE_USART0
+#define ENABLE_4G
+
+
 #endif /*INCLUDED_OS_CONFIG_H*/

@@ -4,20 +4,71 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <os_kernel.h>
+#include "bsp_spi0.h"
+#include <spi_flash.h>
+#include "bsp_usart1.h"
 ////////////////////////////////////////////////////////////////////////////////
 ////
+static sFLASH_IO_T W25QFLASH_IO={.Init = BSP_SPI0_Init, .DeInit=BSP_SPI0_DeInit
+        , .CS_High=BSP_SPI0_CS_High, .CS_Low=BSP_SPI0_CS_Low
+        , .SendByte=BSP_SPI0_SendByte, .SendHalfWord=BSP_SPI0_SendHalfWord
+};
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
+void Board_DeInit(void)
+{
+    rcu_periph_clock_disable(RCU_GPIOA);
+    rcu_periph_clock_disable(RCU_GPIOB);
+    rcu_periph_clock_disable(RCU_GPIOC);
+    rcu_periph_clock_disable(RCU_GPIOD);
+    rcu_periph_clock_disable(RCU_GPIOE);
+    rcu_periph_clock_disable(RCU_GPIOF);
+    rcu_periph_clock_disable(RCU_GPIOG);
+
+    BSP_SPI0_DeInit();
+    BSP_USART1_DeInit();
+    BSP_USART0_DeInit();
+}
 
 void Board_Init(void)
 {
-    __enable_irq();
-    __set_FAULTMASK(0);
+    nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x000000);
+    systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
+
+//    SystemCoreClock = 240000000U;
+
+    /* Configure the NVIC Preemption Priority Bits */
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
+    SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */
+    NVIC_SetPriority(PendSV_IRQn, 0xFF);
 
     BSP_USART0_Init();
     BSP_USART0_EnableDMATx();
     BSP_USART0_EnableRxIRQ();
+
+    os_kernel_init();
+
+    sFLASH_Init(&W25QFLASH_IO);
+
+#if defined(ENABLE_4G)
+    BSP_USART1_Init();
+    BSP_USART1_EnableRxIRQ();
+    BSP_USART1_EnableDMATx();
+
+    BSP_A7670C_Init();
+#endif
+
+
 }
 
+void Board_Reboot(void){
+    __disable_irq();                     // 可以使用这个函数 关闭总中断
+    __set_FAULTMASK(1);        //关闭中断,确保跳转过程中 不会进入中断,导致跳转失败
+    cpu_reboot();
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int fputc(int ch, FILE *f)

@@ -78,4 +78,6 @@ uint16_t sFLASH_SendHalfWord(uint16_t HalfWord);
 void sFLASH_WriteEnable(void);
 void sFLASH_WaitForWriteEnd(void);
 
+uint8_t sFLASH_IsValidID(uint32_t flashId);
+
 #endif /* INCLUDED_SPI_FLASH_H */

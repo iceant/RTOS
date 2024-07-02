@@ -141,6 +141,33 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#ifndef INCLUDED_HTTPACTION_H
+#include <HTTPACTION.h>
+#endif /*INCLUDED_HTTPACTION_H*/
+
+#ifndef INCLUDED_HTTPDATA_H
+#include <HTTPDATA.h>
+#endif /*INCLUDED_HTTPDATA_H*/
+
+#ifndef INCLUDED_HTTPHEAD_H
+#include <HTTPHEAD.h>
+#endif /*INCLUDED_HTTPHEAD_H*/
+
+#ifndef INCLUDED_HTTPINIT_H
+#include <HTTPINIT.h>
+#endif /*INCLUDED_HTTPINIT_H*/
+
+#ifndef INCLUDED_HTTPPARA_H
+#include <HTTPPARA.h>
+#endif /*INCLUDED_HTTPPARA_H*/
+
+#ifndef INCLUDED_HTTPREAD_H
+#include <HTTPREAD.h>
+#endif /*INCLUDED_HTTPREAD_H*/
+
+#ifndef INCLUDED_HTTPTERM_H
+#include <HTTPTERM.h>
+#endif /*INCLUDED_HTTPTERM_H*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

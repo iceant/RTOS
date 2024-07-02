@@ -47,6 +47,8 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t* buffer, void*ud){
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
     }
+
+    return kA7670C_RxHandler_Result_CONTINUE;
 }
 
 A7670C_Result A7670C_HTTPREAD_Write(A7670C_HTTPREAD_Write_Response* response
@@ -54,6 +56,9 @@ A7670C_Result A7670C_HTTPREAD_Write(A7670C_HTTPREAD_Write_Response* response
         , int byte_size
         , uint32_t timeout_ms)
 {
+    response->code = kA7670C_Response_Code_ERROR;
+    response->req_offset = start_offset;
+    response->req_byte_size = byte_size;
     return A7670C_RequestWithArgs(Write_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+HTTPREAD=%d,%d\r\n", start_offset, byte_size);
 }
 

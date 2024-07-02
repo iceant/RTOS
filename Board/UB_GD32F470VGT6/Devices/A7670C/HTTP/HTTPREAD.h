@@ -21,8 +21,10 @@ A7670C_Result A7670C_HTTPREAD_Read(A7670C_HTTPREAD_Read_Response* response, uint
 
 typedef struct A7670C_HTTPREAD_Write_Response{
     A7670C_Response_Code code;
-    int data_len;
-    uint8_t data[10240]; /*Max size: 10K*/
+    int     data_len;
+    void*   data; /*Max size: 10K*/
+    int     req_offset;
+    int     req_byte_size;
 }A7670C_HTTPREAD_Write_Response;
 
 A7670C_Result A7670C_HTTPREAD_Write(A7670C_HTTPREAD_Write_Response* response

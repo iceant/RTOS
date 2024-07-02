@@ -18,6 +18,7 @@ typedef enum A7670C_HTTPACTION_Method{
 typedef struct A7670C_HTTPACTION_Write_Response{
     A7670C_Response_Code code;
     int status_code;
+    int data_length;
 }A7670C_HTTPACTION_Write_Response;
 
 A7670C_Result A7670C_HTTPACTION_Write(A7670C_HTTPACTION_Write_Response* response, A7670C_HTTPACTION_Method method, uint32_t timeout_ms);

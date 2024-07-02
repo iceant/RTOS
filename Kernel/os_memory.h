@@ -26,6 +26,11 @@ void * os_memory_calloc(os_size_t nCount, os_size_t nBytes, const char* file, os
 void * os_memory_realloc(void* memory, os_size_t nBytes, const char* file, os_size_t line);
 void os_memory_free(void* memory, const char* file, os_size_t line);
 
+void * os_memory_malloc_ex(os_size_t nBytes);
+void * os_memory_calloc_ex(os_size_t nCount, os_size_t nBytes);
+void * os_memory_realloc_ex(void* memory, os_size_t nBytes);
+void os_memory_free_ex(void* memory);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define OS_ALLOC(SZ) os_memory_malloc((SZ), __FILE__, __LINE__)

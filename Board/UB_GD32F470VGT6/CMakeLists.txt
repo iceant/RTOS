@@ -143,7 +143,7 @@ add_executable(${PROJECT_NAME} ${APPLICATION_SOURCES}
 
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--scatter ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/app.sct")
-
+target_compile_definitions(${PROJECT_NAME} PRIVATE "CPU_STACK_INIT_WITH_PRIVILEGE=1")
 target_link_libraries(${PROJECT_NAME} PUBLIC RTOS_Kernel)
 target_link_libraries(${PROJECT_NAME} PUBLIC GD32F4xx)
 target_link_libraries(${PROJECT_NAME} PUBLIC RTOS_SDK)
@@ -206,7 +206,10 @@ endforeach ()
 add_executable(${BOOTLOADER_BIN}
         ${BOOTLOADER_SOURCES}
         ${ARMCC_SOURCES}
+        ${SPIFLASH_SOURCES}
+        ${A7670C_SOURCES}
 )
+target_compile_definitions(${BOOTLOADER_BIN} PRIVATE "-DCPU_STACK_INIT_WITH_PRIVILEGE=1")
 set_target_properties(${BOOTLOADER_BIN} PROPERTIES LINK_FLAGS "--scatter ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/link.sct")
 
 target_sources(GD32F4xx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader/gd32f4xx_libopt.h)
@@ -219,10 +222,26 @@ target_include_directories(RTOS_SDK PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Bootload
 target_sources(RTOS_CPU PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader/os_config.h)
 target_include_directories(RTOS_CPU PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader/)
 
+target_include_directories(${BOOTLOADER_BIN} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/SPIFlash)
+
 target_include_directories(${BOOTLOADER_BIN} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader)
 target_link_libraries(${BOOTLOADER_BIN} PUBLIC RTOS_Kernel)
 target_link_libraries(${BOOTLOADER_BIN} PUBLIC GD32F4xx)
 target_link_libraries(${BOOTLOADER_BIN} PUBLIC RTOS_SDK)
+
+target_include_directories(${BOOTLOADER_BIN}
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/Common
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/GNSS
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/HTTP
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/InternetService
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/MQTT
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/Network
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/PacketDomain
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/SIMCard
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/StatusControl
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/A7670C/V25TER
+)
 
 if (CMAKE_C_COMPILER_ID MATCHES ARMCC)
     set(HEX_FILE ${PROJECT_BINARY_DIR}/${BOOTLOADER_BIN}.hex)

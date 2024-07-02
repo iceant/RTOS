@@ -47,6 +47,27 @@ void os_memory_free(void* memory, const char* file, os_size_t line)
     }
 }
 
+void * os_memory_malloc_ex(os_size_t nBytes)
+{
+    return tlsf_malloc(nBytes);
+}
+void * os_memory_calloc_ex(os_size_t nCount, os_size_t nBytes)
+{
+    return tlsf_calloc(nCount, nBytes);
+}
+
+void * os_memory_realloc_ex(void* memory, os_size_t nBytes)
+{
+    return tlsf_realloc(memory, nBytes);
+}
+
+void os_memory_free_ex(void* memory)
+{
+    if(memory){
+        tlsf_free(memory);
+    }
+}
+
 #else
 
 os_err_t os_memory_init(void)

@@ -12,13 +12,16 @@
 #include <bsp_usart0.h>
 #endif /*INCLUDED_BSP_USART0_H*/
 
-
+#ifndef INCLUDED_BSP_A7670C_H
+#include <bsp_a7670c.h>
+#endif /*INCLUDED_BSP_A7670C_H*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 void Board_Init(void);
 
+void Board_DeInit(void);
 
-
+void Board_Reboot(void);
 
 #endif /*INCLUDED_BOARD_H*/

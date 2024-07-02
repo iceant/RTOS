@@ -1,5 +1,9 @@
 #include "main.h"
 #include "board.h"
+#include "iap.h"
+#include <os_kernel.h>
+#include "use_usart0.h"
+#include <A7670C.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -7,9 +11,6 @@
 #define APPLICATION_ADDRESS (0x08010000U)
 
 ////////////////////////////////////////////////////////////////////////////////
-////
-typedef void (*pFunction)(void);
-
 
 static void delay_ms(uint32_t ms){
     for(uint32_t m=0; m<ms; m++){
@@ -29,41 +30,56 @@ static void bootloader_exec_upgrade(void){
 }
 
 static void bootloader_jump(void* address){
-    /* Test if user code is programmed starting from address "APPLICATION_ADDRESS" */
-    {
-        printf("Jump To: 0x%p\n", address);
-        delay_ms(100);
-
-        __disable_irq();
-
-        /* Jump to user application */
-        uint32_t JumpAddress = HW32_ADDR(address + 4);
-        pFunction JumpToApplication = (pFunction) JumpAddress;
-        /* Initialize user application's Stack Pointer */
-        __set_MSP(HW32_ADDR(address));
-
-        BSP_USART0_DeInit();
-
-        JumpToApplication();
-    }
+//    Board_DeInit();
+    iap_jump((uint32_t)address);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+C__ALIGNED(OS_ALIGN_SIZE)
+static uint8_t BootThread_Stack[1024];
+static os_thread_t BootThread;
+
+static void BootThread_Entry(void* p){
+
+#if defined(ENABLE_4G)
+    A7670C_Result result = A7670C_Startup();
+    if(result!=kA7670C_Result_OK){
+        Board_Reboot();
+        return;
+    }
+    iap_check_upgrade();
+#endif
+
+    printf("Jump To %p\n", APPLICATION_ADDRESS);
+    iap_jump(APPLICATION_ADDRESS);
+
+    while(1);
+
+}
 
 int main(void){
 
+#if 1
     Board_Init();
+
+    /*初始化终端*/
+    USE_USART0_Init();
 
     printf("========== BOOTLOADER ==========\n");
 
-    if(bootloader_need_upgrade()){
-        bootloader_exec_upgrade();
-    }
+    os_thread_init(&BootThread, "BootThd", BootThread_Entry, 0, BootThread_Stack, sizeof(BootThread_Stack), 20, 10);
+    os_thread_startup(&BootThread);
 
-    /* no need to upgrade */
-    bootloader_jump((void*)APPLICATION_ADDRESS);
+    os_kernel_startup();
+
+#else
+
+    iap_jump(APPLICATION_ADDRESS);
+
+#endif
+
 
 
     while(1);
