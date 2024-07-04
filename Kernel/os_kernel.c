@@ -6,6 +6,8 @@ os_err_t os_kernel_init(void)
     cpu_init();
 
     cpu_disable_irq();
+    cpu_set_PRIMASK(1);
+    cpu_set_FAULTMASK(1);
 
     os_memory_init();
 
