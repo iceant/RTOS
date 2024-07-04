@@ -125,6 +125,49 @@ static int iap__firmware_info_write(iap_firmware_info_t * info){
     return IAP_RET_OK;
 }
 
+static int iap__http_init(const char* url){
+    Http_Init();
+    int err = IAP_RET_OK;
+
+    A7670C_HTTPPARA_Write_Response HTTPPARA_Write_Response;
+    A7670C_Result result = A7670C_HTTPPARA_Write_URL(&HTTPPARA_Write_Response, url, 12000);
+    if(kA7670C_Response_Code_OK!=HTTPPARA_Write_Response.code){
+        err = IAP_RET_ERROR;
+        goto __iap__http_init_exit;
+    }
+
+    result = A7670C_HTTPPARA_Write_READMODE(&HTTPPARA_Write_Response, 1, 12000);
+    if(kA7670C_Response_Code_OK!=HTTPPARA_Write_Response.code){
+        err = IAP_RET_ERROR;
+        goto __iap__http_init_exit;
+    }
+
+    A7670C_HTTPACTION_Write_Response HTTPACTION_Write_Response;
+    result = A7670C_HTTPACTION_Write(&HTTPACTION_Write_Response, kA7670C_HTTPACTION_Method_GET, 12000);
+    if(kA7670C_Response_Code_OK!=HTTPACTION_Write_Response.code){
+        err = IAP_RET_ERROR;
+        goto __iap__http_init_exit;
+    }
+
+    if(HTTPACTION_Write_Response.status_code==404){
+        printf("File Not Exist!\n");
+        err = IAP_RET_ERROR;
+        goto __iap__http_init_exit;
+    }
+
+    if(HTTPACTION_Write_Response.status_code==500){
+        printf("Server ERROR!\n");
+        err = IAP_RET_ERROR;
+        goto __iap__http_init_exit;
+    }
+
+__iap__http_init_exit:
+    if(err!=IAP_RET_OK){
+        Http_Destroy();
+    }
+    return err;
+}
+
 static int iap__fw_download(int fw_type, const char* url, uint32_t fw_version, int fw_size, char* md5_string)
 {
     iap_firmware_info_t fw_info;
@@ -162,95 +205,93 @@ static int iap__fw_download(int fw_type, const char* url, uint32_t fw_version, i
 
     MD5_CTX md5_ctx;
     uint8_t md5[16];
-    int download_page = PAGE(fw_size, EXT_FLASH_PAGE_SIZE);
-    A7670C_HTTPREAD_Write_Response HTTPREAD_Write_Response;
+    int download_page_size = 1024;
+    int total_read = 0;
+    int read_size = 0;
+    int buffer_size = sizeof(iap__download_buffer);
+    memset(iap__download_buffer, 0, buffer_size);
 
     uint32_t flashId = sFLASH_ReadID();
     if(!sFLASH_IsValidID(flashId)){
+        printf("[IAP] Invalid FLASH ID: %x\n", flashId);
         return IAP_RET_SPI_FLASH_NOT_READY;
     }
 
+    __disable_irq();
+    cpu_set_PRIMASK(1);
     /*根据数据大小，准备 W25Q128 的扇区*/
-    uint8_t sectors = PAGE(fw_info.size, sFLASH_SECTOR_SIZE);
-    for(uint8_t i=0; i<sectors; i++){
-        sFLASH_EraseSector(ext_flash_save_address+i*sFLASH_SECTOR_SIZE);
+    uint8_t erase_sectors = PAGE(fw_size, sFLASH_SECTOR_SIZE);
+    for(uint8_t i=0; i < erase_sectors; i++){
+        uint32_t erase_address = ext_flash_save_address + i * sFLASH_SECTOR_SIZE;
+        printf("[IAP] erase ext flash %p\n", erase_address);
+        sFLASH_EraseSector(erase_address);
+    }
+    __enable_irq();
+    cpu_set_PRIMASK(0);
+
+    err = iap__http_init(url);
+    if(err!=IAP_RET_OK){
+        return IAP_RET_ERROR;
     }
 
     MD5Init(&md5_ctx);
-    Http_Init();
 
-    A7670C_HTTPPARA_Write_Response HTTPPARA_Write_Response;
-    A7670C_Result result = A7670C_HTTPPARA_Write_URL(&HTTPPARA_Write_Response, url, 12000);
-    if(kA7670C_Response_Code_OK!=HTTPPARA_Write_Response.code){
-        err = IAP_RET_ERROR;
-        goto __iap__fw_download_exit;
-    }
-
-    result = A7670C_HTTPPARA_Write_READMODE(&HTTPPARA_Write_Response, 1, 12000);
-    if(kA7670C_Response_Code_OK!=HTTPPARA_Write_Response.code){
-        err = IAP_RET_ERROR;
-        goto __iap__fw_download_exit;
-    }
-
-    A7670C_HTTPACTION_Write_Response HTTPACTION_Write_Response;
-    result = A7670C_HTTPACTION_Write(&HTTPACTION_Write_Response, kA7670C_HTTPACTION_Method_GET, 12000);
-    if(kA7670C_Response_Code_OK!=HTTPACTION_Write_Response.code){
-        err = IAP_RET_ERROR;
-        goto __iap__fw_download_exit;
-    }
-
-    if(HTTPACTION_Write_Response.status_code==404){
-        printf("File Not Exist!\n");
-        err = IAP_RET_ERROR;
-        goto __iap__fw_download_exit;
-    }
-
-    if(HTTPACTION_Write_Response.status_code==500){
-        printf("Server ERROR!\n");
-        err = IAP_RET_ERROR;
-        goto __iap__fw_download_exit;
-    }
-
-    int total_read = 0;
-    int read_size = 0;
-
-    for(int i=0; i<download_page; i++){
-        memset(iap__download_buffer, 0, sizeof(iap__download_buffer));
+    while(1){
+        A7670C_HTTPREAD_Write_Response HTTPREAD_Write_Response;
 
         HTTPREAD_Write_Response.data = iap__download_buffer;
-        HTTPREAD_Write_Response.data_len = sizeof(iap__download_buffer);
+        HTTPREAD_Write_Response.data_len = 0;
 
-        result = A7670C_HTTPREAD_Write(&HTTPREAD_Write_Response, total_read, sizeof(iap__download_buffer), 12000);
+        A7670C_HTTPREAD_Write(&HTTPREAD_Write_Response, total_read, download_page_size, 12000);
         if(kA7670C_Response_Code_OK!=HTTPREAD_Write_Response.code){
             err = IAP_RET_ERROR;
             goto __iap__fw_download_exit;
         }
         read_size = HTTPREAD_Write_Response.data_len;
+        if(read_size==0){
+//            printf("[IAP] download 0 bytes!!!\n");
+//            total_read = 0;
+//            MD5Init(&md5_ctx);
+//            Http_Destroy();
+//            iap__http_init(url);
+//
+//            for(uint8_t i=0; i < erase_sectors; i++){
+//                uint32_t erase_address = ext_flash_save_address + i * sFLASH_SECTOR_SIZE;
+//                sFLASH_EraseSector(erase_address);
+//            }
+
+            continue;
+        }
 
 
         /*将数据写入 W25Q128, 并检查写入的内容是否正确 */
         sFLASH_WriteBuffer(iap__download_buffer, ext_flash_save_address+total_read, read_size);
         sFLASH_ReadBuffer(iap__download_verify_buffer, ext_flash_save_address+total_read, read_size);
+
         if(memcmp(iap__download_buffer, iap__download_verify_buffer, read_size)!=0){
             printf("[IAP] ERROR - write to W25Q128 addr:0x%08x, size=%d, failed!\n", ext_flash_save_address+total_read, read_size);
             err = IAP_RET_ERROR;
             goto __iap__fw_download_exit;
+        }else{
+            // 计算 MD5
+            MD5Update(&md5_ctx, iap__download_verify_buffer, read_size);
+
+            total_read += read_size;
+            printf("[IAP] Download %d/%d %d\n", total_read, fw_size, read_size);
         }
 
-        // 计算 MD5
-        MD5Update(&md5_ctx, iap__download_verify_buffer, read_size);
-
-
-        total_read += read_size;
+        if(total_read==fw_size){
+            break;
+        }
     }
 
-    MD5Final(&md5_ctx, md5);
+    MD5Final(md5, &md5_ctx);
 
     fw_info.remote_version = fw_version;
     fw_info.size = fw_size;
     SDK_HEX_DECODE(fw_info.md5, sizeof(fw_info.md5), md5_string, strlen(md5_string));
 
-    if(memcmp(md5, fw_info.md5, 16)!=0){
+    if(memcmp(md5, fw_info.md5, sizeof(fw_info.md5))!=0){
         printf("[IAP] ERROR Wrong MD5 for URL: %s\n", url);
         char md5_str[33];
         SDK_HEX_ENCODE_BE(md5_str, sizeof(md5_str), fw_info.md5, sizeof(fw_info.md5));
@@ -259,6 +300,7 @@ static int iap__fw_download(int fw_type, const char* url, uint32_t fw_version, i
         printf("Downloaded MD5: %s\n", md5_str);
         err = IAP_RET_ERROR;
     }else{
+        fw_info.type = fw_type;
         fw_info.download_version = fw_info.remote_version;
         fw_info.is_downloaded = 1;
         iap__firmware_info_write(&fw_info);
@@ -281,15 +323,17 @@ __iap__fw_download_exit:
     3.
  */
 static int iap__upgrade_mcu0_app(void){
+    printf("[IAP] Upgrade MCU0_APP...\n");
     iap_firmware_info_t fw_info;
     int err = 0;
     MD5_CTX md5_ctx;
     uint8_t md5[16];
     int nRetry = 3;
-    cpu_uint_t level = 0;
+
     iap__firmware_info_read(IAP_FW_TYPE_MCU0_APP, &fw_info);
 
     if(fw_info.installed_version== fw_info.download_version){
+        printf("[IAP] MCU0_APP download version == installed version! SKIP!!!\n");
         return IAP_RET_OK;
     }
 
@@ -306,57 +350,74 @@ __iap__upgrade_mcu0_app_program:
         return IAP_RET_ERROR;
     }
 
-    level = cpu_interrupt_disable();
-
-    fmc_unlock();
 
     /* 先擦除再写入 */
     size_t mcu_pages = PAGE(fw_info.size, MCU_FLASH_PAGE_SIZE);
-    for(size_t i=0; i<mcu_pages; i++){
-        uint32_t addr = mcu_flash_address + i*MCU_FLASH_PAGE_SIZE;
-        printf("[IAP] MCU FLASH Erase %08x \r\n", addr);
-        if(FMC_READY!=fmc_page_erase(addr)){
-            printf("[IAP] Erase MCU flash %08x failed!\r\n", addr);
+    uint32_t used_sector_size = 0;
+
+
+    __disable_irq();
+    /* unlock the flash program erase controller */
+    fmc_unlock();
+    /* get the information of the start and end sectors */
+    fmc_sector_info_struct start_sector_info = fmc_sector_info_get(mcu_flash_address);
+    fmc_sector_info_struct end_sector_info = fmc_sector_info_get(mcu_flash_address + fw_info.size);
+    /* erase sector */
+    for(uint32_t i = start_sector_info.sector_name; i <= end_sector_info.sector_name; i++){
+        uint32_t sector_num = sector_name_to_number(i);
+        printf("[IAP] Erase MCU sector %d\n", i);
+        /* clear pending flags */
+        fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_OPERR | FMC_FLAG_WPERR | FMC_FLAG_PGMERR | FMC_FLAG_PGSERR);
+
+        if(FMC_READY != fmc_sector_erase(sector_num)){
+            printf("[IAP] ERR erase sector %d failed!\n", i);
             err = IAP_RET_ERROR;
             goto __iap__upgrade_mcu0_app_exit;
         }
     }
 
+
     MD5Init(&md5_ctx);
 
-    size_t page = PAGE(fw_info.size, MCU_FLASH_PAGE_SIZE);
     uint32_t read_size = 0;
     uint32_t total_read = 0;
+    uint32_t write_address = mcu_flash_address;
 
-    for(size_t i=0; i<page; i++){
+    while(1){
         read_size = fw_info.size - total_read;
         read_size = (read_size < MCU_FLASH_PAGE_SIZE)?read_size:MCU_FLASH_PAGE_SIZE;
         sFLASH_ReadBuffer(iap__download_buffer, ext_flash_address+total_read, read_size);
 
         MD5Update(&md5_ctx, iap__download_buffer, read_size);
 
-        printf("[IAP] %d/%d Total:%d bytes, handled %d bytes, Read from %08x - %d bytes from W25Q128\r\n"
-                , (i+1)
-                , page
-                , fw_info.size, total_read, ext_flash_address+total_read, read_size);
+        printf("[IAP] %d/%d bytes, Read from 0x%08x - %d bytes from W25Q128\r\n"
+                , total_read
+                , fw_info.size
+                , ext_flash_address+total_read
+                , read_size);
 
-        uint32_t *data = (uint32_t*)iap__download_buffer;
-        uint32_t write_page = PAGE(read_size, 4); /*计算有多少个 WORD */
+        uint32_t* word_addr = (uint32_t*)iap__download_buffer;
+        int word_page = PAGE(read_size, 4);
 
-        for(uint32_t w=0; w<write_page; w++){
-            uint32_t write_addr = mcu_flash_address+total_read+w*4;
-            if (FMC_READY != fmc_word_program(write_addr, data[w])) //write
+        for(int x=0; x< word_page; x++){
+            fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_OPERR | FMC_FLAG_WPERR | FMC_FLAG_PGMERR | FMC_FLAG_PGSERR);
+            if (FMC_READY != fmc_word_program(write_address, word_addr[x])) //write
             {
-                printf("[IAP] Write MCU Flash Addr %08x Failed!\r\n", write_addr);
+                printf("[IAP] Write MCU Flash Addr %08x Failed!\r\n", write_address);
                 err = IAP_RET_ERROR;
                 goto __iap__upgrade_mcu0_app_exit;
             }
+            write_address+=4;
         }
 
         total_read += read_size;
+
+        if(total_read==fw_info.size){
+            break;
+        }
     }
 
-    MD5Final(&md5_ctx, md5);
+    MD5Final(md5, &md5_ctx);
 
     if(memcmp(md5, fw_info.md5, 16)!=0){
         printf("[IAP] ERROR Wrong MD5:\n");
@@ -366,7 +427,6 @@ __iap__upgrade_mcu0_app_program:
         SDK_HEX_ENCODE_BE(md5_str, sizeof(md5_str), md5, sizeof(md5));
         printf("Check MD5: %s\n", md5_str);
         err = IAP_RET_ERROR;
-        fmc_lock();
         goto __iap__upgrade_mcu0_app_program;
     }
 
@@ -377,7 +437,6 @@ __iap__upgrade_mcu0_app_program:
 
 __iap__upgrade_mcu0_app_exit:
     fmc_lock();
-    cpu_interrupt_enable(level);
     return err;
 }
 
@@ -416,14 +475,15 @@ int iap_check_upgrade(void)
     int err;
     int offset = 0;
     int page_size = 1024;
-    int read_size = 0;
-    int total_size = 0;
+    size_t read_size = 0;
+    size_t total_size = 0;
     int upgrade_flag = IAP_UPGRADE_FLAG_NONE;
 
     ////////////////////////////////////////////////////////////////////////////////
     // 1. 读取 upgrade.json 文件
 
     const char* upgrade_json_url = iap__fw_info_url();
+    memset(iap__download_buffer, 0, sizeof(iap__download_buffer));
 
     Http_Init();
 
@@ -435,8 +495,14 @@ int iap_check_upgrade(void)
             break;
         }
 
+        if(err!=HTTP_RET_OK){
+            printf("[IAP] Http Get Failed! Code=%d\n", err);
+            break;
+        }
+
         printf("[IAP] Download offset=%d, read=%d, total=%d\n", offset, read_size, total_size);
         offset+=read_size;
+
         if(offset==total_size){
             err = IAP_RET_OK;
             break;
@@ -544,19 +610,19 @@ int iap_check_upgrade(void)
         }
     }
 
-    if(upgrade_flag & IAP_UPGRADE_FLAG_MCU0_APP){
+    if((upgrade_flag & IAP_UPGRADE_FLAG_MCU0_APP)==IAP_UPGRADE_FLAG_MCU0_APP){
         err = iap__upgrade_mcu0_app();
     }
 
-    if(upgrade_flag & IAP_UPGRADE_FLAG_MCU1_APP){
+    if((upgrade_flag & IAP_UPGRADE_FLAG_MCU1_APP)==IAP_UPGRADE_FLAG_MCU1_APP){
         err = iap__upgrade_mcu1_app();
     }
 
-    if(upgrade_flag & IAP_UPGRADE_FLAG_MCU1_BOOT){
+    if((upgrade_flag & IAP_UPGRADE_FLAG_MCU1_BOOT)==IAP_UPGRADE_FLAG_MCU1_BOOT){
         err = iap__upgrade_mcu1_boot();
     }
 
-    if(upgrade_flag & IAP_UPGRADE_FLAG_MCU0_BOOT){
+    if((upgrade_flag & IAP_UPGRADE_FLAG_MCU0_BOOT)==IAP_UPGRADE_FLAG_MCU0_BOOT){
         err = iap__upgrade_mcu0_boot();
     }
 
@@ -579,12 +645,14 @@ void iap_jump(uint32_t address)
         NVIC->ICPR[i] = 0xFFFFFFFF;
     }
 
-    Board_DeInit();
-
     /* Jump to user application */
     iap_function_t JumpToApplication = (iap_function_t) CPU_REG(address + 4);
     /* Initialize user application's Stack Pointer */
     cpu_set_MSP(CPU_REG(address));
+
+    printf("Jump %p\n", address);
+    delay_ms(200);
+    Board_DeInit();
 
     JumpToApplication();
 }

@@ -21,6 +21,7 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t * buffer, void* ud
         {
             response->status_code = (int)sdk_ringbuffer_iter_strtoul(&iter, 0);
         }else{
+            sdk_ringbuffer_reset(buffer);
             A7670C_Notify();
             return kA7670C_RxHandler_Result_RESET;
         }
@@ -32,12 +33,14 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t * buffer, void* ud
             response->data_length = -1;
         }
 
+        sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
     }
     
     if(sdk_ringbuffer_find_str(buffer, 0, "ERROR\r\n")!=-1){
         response->code=kA7670C_Response_Code_ERROR;
+        sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
     }
@@ -45,6 +48,6 @@ static A7670C_RxHandler_Result Write_Handler(sdk_ringbuffer_t * buffer, void* ud
     return kA7670C_RxHandler_Result_CONTINUE;
 }
 A7670C_Result A7670C_HTTPACTION_Write(A7670C_HTTPACTION_Write_Response* response, A7670C_HTTPACTION_Method method, uint32_t timeout_ms){
-    return A7670C_RequestWithArgs(Write_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+HTTPACTION=%d\r\n", method);
+    return A7670C_RequestWithArgs(__FUNCTION__,Write_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+HTTPACTION=%d\r\n", method);
 }
 

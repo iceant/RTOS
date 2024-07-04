@@ -16,7 +16,7 @@ static A7670C_RxHandler_Result SIMEI_Test_Handler(sdk_ringbuffer_t *buffer, void
 
 A7670C_Result A7670C_SIMEI_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(SIMEI_Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+SIMEI=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, SIMEI_Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+SIMEI=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -55,7 +55,7 @@ static A7670C_RxHandler_Result SIMEI_Read_Handler(sdk_ringbuffer_t *buffer, void
 A7670C_Result A7670C_SIMEI_Read(A7670C_SIMEI_Read_Response* result, uint32_t timeout_ms)
 {
     result->code = kA7670C_Response_Code_ERROR;
-    A7670C_Result err = A7670C_RequestWithCmd(SIMEI_Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+SIMEI?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, SIMEI_Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+SIMEI?\r\n");
     return err;
 }
 
@@ -86,7 +86,7 @@ static A7670C_RxHandler_Result SIMEI_Write_Handler(sdk_ringbuffer_t * buffer, vo
 
 A7670C_Result A7670C_SIMEI_Write(bool* result, const char* IMEI, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithArgs(SIMEI_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+SIMEI=%s\r\n", IMEI);
+    A7670C_Result err = A7670C_RequestWithArgs("SIMEI_Write",SIMEI_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+SIMEI=%s\r\n", IMEI);
     return err;
 }
 

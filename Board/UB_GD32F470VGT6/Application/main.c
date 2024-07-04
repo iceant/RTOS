@@ -153,12 +153,16 @@ int main(void)
 {
     /* startup */
     Board_Init();
+    
+    iap_check_upgrade();
 
     /* 加载全局数据 */
     global_init();
 
     /*初始化终端*/
     USE_USART0_Init();
+
+    printf("========== APPLICATION ==========\n");
 
 #if defined(ENABLE_SDCARD)
     USE_SD_CARD_Init();
@@ -171,13 +175,14 @@ int main(void)
 
     sdk_fmt_register('F', sdk_float_str_fmt);
 
-    dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
-    dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
-    dbg_print("CK_SYS: %d\n", rcu_clock_freq_get(CK_SYS));
-    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
-    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
-    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
-    dbg_print("[CPUID] %s\n", BSP_CPUID_Read());
+
+//    dbg_print("__HXTAL: %d\n", HXTAL_VALUE);
+//    dbg_print("SystemCoreClock: %ld\n", SystemCoreClock);
+//    dbg_print("CK_SYS: %d\n", rcu_clock_freq_get(CK_SYS));
+//    dbg_print("CK_AHB: %d\n", rcu_clock_freq_get(CK_AHB));
+//    dbg_print("CK_APB1: %d\n", rcu_clock_freq_get(CK_APB1));
+//    dbg_print("CK_APB2: %d\n", rcu_clock_freq_get(CK_APB2));
+//    dbg_print("[CPUID] %s\n", BSP_CPUID_Read());
 
     /*启动*/
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0

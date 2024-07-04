@@ -17,7 +17,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CEREG_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CEREG=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CEREG=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -141,7 +141,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CEREG_Read(A7670C_CEREG_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG?\r\n");
     return err;
 }
 
@@ -191,7 +191,7 @@ A7670C_Result A7670C_CEREG_Write(A7670C_CEREG_Write_Response* result, int n, uin
 {
     A7670C_Result err;
     result->err_code = -1;
-    err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG=%d\r\n", n);
+    err = A7670C_RequestWithArgs("CEREG_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG=%d\r\n", n);
     return err;
 }
 
@@ -212,7 +212,7 @@ static A7670C_RxHandler_Result Exec_Handler(sdk_ringbuffer_t *buffer, void* ud)
 A7670C_Result A7670C_CEREG_Exec(bool* result, uint32_t timeout_ms)
 {
     A7670C_Result err;
-    err = A7670C_RequestWithArgs(Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG\r\n");
+    err = A7670C_RequestWithArgs("CEREG_Exec",Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CEREG\r\n");
     return err;
 }
 

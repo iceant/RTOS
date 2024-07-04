@@ -17,6 +17,8 @@
 
 void BSP_I2C0_Init(void);
 
+void BSP_I2C0_DeInit(void);
+
 void BSP_I2C0_EnableTxDMA(void);
 void BSP_I2C0_EnableRxDMA(void);
 

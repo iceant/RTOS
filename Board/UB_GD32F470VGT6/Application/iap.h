@@ -1,10 +1,6 @@
 #ifndef INCLUDED_IAP_H
 #define INCLUDED_IAP_H
 
-/* -------------------------------------------------------------------------------------------------------------- */
-/* IAP 升级管理模块 */
-/* -------------------------------------------------------------------------------------------------------------- */
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #ifndef INCLUDED_OS_KERNEL_H
@@ -13,7 +9,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
 typedef struct iap_firmware_info_s{
     uint8_t     type;
     uint32_t    remote_version;
@@ -26,6 +21,8 @@ typedef struct iap_firmware_info_s{
 }iap_firmware_info_t;
 
 #define IAP_FW_HEADER_SIZE sizeof(iap_firmware_info_t)
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -55,7 +52,7 @@ typedef struct iap_firmware_info_s{
 #define IAP_FW_MCU1_BOOT_BACKUP_AREA    0x002DE000
 
 #define IAP_FW_MCU1_APP_DOWNLOAD_AREA  0x002F8000
-#define IAP_FW_MCU1_APP_BACKUP_AREA    0x00338000
+#define IAP_FW_MCU1_APP_BACKUP_AREA    0x00339000
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

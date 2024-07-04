@@ -49,6 +49,7 @@ static void BootThread_Entry(void* p){
         Board_Reboot();
         return;
     }
+
     iap_check_upgrade();
 #endif
 

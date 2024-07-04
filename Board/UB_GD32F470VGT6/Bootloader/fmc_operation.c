@@ -136,15 +136,14 @@ uint32_t sector_name_to_number(uint32_t sector_name)
     \param[out] none
     \retval     none
 */
-void fmc_erase_sector_by_address(uint32_t address)
+int fmc_erase_sector_by_address(uint32_t address)
 {
     fmc_sector_info_struct sector_info;
     printf("\r\nFMC erase operation:\n");
     /* get information about the sector in which the specified address is located */
     sector_info = fmc_sector_info_get(address);
     if(FMC_WRONG_SECTOR_NAME == sector_info.sector_name){
-        printf("\r\nWrong address!\n");
-        while(1);
+        return -1;
     }else{
         printf("\r\nErase start ......\n");
         /* unlock the flash program erase controller */
@@ -153,7 +152,7 @@ void fmc_erase_sector_by_address(uint32_t address)
         fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_OPERR | FMC_FLAG_WPERR | FMC_FLAG_PGMERR | FMC_FLAG_PGSERR);
         /* wait the erase operation complete*/
         if(FMC_READY != fmc_sector_erase(sector_info.sector_num)){
-            while(1);
+            return -2;
         }
         /* lock the flash program erase controller */
         fmc_lock();
@@ -163,6 +162,7 @@ void fmc_erase_sector_by_address(uint32_t address)
         printf("\r\nErase success!\n");
         printf("\r\n");
     }
+    return 0;
 }
 
 /*!

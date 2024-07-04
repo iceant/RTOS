@@ -175,7 +175,6 @@ void Board_Init(void){
     BSP_USART0_EnableRxIRQ();
     #endif
 
-    cpu_interrupt_enable(level);
     /* ------------------------------------------------------------------------------------------ */
     /* ---- OS KERNEL ----*/
     os_kernel_init();
@@ -213,7 +212,6 @@ void Board_Init(void){
     
     /* ------------------------------------------------------------------------------------------ */
     /* ---- A7670C ----*/
-
 
 #if defined(ENABLE_4G)
     BSP_USART1_Init();
@@ -269,7 +267,24 @@ void Board_Init(void){
 void Board_Reboot(void){
     __disable_irq();  // 可以使用这个函数 关闭总中断
     __set_FAULTMASK(1);        //关闭中断,确保跳转过程中 不会进入中断,导致跳转失败
+    Board_DeInit();
     cpu_reboot();
+}
+
+void Board_DeInit(void)
+{
+    rcu_periph_clock_disable(RCU_GPIOA);
+    rcu_periph_clock_disable(RCU_GPIOB);
+    rcu_periph_clock_disable(RCU_GPIOC);
+    rcu_periph_clock_disable(RCU_GPIOD);
+    rcu_periph_clock_disable(RCU_GPIOE);
+    rcu_periph_clock_disable(RCU_GPIOF);
+    rcu_periph_clock_disable(RCU_GPIOG);
+
+    BSP_I2C0_DeInit();
+    BSP_SPI0_DeInit();
+    BSP_USART1_DeInit();
+    BSP_USART0_DeInit();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

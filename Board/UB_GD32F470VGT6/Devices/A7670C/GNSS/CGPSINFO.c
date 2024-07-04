@@ -18,7 +18,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CGPSINFO_Test(bool* result, uint32_t timeout_ms)
 {
-    return A7670C_RequestWithCmd(Test_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO=?\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO=?\r\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
 A7670C_Result A7670C_CGPSINFO_Read(A7670C_CGPSINFO_Read_Response* result, uint32_t timeout_ms)
 {
     result->code = kA7670C_Response_Code_ERROR;
-    return A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO?\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO?\r\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ A7670C_Result A7670C_CGPSINFO_Write(A7670C_CGPSINFO_Write_Response* result
         , uint32_t timeout_ms)
 {
     result->code = kA7670C_Response_Code_ERROR;
-    return A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO=%d\r\n", time);
+    return A7670C_RequestWithArgs("CGPSINFO_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO=%d\r\n", time);
 }
 
 
@@ -111,5 +111,5 @@ static A7670C_RxHandler_Result Exec_Handler(sdk_ringbuffer_t * buffer, void* ud)
 A7670C_Result A7670C_CGPSINFO_Exec(A7670C_CGPSINFO_Exec_Response* result, uint32_t timeout_ms)
 {
     result->code = kA7670C_Response_Code_ERROR;
-    return A7670C_RequestWithCmd(Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGPSINFO\r\n");
 }

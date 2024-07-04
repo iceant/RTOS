@@ -34,7 +34,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void* ud){
 
 A7670C_Result A7670C_CNTP_Read(A7670C_CNTP_Read_Response *response, os_size_t timeout_ms)
 {
-    return A7670C_RequestWithCmd(Read_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+CNTP?\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+CNTP?\r\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ static A7670C_RxHandler_Result CNTP_Write_Handler(sdk_ringbuffer_t *buffer, void
 A7670C_Result A7670C_CNTP_Write(A7670C_CNTP_Write_Response *response, const char* host, int8_t timezone, os_size_t timeout_ms)
 {
     response->code = kA7670C_Response_Code_ERROR;
-    return A7670C_RequestWithArgs(CNTP_Write_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+CNTP=\"%s\",%d\r\n", host, timezone);
+    return A7670C_RequestWithArgs("CNTP_Write",CNTP_Write_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+CNTP=\"%s\",%d\r\n", host, timezone);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ A7670C_Result A7670C_CNTP_Exec(A7670C_CNTP_Exec_Response* result, uint32_t timeo
 {
     result->code = kA7670C_Response_Code_ERROR;
     result->err_code=-1;
-    return A7670C_RequestWithCmd(CNTP_Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CNTP\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, CNTP_Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CNTP\r\n");
 }
 
 

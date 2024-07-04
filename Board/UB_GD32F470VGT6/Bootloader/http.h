@@ -11,6 +11,10 @@
 #define HTTP_RET_404    (404)
 #define HTTP_RET_500    (500)
 
+#define HTTP_RET_PARA_WRITE_URL_ERR 	(-3)
+#define HTTP_RET_ACTION_WRITE_ERR 	    (-4)
+#define HTTP_RET_READ_ERR 	            (-5)
+
 ////////////////////////////////////////////////////////////////////////////////
 int Http_Init(void);
 

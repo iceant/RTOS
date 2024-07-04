@@ -73,7 +73,7 @@ fmc_sector_info_struct fmc_sector_info_get(uint32_t addr);
 /* get the sector number by sector name */
 uint32_t sector_name_to_number(uint32_t sector_name);
 /* erases the sector of a given sector number */
-void fmc_erase_sector_by_address(uint32_t address);
+int fmc_erase_sector_by_address(uint32_t address);
 /* write 32 bit length data to a given address */
 void fmc_write_32bit_data(uint32_t address, uint16_t length, int32_t* data_32);
 /* read 32 bit length data from a given address */

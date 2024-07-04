@@ -134,6 +134,8 @@
 ////
 void Board_Init(void);
 
+void Board_DeInit(void);
+
 void Board_Reboot(void);
 
 void Board_5V_Enable(void);

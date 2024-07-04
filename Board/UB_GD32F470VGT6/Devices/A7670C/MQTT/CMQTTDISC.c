@@ -17,7 +17,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTDISC_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTDISC=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTDISC=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -77,7 +77,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTDISC_Read(A7670C_CMQTTDISC_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTDISC?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTDISC?\r\n");
     return err;
 }
 
@@ -134,7 +134,7 @@ A7670C_Result A7670C_CMQTTDISC_Write(A7670C_CMQTTDISC_Write_Response* result
         , int timeout /* 60s - 180s*/
         , uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTDISC=%d,%d\r\n"
+    A7670C_Result err = A7670C_RequestWithArgs("CMQTTDISC_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTDISC=%d,%d\r\n"
             , client_index
             , timeout);
     return err;

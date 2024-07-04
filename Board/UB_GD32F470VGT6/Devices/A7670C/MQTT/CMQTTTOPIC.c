@@ -18,7 +18,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTTOPIC_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTTOPIC=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTTOPIC=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -92,7 +92,7 @@ A7670C_Result A7670C_CMQTTTOPIC_Write(A7670C_CMQTTTOPIC_Write_Response* result
     result->err_code = -1;
     result->code = kA7670C_Response_Code_ERROR;
     A7670C_CMQTTTOPIC_Write_Request request={.topic = topic, .topic_length = topic_length, .response = result, .send_flag=false};
-    A7670C_Result err = A7670C_RequestWithArgs(Write_Handler, &request, os_tick_from_millisecond(timeout_ms), "AT+CMQTTTOPIC=%d,%d\r\n"
+    A7670C_Result err = A7670C_RequestWithArgs("CMQTTTOPIC_Write",Write_Handler, &request, os_tick_from_millisecond(timeout_ms), "AT+CMQTTTOPIC=%d,%d\r\n"
             , client_index
             , topic_length);
     return err;

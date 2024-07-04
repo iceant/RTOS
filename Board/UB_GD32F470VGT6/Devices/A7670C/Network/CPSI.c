@@ -23,7 +23,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CPSI_Test(os_bool_t* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CPSI=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CPSI=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -135,7 +135,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CPSI_Read(A7670C_CPSI_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPSI?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPSI?\r\n");
     return err;
 }
 

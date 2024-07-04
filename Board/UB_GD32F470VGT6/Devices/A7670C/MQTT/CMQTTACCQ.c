@@ -20,7 +20,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTACCQ_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTACCQ=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTACCQ=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -101,7 +101,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
 A7670C_Result A7670C_CMQTTACCQ_Read(A7670C_CMQTTACCQ_Read_Response* result, uint32_t timeout_ms)
 {
     memset(result, 0, sizeof(*result));
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTACCQ?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTACCQ?\r\n");
     return err;
 }
 
@@ -150,7 +150,7 @@ A7670C_Result A7670C_CMQTTACCQ_Write(A7670C_CMQTTACCQ_Write_Response* result
 {
     result->err_code=-1;
     result->code = kA7670C_Response_Code_ERROR;
-    A7670C_Result err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTACCQ=%d,\"%s\",%d\r\n"
+    A7670C_Result err = A7670C_RequestWithArgs("CMQTTACCQ_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTACCQ=%d,\"%s\",%d\r\n"
                                                , client_index
                                                , client_id
                                                , ServerType);

@@ -19,7 +19,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTSUB_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTSUB=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTSUB=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -74,13 +74,13 @@ A7670C_Result A7670C_CMQTTSUB_Write(A7670C_CMQTTSUB_Write_Response* result
 {
     A7670C_Result err;
     if(dup!=kA7670C_Bool_Unspecified){
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTSUB_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTSUB=%d,%d\r\n"
                 , client_index
                 , dup
                 );
     }else{
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTSUB_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTSUB=%d\r\n"
                 , client_index
         );
@@ -163,7 +163,7 @@ A7670C_Result A7670C_CMQTTSUB_Write2(A7670C_CMQTTSUB_Write_Response* result
     A7670C_CMQTTSUB_Write2_Request request = {.response = result, .topic = topic, .topic_length=topic_length, .send_flag=false};
     A7670C_Result err;
     if(dup==kA7670C_Bool_Unspecified){
-        err = A7670C_RequestWithArgs(Write2_Handler, &request, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTSUB_Write2",Write2_Handler, &request, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTSUB=%d,%d,%d\r\n"
                 , client_index
                 , topic_length
@@ -171,7 +171,7 @@ A7670C_Result A7670C_CMQTTSUB_Write2(A7670C_CMQTTSUB_Write_Response* result
                 );
         
     }else{
-        err = A7670C_RequestWithArgs(Write2_Handler, &request, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTSUB_Write2",Write2_Handler, &request, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTSUB=%d,%d,%d,%d\r\n"
                 , client_index
                 , topic_length

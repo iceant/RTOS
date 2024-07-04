@@ -25,6 +25,8 @@ os_err_t os_kernel_init(void)
 os_err_t os_kernel_startup(void)
 {
     os_err_t  err = os_scheduler_startup();
+    cpu_set_FAULTMASK(0);
+    cpu_set_PRIMASK(0);
     cpu_enable_irq();
     return err;
 }

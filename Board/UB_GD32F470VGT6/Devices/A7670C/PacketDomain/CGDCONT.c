@@ -21,7 +21,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void *ud) 
 }
 
 A7670C_Result A7670C_CGDCONT_Test(bool *result, uint32_t timeout_ms) {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=?\r\n");
     if (err == kA7670C_Result_TIMEOUT) {
         *result = false;
     }
@@ -157,7 +157,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void *ud) 
 A7670C_Result A7670C_CGDCONT_Read(A7670C_CGDCONT_Read_Response *result, uint32_t timeout_ms) {
     result->err_code = -1;
     result->record_count = 0;
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT?\r\n");
     return err;
 }
 
@@ -213,35 +213,35 @@ A7670C_Result A7670C_CGDCONT_Write(A7670C_CGDCONT_Write_Response *result,
     result->err_code = -1;
 
     if (request_type != -1) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms),
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms),
                                      "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d,%d,%d,%d\r\n", cid, pdp_type_cstr(PDP_type), APN, PDP_addr,
                                      d_comp, h_comp, ipv4_ctrl, request_type
         );
     } else if (ipv4_ctrl != kA7670C_CGDCONT_IPv4_NULL) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d,%d,%d\r\n",
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d,%d,%d\r\n",
                                      cid, pdp_type_cstr(PDP_type), APN, PDP_addr, d_comp, h_comp, ipv4_ctrl
         );
     } else if (h_comp != kA7670C_CGDCONT_HeaderCompression_NULL) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d,%d\r\n", cid,
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d,%d\r\n", cid,
                                      pdp_type_cstr(PDP_type), APN, PDP_addr, d_comp, h_comp
         );
     } else if (d_comp != kA7670C_CGDCONT_DataCompression_NULL) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d\r\n", cid,
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\",%d\r\n", cid,
                                      pdp_type_cstr(PDP_type), APN, PDP_addr, d_comp
         );
     } else if (PDP_addr != NULL) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\"\r\n", cid,
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\",\"%s\"\r\n", cid,
                                      pdp_type_cstr(PDP_type), APN, PDP_addr
         );
     } else if (APN != NULL) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\"\r\n", cid, pdp_type_cstr(PDP_type),
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\",\"%s\"\r\n", cid, pdp_type_cstr(PDP_type),
                                      APN
         );
     } else if (PDP_type != kA7670C_CGDCONT_PDP_NULL) {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\"\r\n", cid, pdp_type_cstr(PDP_type)
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d,\"%s\"\r\n", cid, pdp_type_cstr(PDP_type)
         );
     } else {
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d\r\n", cid
+        err = A7670C_RequestWithArgs("CGDCONT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT=%d\r\n", cid
         );
     }
 
@@ -270,7 +270,7 @@ static A7670C_RxHandler_Result Exec_Handler(sdk_ringbuffer_t *buffer, void *ud) 
 
 A7670C_Result A7670C_CGDCONT_Exec(os_bool_t *result, uint32_t timeout_ms) {
     A7670C_Result err;
-    err = A7670C_RequestWithArgs(Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT\r\n");
+    err = A7670C_RequestWithArgs("CGDCONT_Exec", Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CGDCONT\r\n");
     return err;
 }
 

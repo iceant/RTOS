@@ -83,6 +83,7 @@ typedef enum A7670C_Client_Index{
 
 typedef struct A7670C_RxHandler_Register_S{
     os_list_node_t node;
+    char name[256];
     A7670C_RxHandler_T handler;
     void* userdata;
 }A7670C_RxHandler_Register_T;
@@ -155,9 +156,9 @@ os_size_t A7670C_Send(uint8_t* data, os_size_t size);
 void A7670C_Lock(void);
 void A7670C_UnLock(void);
 
-A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* fmt, ...);
-A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command);
-A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks);
+A7670C_Result A7670C_RequestWithArgs(const char* name, A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* fmt, ...);
+A7670C_Result A7670C_RequestWithCmd(const char* name, A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command);
+A7670C_Result A7670C_RequestWithHandler(const char* name, A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks);
 
 A7670C_Result A7670C_TimedWait(os_tick_t ticks);
 void A7670C_Notify(void);

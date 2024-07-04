@@ -241,6 +241,16 @@ void BSP_I2C0_Init(void)
     os_mutex_init(&BSP_I2C0__Mutex);
 }
 
+void BSP_I2C0_DeInit(void)
+{
+    i2c_deinit(I2Cx);
+    /* enable I2C clock */
+    rcu_periph_clock_disable(I2C_CLOCK);
+
+    rcu_periph_clock_disable(I2C_SCL_GPIO_CLOCK);
+    rcu_periph_clock_disable(I2C_SDA_GPIO_CLOCK);
+}
+
 void BSP_I2C0_Lock(void)
 {
     os_mutex_lock(&BSP_I2C0__Mutex);

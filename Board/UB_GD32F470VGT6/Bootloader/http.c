@@ -8,7 +8,7 @@
 int Http_Init(void)
 {
     A7670C_HTTPINIT_Exec_Response HTTPINIT_Exec_Response;
-    A7670C_Result result = A7670C_HTTPINIT_Exec(&HTTPINIT_Exec_Response, 12000);
+    A7670C_HTTPINIT_Exec(&HTTPINIT_Exec_Response, 12000);
     if(HTTPINIT_Exec_Response.code == kA7670C_Response_Code_OK){
         return HTTP_RET_OK;
     }
@@ -31,7 +31,7 @@ int Http_Get(const char* url, void* data, size_t data_size, size_t offset, size_
     A7670C_HTTPPARA_Write_Response HTTPPARA_Write_Response;
     A7670C_Result result = A7670C_HTTPPARA_Write_URL(&HTTPPARA_Write_Response, url, 12000);
     if(kA7670C_Response_Code_OK!=HTTPPARA_Write_Response.code){
-        return HTTP_RET_ERROR;
+        return HTTP_RET_PARA_WRITE_URL_ERR;
     }
 
 #if 0
@@ -44,7 +44,7 @@ int Http_Get(const char* url, void* data, size_t data_size, size_t offset, size_
     A7670C_HTTPACTION_Write_Response HTTPACTION_Write_Response;
     result = A7670C_HTTPACTION_Write(&HTTPACTION_Write_Response, kA7670C_HTTPACTION_Method_GET, 12000);
     if(kA7670C_Response_Code_OK!=HTTPACTION_Write_Response.code){
-        return HTTP_RET_ERROR;
+        return HTTP_RET_ACTION_WRITE_ERR;
     }
 
     if(HTTPACTION_Write_Response.data_length==-1){
@@ -65,18 +65,17 @@ int Http_Get(const char* url, void* data, size_t data_size, size_t offset, size_
 
     A7670C_HTTPREAD_Write_Response HTTPREAD_Write_Response;
     HTTPREAD_Write_Response.data = data;
-    HTTPREAD_Write_Response.data_len = data_size;
 
     result = A7670C_HTTPREAD_Write(&HTTPREAD_Write_Response, offset, data_size, 12000);
     if(kA7670C_Response_Code_OK!=HTTPREAD_Write_Response.code){
-        return HTTP_RET_ERROR;
+        return HTTP_RET_READ_ERR;
     }
 
     if(size){
         *size = HTTPREAD_Write_Response.data_len;
     }
 
-    if(HTTPREAD_Write_Response.data_len!=0){
+    if(HTTPREAD_Write_Response.data_len<HTTPACTION_Write_Response.data_length){
         return HTTP_RET_MORE;
     }
 

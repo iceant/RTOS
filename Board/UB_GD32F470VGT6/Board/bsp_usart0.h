@@ -17,6 +17,8 @@ typedef void (*BSP_USART0_RxHandler)(uint16_t data, void* userdata);
 
 void BSP_USART0_Init(void);
 
+void BSP_USART0_DeInit(void);
+
 void BSP_USART0_SetRxHandler(BSP_USART0_RxHandler rxHandler, void* userdata);
 
 void BSP_USART0_EnableRxIRQ(void);

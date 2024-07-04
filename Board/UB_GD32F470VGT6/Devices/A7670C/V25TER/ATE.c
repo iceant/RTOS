@@ -22,6 +22,6 @@ static A7670C_RxHandler_Result Exec_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_ATE_Exec(A7670C_ATE_Exec_Response* response, A7670C_ATE_Command cmd, uint32_t timeout_ms)
 {
-    return A7670C_RequestWithArgs(Exec_Handler, response, os_tick_from_millisecond(timeout_ms), "ATE%d\r\n", cmd);
+    return A7670C_RequestWithArgs("ATE_Exec", Exec_Handler, response, os_tick_from_millisecond(timeout_ms), "ATE%d\r\n", cmd);
 }
 

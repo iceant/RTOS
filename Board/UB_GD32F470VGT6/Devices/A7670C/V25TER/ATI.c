@@ -71,5 +71,5 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_ATI_Read(A7670C_ATI_Response* response, os_uint_t timeout_ms)
 {
-    return A7670C_RequestWithCmd(Read_Handler, response, os_tick_from_millisecond(timeout_ms), "ATI\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, response, os_tick_from_millisecond(timeout_ms), "ATI\r\n");
 }

@@ -18,7 +18,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTPUB_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTPUB=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTPUB=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -80,13 +80,13 @@ A7670C_Result A7670C_CMQTTPUB_Write(A7670C_CMQTTPUB_Write_Response* result
     result->err_code = -1;
     result->code = kA7670C_Response_Code_ERROR;
     if(dup==kA7670C_Bool_Unspecified && retained==kA7670C_Bool_Unspecified){
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTPUB_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTPUB=%d,%d,%d\r\n"
                 , client_index
                 , qos
                 , pub_timeout);
     }else if(dup==kA7670C_Bool_Unspecified && retained!=kA7670C_Bool_Unspecified){
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTPUB_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTPUB=%d,%d,%d,%d\r\n"
                 , client_index
                 , qos
@@ -94,7 +94,7 @@ A7670C_Result A7670C_CMQTTPUB_Write(A7670C_CMQTTPUB_Write_Response* result
                 , retained
                 );
     }else if(dup!=kA7670C_Bool_Unspecified){
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTPUB_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTPUB=%d,%d,%d,%d,%d\r\n"
                 , client_index
                 , qos

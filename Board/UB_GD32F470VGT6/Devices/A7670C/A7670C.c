@@ -28,7 +28,7 @@ static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, voi
 }
 
 A7670C_Result A7670C_AT(os_time_t timeout_ms){
-    return A7670C_RequestWithCmd(A7670C_AT__Handler, 0, os_tick_from_millisecond(timeout_ms), "AT\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__ , A7670C_AT__Handler, 0, os_tick_from_millisecond(timeout_ms), "AT\r\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ static A7670C_RxHandler_Result WaitPBDone_Handler(sdk_ringbuffer_t* buffer, void
 
 A7670C_Result A7670C_WaitPBDone(uint32_t timeout_ms)
 {
-    return A7670C_RequestWithHandler(WaitPBDone_Handler, 0, os_tick_from_millisecond(timeout_ms));
+    return A7670C_RequestWithHandler(__FUNCTION__, WaitPBDone_Handler, 0, os_tick_from_millisecond(timeout_ms));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

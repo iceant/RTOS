@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <ctype.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 struct A7670C_Device_S{
@@ -108,7 +108,7 @@ os_size_t A7670C_Send(uint8_t* data, os_size_t size)
     return A7670C__Instance.IO->send(data, (int)size);
 }
 
-A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks)
+A7670C_Result A7670C_RequestWithHandler(const char* name, A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks)
 {
     A7670C_RxHandler_Register_T Register;
     A7670C_Result res = kA7670C_Result_ERROR;
@@ -116,6 +116,9 @@ A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* user
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
+    size_t name_size = strlen(name);
+    memcpy(Register.name, name, name_size);
+    Register.name[name_size]='\0';
     
     A7670C_Lock();
     A7670C_InsertRxHandlerHead(&Register);
@@ -126,7 +129,7 @@ A7670C_Result A7670C_RequestWithHandler(A7670C_RxHandler_T rxHandler, void* user
     return res;
 }
 
-A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command)
+A7670C_Result A7670C_RequestWithCmd(const char* name, A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* command)
 {
     A7670C_Result err = kA7670C_Result_ERROR;
     A7670C_RxHandler_Register_T Register;
@@ -134,6 +137,9 @@ A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
+    size_t name_size = strlen(name);
+    memcpy(Register.name, name, name_size);
+    Register.name[name_size]='\0';
     
     A7670C_Lock();
     A7670C_InsertRxHandlerHead(&Register);
@@ -145,7 +151,7 @@ A7670C_Result A7670C_RequestWithCmd(A7670C_RxHandler_T rxHandler, void* userdata
     return err;
 }
 
-A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* fmt, ...)
+A7670C_Result A7670C_RequestWithArgs(const char* name, A7670C_RxHandler_T rxHandler, void* userdata, os_tick_t ticks, const char* fmt, ...)
 {
     va_list ap;
     A7670C_Result err=kA7670C_Result_ERROR;
@@ -154,6 +160,9 @@ A7670C_Result A7670C_RequestWithArgs(A7670C_RxHandler_T rxHandler, void* userdat
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
+    size_t name_size = strlen(name);
+    memcpy(Register.name, name, name_size);
+    Register.name[name_size]='\0';
 
     A7670C_Lock();
     {
@@ -186,20 +195,36 @@ void A7670C_Notify(void){
     A7670C__Instance.IO->notify();
 }
 
+static bool is_valid_name(const char* name){
+
+    if(name==0){
+        return false;
+    }
+
+    char c;
+    for(size_t i=0; i<255 && c!='\0'; i++){
+        c = *name++;
+        if(c<=0x20 || c>=0x7F){
+            return false;
+        }
+    }
+
+    return true;
+}
 
 A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
 {
 //    sdk_hex_dump("[A7670C_HREQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
-    os_list_t * head = &A7670C__RxHandler_List;
-    os_list_node_t * node;
+    os_list_node_t * node=0;
 
     A7670C_RxHandler_Result result = kA7670C_RxHandler_Result_SKIP;
-    for(node = OS_LIST_NEXT(head); node!=head; node = OS_LIST_NEXT(node)){
+    for(node = A7670C__RxHandler_List.next; node!= &A7670C__RxHandler_List; node = OS_LIST_NEXT(node)){
         A7670C_RxHandler_Register_T* Register = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
-        if(Register->handler){
+        if(is_valid_name(Register->name)){
+//            printf("[A7670C_COMMON] exec %s\n", Register->name);
             result = Register->handler(buffer, Register->userdata);
             if(kA7670C_RxHandler_Result_DONE==result){
-                sdk_ringbuffer_reset(buffer);
+//                sdk_ringbuffer_reset(buffer);
                 return result;
             }
         }

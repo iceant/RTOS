@@ -18,7 +18,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTCFG_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -85,7 +85,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTCFG_Read(A7670C_CMQTTCFG_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG?\r\n");
     return err;
 }
 
@@ -132,7 +132,7 @@ A7670C_Result A7670C_CMQTTCFG_SetUTF8(A7670C_CMQTTCFG_Write_Response* result
         , bool checkUTF8_flag
         , uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithArgs(UTF8_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG=\"checkUTF8\",%d,%d\r\n"
+    A7670C_Result err = A7670C_RequestWithArgs("CMQTTCFG_SetUTF8",UTF8_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG=\"checkUTF8\",%d,%d\r\n"
             , client_index
             , checkUTF8_flag
             );
@@ -182,7 +182,7 @@ A7670C_Result A7670C_CMQTTCFG_SetTimeout(A7670C_CMQTTCFG_Write_Response* result
         , uint32_t timeout_ms)
 {
     result->code = kA7670C_Response_Code_ERROR;
-    A7670C_Result err = A7670C_RequestWithArgs(SetTimeout_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG=\"optimeout\",%d,%d\r\n"
+    A7670C_Result err = A7670C_RequestWithArgs("CMQTTCFG_SetTimeout",SetTimeout_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCFG=\"optimeout\",%d,%d\r\n"
             , client_index
             , optimeout_val
     );

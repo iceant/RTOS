@@ -91,6 +91,10 @@ OF SUCH DAMAGE.
 #include <use_sd_card.h>
 #endif /*INCLUDED_USE_SD_CARD_H*/
 
+#ifndef INCLUDED_IAP_H
+#include "iap.h"
+#endif /*INCLUDED_IAP_H*/
+
 
 
 

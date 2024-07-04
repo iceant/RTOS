@@ -17,7 +17,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CCLK_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CCLK=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CCLK=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -56,7 +56,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void* ud)
 A7670C_Result A7670C_CCLK_Read(A7670C_CCLK_Read_Response* result, uint32_t timeout_ms)
 {
     result->code = kA7670C_Response_Code_ERROR;
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CCLK?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CCLK?\r\n");
     return err;
 }
 
@@ -89,7 +89,7 @@ A7670C_Result A7670C_CCLK_Write(A7670C_CCLK_Write_Response* result, const char* 
 {
     A7670C_Result err;
     result->code = kA7670C_Response_Code_ERROR;
-    err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CCLK=\"%s\"\r\n", time);
+    err = A7670C_RequestWithArgs("CCLK_Write", Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CCLK=\"%s\"\r\n", time);
     return err;
 }
 

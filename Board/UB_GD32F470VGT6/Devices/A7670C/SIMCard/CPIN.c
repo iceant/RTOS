@@ -18,7 +18,7 @@ static A7670C_RxHandler_Result CPIN_Test_Handler(sdk_ringbuffer_t *buffer, void*
 
 A7670C_Result A7670C_CPIN_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(CPIN_Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CPIN=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, CPIN_Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CPIN=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -140,7 +140,7 @@ static A7670C_RxHandler_Result CPIN_Read_Handler(sdk_ringbuffer_t *buffer, void*
 
 A7670C_Result A7670C_CPIN_Read(A7670C_CPIN_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(CPIN_Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPIN?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd("A7670C_CPIN_Read", CPIN_Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPIN?\r\n");
     return err;
 }
 
@@ -189,9 +189,9 @@ A7670C_Result A7670C_CPIN_Write(A7670C_CPIN_Write_Response* result, const char* 
 {
     A7670C_Result err;
     if(newpin==0){
-         err = A7670C_RequestWithArgs(CPIN_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPIN=%s\r\n", pin);
+         err = A7670C_RequestWithArgs("CPIN_Write",CPIN_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPIN=%s\r\n", pin);
     }else{
-        err = A7670C_RequestWithArgs(CPIN_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPIN=%s,%s\r\n", pin, newpin);
+        err = A7670C_RequestWithArgs("CPIN_Write",CPIN_Write_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CPIN=%s,%s\r\n", pin, newpin);
     }
     return err;
 }

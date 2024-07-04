@@ -18,7 +18,7 @@ static A7670C_RxHandler_Result CSQ_Test_Handler(sdk_ringbuffer_t * buffer, void*
 
 A7670C_Result A7670C_CSQ_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(CSQ_Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CSQ=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, CSQ_Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CSQ=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -82,7 +82,7 @@ A7670C_Result A7670C_CSQ_Exec(A7670C_CSQ_Exec_Response * result, uint32_t timeou
     result->rssi = -1;
     result->code = -1;
     result->ber = -1;
-    A7670C_Result err = A7670C_RequestWithCmd(CSQ_Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CSQ\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, CSQ_Exec_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CSQ\r\n");
     return err;
 }
 

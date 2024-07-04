@@ -70,6 +70,14 @@ void BSP_USART0_Init(void)
     usart_enable(USARTx);
 }
 
+void BSP_USART0_DeInit(void){
+    usart_deinit(USARTx);
+    rcu_periph_clock_disable(USART_CLOCK);
+    rcu_periph_clock_disable(USART_TX_GPIO_CLOCK);
+    rcu_periph_clock_disable(USART_RX_GPIO_CLOCK);
+}
+
+
 void BSP_USART0_SetRxHandler(BSP_USART0_RxHandler rxHandler, void* userdata)
 {
     BSP_USART0__RxHandler = rxHandler;

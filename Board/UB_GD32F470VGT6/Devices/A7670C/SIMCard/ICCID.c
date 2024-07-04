@@ -29,6 +29,6 @@ static  A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t * buffer, void* ud
 A7670C_Result A7670C_ICCID_Read(A7670C_ICCID_Read_Response* response, uint32_t timeout_ms)
 {
     response->code = kA7670C_Response_Code_ERROR;
-    return A7670C_RequestWithCmd(Read_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+CICCID\r\n");
+    return A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, response, os_tick_from_millisecond(timeout_ms), "AT+CICCID\r\n");
 }
 

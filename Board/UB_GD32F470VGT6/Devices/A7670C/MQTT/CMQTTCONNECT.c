@@ -21,7 +21,7 @@ static A7670C_RxHandler_Result Test_Handler(sdk_ringbuffer_t * buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTCONNECT_Test(bool* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCONNECT=?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Test_Handler, &result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCONNECT=?\r\n");
     if(err==kA7670C_Result_TIMEOUT){
         *result = false;
     }
@@ -167,7 +167,7 @@ static A7670C_RxHandler_Result Read_Handler(sdk_ringbuffer_t *buffer, void* ud)
 
 A7670C_Result A7670C_CMQTTCONNECT_Read(A7670C_CMQTTCONNECT_Read_Response* result, uint32_t timeout_ms)
 {
-    A7670C_Result err = A7670C_RequestWithCmd(Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCONNECT?\r\n");
+    A7670C_Result err = A7670C_RequestWithCmd(__FUNCTION__, Read_Handler, result, os_tick_from_millisecond(timeout_ms), "AT+CMQTTCONNECT?\r\n");
     return err;
 }
 
@@ -271,7 +271,7 @@ A7670C_Result A7670C_CMQTTCONNECT_Write(A7670C_CMQTTCONNECT_Write_Response* resu
     result->err_code = -1;
 
     if(username!=0 && password!=0){
-        err = A7670C_RequestWithArgs(Write_Handler, result, os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTCONNECT_Write",Write_Handler, result, os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTCONNECT=%d,\"%s\",%d,%d,\"%s\",\"%s\"\r\n"
                 , client_index
                 , server_addr
@@ -281,7 +281,7 @@ A7670C_Result A7670C_CMQTTCONNECT_Write(A7670C_CMQTTCONNECT_Write_Response* resu
                 , password
         );
     }else if(username!=0 && username_size>0){
-        err = A7670C_RequestWithArgs(Write_Handler, result,  os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTCONNECT_Write",Write_Handler, result,  os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTCONNECT=%d,\"%s\",%d,%d,\"%s\"\r\n"
                 , client_index
                 , server_addr
@@ -290,7 +290,7 @@ A7670C_Result A7670C_CMQTTCONNECT_Write(A7670C_CMQTTCONNECT_Write_Response* resu
                 , username
         );
     }else{
-        err = A7670C_RequestWithArgs(Write_Handler, result,  os_tick_from_millisecond(timeout_ms)
+        err = A7670C_RequestWithArgs("CMQTTCONNECT_Write",Write_Handler, result,  os_tick_from_millisecond(timeout_ms)
                 , "AT+CMQTTCONNECT=%d,\"%s\",%d,%d\r\n"
                 , client_index
                 , server_addr

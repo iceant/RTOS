@@ -41,5 +41,5 @@ A7670C_Result A7670C_HTTPDATA_Write(A7670C_HTTPDATA_Write_Response * response
         , uint32_t timeout_ms)
 {
     A7670C_HTTPDATA_Write_Request request = {.response = response, .data = data, .data_size = data_size, .data_send_flag=OS_FALSE};
-    return A7670C_RequestWithArgs(Write_Handler, &request, os_tick_from_millisecond(timeout_ms), "AT+HTTPDATA=%d,%d\r\n", data_size, time);
+    return A7670C_RequestWithArgs("HTTPDATA_Write",Write_Handler, &request, os_tick_from_millisecond(timeout_ms), "AT+HTTPDATA=%d,%d\r\n", data_size, time);
 }
