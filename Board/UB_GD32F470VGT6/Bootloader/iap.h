@@ -79,6 +79,18 @@ typedef struct iap_firmware_info_s{
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
+#define IAP_STATE_OK                    (0x0000)
+#define IAP_STATE_WAIT_UPG_READY        (0x0001)
+#define IAP_STATE_RECV_UPG_MCU1_APP     (0x0002)
+#define IAP_STATE_RECV_UPG_MCU1_BOOT    (0x0003)
+#define IAP_STATE_WAIT_RECV_OK          (0x0004)
+#define IAP_STATE_RECV_OK               (0x0005)
+#define IAP_STATE_CRC_ERROR             (0xE001)
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
 typedef void (*iap_function_t)(void);
 
 ////////////////////////////////////////////////////////////////////////////////

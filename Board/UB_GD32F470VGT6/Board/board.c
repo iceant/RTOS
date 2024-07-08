@@ -267,6 +267,18 @@ void Board_Init(void){
 void Board_Reboot(void){
     __disable_irq();  // 可以使用这个函数 关闭总中断
     __set_FAULTMASK(1);        //关闭中断,确保跳转过程中 不会进入中断,导致跳转失败
+
+    /* Disable Systick timer */
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+    /* Clear Interrupt Enable Register & Interrupt Pending Register */
+    for (uint16_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
+    {
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
     Board_DeInit();
     cpu_reboot();
 }

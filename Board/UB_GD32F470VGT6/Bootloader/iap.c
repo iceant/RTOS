@@ -9,6 +9,7 @@
 #include <sdk_hex.h>
 #include <md5.h>
 #include <board.h>
+#include <mcu_session.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -434,6 +435,7 @@ __iap__upgrade_mcu0_app_program:
     fw_info.installed_version = fw_info.download_version;
     iap__firmware_info_write(&fw_info);
     printf("Upgraded Firmware Info Saved!\n");
+    err = IAP_RET_OK;
 
 __iap__upgrade_mcu0_app_exit:
     fmc_lock();
@@ -446,9 +448,134 @@ static int iap__upgrade_mcu0_boot(void){
     return 0;
 }
 
-static int iap__upgrade_mcu1_app(void){
-    return 0;
+////////////////////////////////////////////////////////////////////////////////
+////
+
+
+
+static void iap__upgrade_crc_error(mcu_session_t * session, void* userdata){
+    mcu_session_notify(session);
+    session->state = IAP_STATE_CRC_ERROR;
 }
+
+static int iap__upgrade_mcu1_app(void){
+    iap_firmware_info_t fw_info;
+    iap__firmware_info_read(IAP_FW_TYPE_MCU1_APP, &fw_info);
+    printf("Upgrade MCU1_APP...\n");
+    if(fw_info.download_version==fw_info.installed_version){
+        printf("[IAP] MCU1_APP download version == installed version! SKIP!!!\n");
+        return IAP_RET_OK;
+    }
+
+    mcu_session_t* session = mcu_session_get_default();
+    os_err_t err = 0;
+    int nRetry = 3;
+    MD5_CTX md5_ctx;
+    uint8_t md5[16];
+    int page_size = 2048;
+    int total_read = 0;
+    int send_size = 0;
+
+    uint32_t flash_id = sFLASH_ReadID();
+    if(!sFLASH_IsValidID(flash_id)){
+        return IAP_RET_ERROR;
+    }
+
+    uint32_t ext_flash_address = IAP_FW_MCU1_APP_DOWNLOAD_AREA;
+
+    while(1){
+        uint8_t * buffer = MCU_SESSION_DU_GET(session);
+        int idx = 0;
+
+        SDK_HEX_SET_UINT8(buffer, idx, IAP_FW_TYPE_MCU1_APP); idx+=1;       /* type: MCU1_APP */
+        SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.size); idx+=4;           /* fw_size */
+        SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.download_version); idx+=4;
+        memcpy(buffer+idx, fw_info.md5, sizeof(fw_info.md5)); idx+=16;
+
+        mcu_session_pack(session, kMCU_PROTOCOL_DU_UPGRADE, 0, idx);
+        mcu_session_send(session, iap__upgrade_crc_error, 0);
+        session->state = IAP_STATE_WAIT_UPG_READY;
+        err = mcu_session_timed_wait(session, 10000);
+        if(err==OS_ETIMEOUT){
+            if(nRetry-- == 0){
+                return IAP_RET_ERROR;
+            }else{
+                continue;
+            }
+        }
+        if(session->state==IAP_STATE_CRC_ERROR){
+            continue;
+        }
+
+        if(session->state == IAP_STATE_RECV_UPG_MCU1_APP){
+            break;
+        }
+    }
+
+    nRetry = 3;
+    while(1){
+        MD5Init(&md5_ctx);
+        int pages = OS_PAGE(fw_info.size, page_size);
+        for(int i=0; i<pages; ){
+            uint8_t * buffer = MCU_SESSION_DU_GET(session);
+            send_size = fw_info.size - (i * page_size);
+            send_size = (send_size > page_size)?page_size:send_size;
+            sFLASH_ReadBuffer(buffer, ext_flash_address + (i*page_size), send_size);
+
+            MD5Update(&md5_ctx, buffer, send_size);
+
+            mcu_session_pack(session, kMCU_PROTOCOL_DU_SEND_FW_DATA, 0, send_size);
+            mcu_session_send(session, iap__upgrade_crc_error, 0);
+            session->state = IAP_STATE_WAIT_RECV_OK;
+            err = mcu_session_timed_wait(session, 10000);
+
+            if(err==OS_ETIMEOUT){
+                if(nRetry-- == 0){
+                    return IAP_RET_ERROR;
+                }
+                continue;
+            }
+
+            if(session->state==IAP_STATE_CRC_ERROR){
+                if(nRetry-- == 0){
+                    return IAP_RET_ERROR;
+                }
+                continue;
+            }
+
+            if(session->state==IAP_STATE_RECV_OK){
+                i+=1;
+            }
+        }
+
+        MD5Final(md5, &md5_ctx);
+
+        if(memcmp(md5, fw_info.md5, 16)!=0){
+            printf("[IAP] ERROR Wrong MD5:\n");
+            char md5_str[33];
+            SDK_HEX_ENCODE_BE(md5_str, sizeof(md5_str), fw_info.md5, sizeof(fw_info.md5));
+            printf("Remote MD5: %s\n", md5_str);
+            SDK_HEX_ENCODE_BE(md5_str, sizeof(md5_str), md5, sizeof(md5));
+            printf("Check MD5: %s\n", md5_str);
+            err = IAP_RET_ERROR;
+            continue; /*发送的数据有误，重试*/
+        }
+
+        /*升级成功*/
+        fw_info.installed_version = fw_info.download_version;
+        iap__firmware_info_write(&fw_info);
+        printf("Upgraded Firmware Info Saved!\n");
+        err = IAP_RET_OK;
+
+        break;
+    }
+
+    return err;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
 
 static int iap__upgrade_mcu1_boot(void){
     return 0;

@@ -7,6 +7,7 @@
 #include "bsp_spi0.h"
 #include <spi_flash.h>
 #include "bsp_usart1.h"
+#include <bsp_i2c0.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static sFLASH_IO_T W25QFLASH_IO={.Init = BSP_SPI0_Init, .DeInit=BSP_SPI0_DeInit
@@ -15,7 +16,33 @@ static sFLASH_IO_T W25QFLASH_IO={.Init = BSP_SPI0_Init, .DeInit=BSP_SPI0_DeInit
 };
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////
+#if defined(ENABLE_OLED)
+static int OLED_Send(uint8_t OLED_Address, uint8_t address, uint8_t* data, int size){
+    BSP_I2C0_Lock();
+    int ret = BSP_I2C0_Write_Timeout(OLED_Address, address, data, size);
+    BSP_I2C0_UnLock();
+//    int ret = BSP_I2C0_DMATx(address, data, size);
 
+    if(ret!=I2C_END){
+        printf("I2C0 Send Error: %d\r\n", ret);
+    }
+}
+
+static int OLED_Recv(uint8_t OLED_Address, uint8_t address, uint8_t* data, int size){
+    BSP_I2C0_Lock();
+    int ret = BSP_I2C0_Read_Timeout(OLED_Address, address, data, size);
+    BSP_I2C0_UnLock();
+//    int ret = BSP_I2C0_DMARx(address, data, size);
+    if(ret!=I2C_END){
+        printf("I2C0 Recv Error: %d\r\n", ret);
+    }
+}
+
+static OLED_IO_T OLED_IO = {.send = OLED_Send, .recv = OLED_Recv, .reset = BSP_I2C0_Reset};
+
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////
 void Board_DeInit(void)
@@ -39,7 +66,9 @@ void Board_DeInit(void)
     rcu_periph_clock_disable(RCU_GPIOF);
     rcu_periph_clock_disable(RCU_GPIOG);
 
+    BSP_I2C0_DeInit();
     BSP_SPI0_DeInit();
+    BSP_USART2_DeInit();
     BSP_USART1_DeInit();
     BSP_USART0_DeInit();
 }
@@ -64,6 +93,13 @@ void Board_Init(void)
 
     sFLASH_Init(&W25QFLASH_IO);
 
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- KEY ----*/
+#if defined(ENABLE_KEY)
+    BSP_Lock_Init();
+    BSP_Key_Init(0);
+#endif
+
 #if defined(ENABLE_4G)
     BSP_USART1_Init();
     BSP_USART1_EnableRxIRQ();
@@ -72,7 +108,22 @@ void Board_Init(void)
     BSP_A7670C_Init();
 #endif
 
+    /* ------------------------------------------------------------------------------------------ */
+    /* ---- I2C0: RTC/OLED ----*/
+#if defined(ENABLE_I2C0) || defined(ENABLE_DS1307) || defined(ENABLE_OLED)
+    BSP_I2C0_Init();
+    BSP_I2C0_EnableTxDMA();
+    BSP_I2C0_EnableRxDMA();
+#endif
 
+#if defined(ENABLE_OLED)
+    OLED_Init(&OLED_IO);
+#endif
+
+    /*GD303 通讯*/
+    BSP_USART2_Init();
+    BSP_USART2_EnableDMATx();
+    BSP_USART2_EnableRxIRQ();
 }
 
 void Board_Reboot(void){

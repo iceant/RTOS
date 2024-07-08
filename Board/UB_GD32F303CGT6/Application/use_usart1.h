@@ -12,14 +12,13 @@
 #endif /*INCLUDED_BOARD_H*/
 
 #ifndef INCLUDED_MCU_PROTOCOL_H
-#include <mcu_protocol.h>
+#include <mcu_session.h>
 #endif /*INCLUDED_MCU_PROTOCOL_H*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 void USE_USART1_Init(void);
-
 
 
 #endif /*INCLUDED_USE_USART1_H*/

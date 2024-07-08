@@ -1,5 +1,4 @@
 #include <task_timesync.h>
-
 #include <board.h>
 #include <os_kernel.h>
 #include <A7670C.h>

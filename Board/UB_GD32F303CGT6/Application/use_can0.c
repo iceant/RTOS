@@ -6,7 +6,7 @@
 #include "meter_protocol.h"
 #include "global.h"
 #include "CAN.h"
-#include <mcu_protocol.h>
+#include <mcu_session.h>
 #include <sdk_crc16.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,6 @@ static int USE_CAN0_MeterProtocl_WriteIdx = 0;
 
 static USE_CAN0_OnTimeout_Handler USE_CAN0__OnTimeoutHandler=0;
 static void* USE_CAN0__OnTimeoutHandler_Userdata=0;
-static mcu_protocol_t mcu_tx_protocol;
 static CAN_Parse_Session_T USE_CAN0__CAN_ParseSession;
 
 static char USE_CAN0__Hex[17]={0};
@@ -91,7 +90,7 @@ static void USE_CAN0_RxThread_Entry(void* p){
                 USE_CAN0__State=USE_CAN0_STATE_IDLE;
 
                 static const char* TimeOutMsg = "!!!CAN TIMEOUT!!!";
-                mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, TimeOutMsg, strlen(TimeOutMsg));
+                mcu_session_printf(mcu_session_get_default(), TimeOutMsg);
             }
 
         }else{
@@ -101,7 +100,7 @@ static void USE_CAN0_RxThread_Entry(void* p){
                 USE_CAN0__State=USE_CAN0_STATE_WIP;
 
                 static const char* StartMsg = "!!!CAN START!!!";
-                mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, StartMsg, strlen(StartMsg));
+                mcu_session_printf(mcu_session_get_default(), StartMsg);
             }
         }
     }
@@ -185,8 +184,9 @@ static meter_protocol_t *USE_CAN0__SendCAN(meter_protocol_t *protocol, const glo
     uint16_t crc = sdk_crc16(protocol->buffer, buffer_size);
     SDK_HEX_SET_UINT16_LE(protocol->buffer, buffer_size, crc);
 
-    mcu_protocol_can_init(&mcu_tx_protocol, protocol->buffer, buffer_size + 2);
-    mcu_protocol_send(&mcu_tx_protocol);
+    mcu_session_t* mcu_session = mcu_session_get_default();
+    mcu_session_pack(mcu_session, kMCU_PROTOCOL_DU_CAN, protocol->buffer, buffer_size+2);
+    mcu_session_send(mcu_session, 0, 0);
 
     int next_idx = USE_CAN0_MeterProtocl_WriteIdx;
     if(next_idx==USE_CAN0_MAX_METER_PROTOCOL_BUFFER_COUNT){

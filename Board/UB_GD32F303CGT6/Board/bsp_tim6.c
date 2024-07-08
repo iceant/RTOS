@@ -17,7 +17,11 @@ volatile uint32_t BSP_TIM6__TickCount = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
+void BSP_TIM6_DeInit(void){
+    nvic_irq_disable(TIMERx_IRQn);
+    timer_disable(TIMERx);
+    rcu_periph_clock_disable(TIMERx_CLOCK);
+}
 
 void BSP_TIM6_Init(void)
 {

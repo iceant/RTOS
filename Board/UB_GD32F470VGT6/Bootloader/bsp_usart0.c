@@ -20,6 +20,8 @@
 #define USARTx						USART0
 #define USART0_DATA_ADDRESS         ((uint32_t)&USART_DATA(USART0))
 
+#define USART_TX_DMA_CLOCK          RCU_DMA1
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 static BSP_USART0_RxHandler BSP_USART0__RxHandler = 0;
@@ -30,6 +32,7 @@ static void* BSP_USART0__RxHandlerUserdata = 0;
 ////
 void BSP_USART0_DeInit(void){
     usart_deinit(USARTx);
+    rcu_periph_clock_disable(USART_TX_DMA_CLOCK);
     rcu_periph_clock_disable(USART_CLOCK);
     rcu_periph_clock_disable(USART_TX_GPIO_CLOCK);
     rcu_periph_clock_disable(USART_RX_GPIO_CLOCK);
@@ -84,7 +87,7 @@ void BSP_USART0_EnableRxIRQ(void)
 void BSP_USART0_EnableDMATx(void)
 {
     /* enable DMA1 */
-    rcu_periph_clock_enable(RCU_DMA1);
+    rcu_periph_clock_enable(USART_TX_DMA_CLOCK);
 }
 
 void BSP_USART0_DMATx(uint8_t* txBuffer, uint32_t size)

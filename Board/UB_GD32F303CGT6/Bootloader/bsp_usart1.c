@@ -42,6 +42,7 @@ void BSP_USART1_DeInit(void)
     rcu_periph_clock_disable(USART_TX_GPIO_CLOCK);
     rcu_periph_clock_disable(USART_RX_GPIO_CLOCK);
     rcu_periph_clock_disable(RCU_AF);
+    rcu_periph_clock_disable(USART_TX_DMA_CLOCK);
 }
 
 void BSP_USART1_Init(void)

@@ -10,12 +10,42 @@
 
 void Board_Init(void)
 {
-    __enable_irq();
-    __set_FAULTMASK(0);
-
     BSP_USART1_Init();
     BSP_USART1_EnableDMATx();
     BSP_USART1_EnableRxIRQ();
+}
+
+void Board_DeInit(void){
+
+    rcu_periph_clock_disable(RCU_GPIOA);
+    rcu_periph_clock_disable(RCU_GPIOB);
+    rcu_periph_clock_disable(RCU_GPIOC);
+    rcu_periph_clock_disable(RCU_GPIOD);
+    rcu_periph_clock_disable(RCU_GPIOE);
+    rcu_periph_clock_disable(RCU_GPIOF);
+    rcu_periph_clock_disable(RCU_GPIOG);
+    rcu_periph_clock_disable(RCU_AF);
+
+    BSP_USART1_DeInit();
+}
+
+void Board_Reboot(void){
+    __disable_irq();  // 可以使用这个函数 关闭总中断
+    __set_FAULTMASK(1);        //关闭中断,确保跳转过程中 不会进入中断,导致跳转失败
+
+    /* Disable Systick timer */
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+    /* Clear Interrupt Enable Register & Interrupt Pending Register */
+    for (uint16_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
+    {
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
+    Board_DeInit();
+    NVIC_SystemReset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

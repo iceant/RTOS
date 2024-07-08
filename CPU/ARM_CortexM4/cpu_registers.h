@@ -4,7 +4,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-# define CPU_REG(ADDRESS) (*(volatile unsigned long *)(ADDRESS))
+#ifndef INCLUDED_STDINT_H
+#define INCLUDED_STDINT_H
+#include <stdint.h>
+#endif /*INCLUDED_STDINT_H*/
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+#define CPU_REG8(ADDRESS) (*(volatile uint8_t *)(ADDRESS))
+#define CPU_REG16(ADDRESS) (*(volatile uint16_t *)(ADDRESS))
+#define CPU_REG32(ADDRESS) (*(volatile uint32_t *)(ADDRESS))
+#define CPU_REG64(ADDRESS) (*(volatile uint64_t *)(ADDRESS))
+
+# define CPU_REG(ADDRESS) CPU_REG32(ADDRESS)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

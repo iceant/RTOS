@@ -64,7 +64,7 @@ OF SUCH DAMAGE.
 #endif /*INCLUDED_USE_USART2_H*/
 
 #ifndef INCLUDED_MCU_PROTOCOL_H
-#include <mcu_protocol.h>
+#include <mcu_session.h>
 #endif /*INCLUDED_MCU_PROTOCOL_H*/
 
 #ifndef INCLUDED_TASK_MCU_DATETIME_H

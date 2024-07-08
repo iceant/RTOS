@@ -17,15 +17,11 @@
 #define IAP_FW_TYPE_MCU1_BOOT   0x03
 #define IAP_FW_TYPE_MCU1_APP    0x04
 
-#define IAP_INFO_ADDRESS 0x08040000
+#define IAP_INFO_ADDRESS 0x08030000
 
-#define IAP_FW_BOOT_ADDRESS 0x08000000
-#define IAP_FW_APP_ADDRESS  0x08010000
-
-#define IAP_RET_OK      0
-#define IAP_RET_ERROR   (-1)
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
 typedef struct iap_firmware_info_s{
     uint8_t     type;
     uint32_t    size;
@@ -39,17 +35,12 @@ typedef struct iap_info_s{
     iap_firmware_info_t MCU_APP;
 }iap_info_t;
 
-typedef void (*iap_function_t)(void);
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int iap_info_read(iap_info_t * iap_info);
 
 int iap_info_write(iap_info_t * iap_info);
 
-void iap_jump(uint32_t address);
-
-int iap_check_upgrade();
 
 
 #endif /*INCLUDED_IAP_H*/

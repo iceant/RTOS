@@ -3,39 +3,35 @@
 #include <os_kernel.h>
 #include <sdk_fmt.h>
 #include <meter_protocol.h>
-#include <mcu_protocol.h>
+#include <mcu_session.h>
 #include "global.h"
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t BootThread_Stack[1024];
 static os_thread_t BootThread;
-static char BootThread_Buf[256];
 static void BootThread_Entry(void* p){
 
     /* 等待主控MCU启动 */
     os_thread_mdelay(5000);
 
-    mcu_protocol_module_init();
-
     /* 通知主控，我已经启动了 */
-    mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "GD303 Startup", 13);
+    mcu_session_printf(mcu_session_get_default(), "GD303 Startup");
 
     while(1){
-        meter_protocol_datetime_t * datetime = meter_protocol_datetime_get();
+        global_t * global = global_get();
         /* 每秒发送一次数据，测试TIMER的精度 */
-        int sz = snprintf(BootThread_Buf, sizeof(BootThread_Buf), "Tick:%d, ID:%s, %04d-%02d-%02d %02d:%02d:%02d.%d"
-                          , BSP_TIM6__TickCount
-                          , strlen(global_get()->CPUID)?global_get()->CPUID:"N/A"
-                          , datetime->year
-                          , datetime->month
-                          , datetime->date
-                          , datetime->hour
-                          , datetime->min
-                          , datetime->sec
-                          , BSP_TIM6__TickCount%1000);
-        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, BootThread_Buf, sz);
-//        mcu_protocol_du_print(&mcu_protocol_g_tx_protocol, "Hello", 5);
+        mcu_session_printf(mcu_session_get_default(), "Tick:%d, ID:%s, %04d-%02d-%02d %02d:%02d:%02d.%d"
+                , BSP_TIM6__TickCount
+                , strlen(global_get()->CPUID)?global_get()->CPUID:"N/A"
+                , global->datetime.year
+                , global->datetime.month
+                , global->datetime.date
+                , global->datetime.hour
+                , global->datetime.min
+                , global->datetime.sec
+                , BSP_TIM6__TickCount%1000);
+
         os_thread_mdelay(60000);
     }
 }

@@ -2,8 +2,7 @@
 #include <sdk_ringbuffer.h>
 #include <sdk_hex.h>
 #include <sdk_crc16.h>
-#include <mcu_protocol.h>
-#include <assert.h>
+#include <mcu_session.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -17,12 +16,6 @@ static os_semaphore_t USE_USART1_Sem;
 static uint8_t USE_USART1_RxBlock[USE_USART1_RX_BLOCK_SIZE];
 static sdk_ringbuffer_t USE_USART1_RxBuffer;
 
-//static uint8_t USE_USART1__DataUnit[USE_USART1_DU_SIZE];
-
-static mcu_protocol_handler_t USE_USART1__ProtocolHandler = 0;
-static void* USE_USART1__ProtocolHandler_Userdata = 0;
-
-
 static void USE_USART1__RxHandler(uint16_t data, void* userdata)
 {
     if(sdk_ringbuffer_is_full(&USE_USART1_RxBuffer)){
@@ -32,15 +25,11 @@ static void USE_USART1__RxHandler(uint16_t data, void* userdata)
     os_semaphore_release(&USE_USART1_Sem);
 }
 
-static void USE_USART1__SendErrorCRC(void){
-    mcu_protocol_t protocol;
-    mcu_protocol_du_ecrc(&protocol);
-    mcu_protocol_send(&protocol);
-}
 
 static void USE_USART1__ThreadEntry(void* p){
 
     BSP_USART1_SetRxHandler(USE_USART1__RxHandler, 0);
+    mcu_session_t* mcu_session = mcu_session_get_default();
 
     int used = 0;
     int start_idx = -1;
@@ -85,18 +74,11 @@ static void USE_USART1__ThreadEntry(void* p){
         uint16_t chk_crc = sdk_crc16(USE_USART1_RxBuffer.buffer+start_idx, du_size+5);
         if(crc!=chk_crc){
             sdk_ringbuffer_reset(&USE_USART1_RxBuffer);
-//            USE_USART1__SendErrorCRC();
+            mcu_session_on_crc_error(mcu_session);
             continue;
         }
 
-        if(USE_USART1__ProtocolHandler){
-            mcu_protocol_init(&mcu_protocol_g_rx_protocol, du_type, 0, 0);
-            assert(du_size < MCU_PROTOCOL_DU_MAX_SIZE);
-            MCU_PROTOCOL_DU_SET(&mcu_protocol_g_rx_protocol, USE_USART1_RxBuffer.buffer+start_idx+5, du_size);
-            MCU_PROTOCOL_DU_SIZE_SET(&mcu_protocol_g_rx_protocol, du_size);
-            MCU_PROTOCOL_CRC_SET(&mcu_protocol_g_rx_protocol, crc);
-            USE_USART1__ProtocolHandler(&mcu_protocol_g_rx_protocol, USE_USART1__ProtocolHandler_Userdata);
-        }
+        mcu_session_on_receive(mcu_session, USE_USART1_RxBuffer.buffer+start_idx, du_size + 7);
 
         /*处理完成，重置buffer*/
         sdk_ringbuffer_reset(&USE_USART1_RxBuffer);
@@ -110,9 +92,6 @@ static void USE_USART1__ThreadEntry(void* p){
 
 void USE_USART1_Init()
 {
-    USE_USART1__ProtocolHandler = mcu_protocol_g_handler;
-    USE_USART1__ProtocolHandler_Userdata = 0;
-
     sdk_ringbuffer_init(&USE_USART1_RxBuffer, USE_USART1_RxBlock, sizeof(USE_USART1_RxBlock));
 
     os_semaphore_init(&USE_USART1_Sem, "USE_USART1_Sem", 0, OS_QUEUE_FIFO);

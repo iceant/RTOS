@@ -208,6 +208,7 @@ add_executable(${BOOTLOADER_BIN}
         ${ARMCC_SOURCES}
         ${SPIFLASH_SOURCES}
         ${A7670C_SOURCES}
+        ${OLED_SOURCES}
 )
 target_compile_definitions(${BOOTLOADER_BIN} PRIVATE "-DCPU_STACK_INIT_WITH_PRIVILEGE=1")
 set_target_properties(${BOOTLOADER_BIN} PROPERTIES LINK_FLAGS "--scatter ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/link.sct")
@@ -223,6 +224,7 @@ target_sources(RTOS_CPU PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader/os_config
 target_include_directories(RTOS_CPU PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader/)
 
 target_include_directories(${BOOTLOADER_BIN} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/SPIFlash)
+target_include_directories(${BOOTLOADER_BIN} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Devices/OLED)
 
 target_include_directories(${BOOTLOADER_BIN} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Bootloader)
 target_link_libraries(${BOOTLOADER_BIN} PUBLIC RTOS_Kernel)

@@ -31,6 +31,8 @@ typedef void (*BSP_CAN0_RxHandler)(can_receive_message_struct* rxMsg, void* user
 
 void BSP_CAN0_Init(uint32_t BaudRate);
 
+void BSP_CAN0_DeInit(void);
+
 void BSP_CAN0_SetRxHandler(BSP_CAN0_RxHandler rxHandler, void* userdata);
 
 int BSP_CAN0_Send(can_trasnmit_message_struct* txMsg);

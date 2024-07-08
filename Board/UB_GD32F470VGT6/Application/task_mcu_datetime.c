@@ -1,9 +1,8 @@
 #include <task_mcu_datetime.h>
 #include <os_kernel.h>
-#include <mcu_protocol.h>
-#include <DS1307.h>
+#include <mcu_session.h>
 #include <global.h>
-#include <bsp_cpuid.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define TASK_MCU_DATETIME_STACK_SIZE 1024
@@ -15,22 +14,21 @@ static os_thread_t Task_MCU_DateTime__Thread;
 
 static void Task_MCU_DateTime_Thread_Entry(void* p){
     global_datetime_t * datetime;
+    mcu_session_t* mcu_session = mcu_session_get_default();
     while(1){
         datetime = &global_get()->datetime;
-        mcu_protocol_du_datetime(&mcu_protocol_g_tx_protocol
-                                 , datetime->year
-                                 , datetime->month
-                                 , datetime->date
-                                 , datetime->hour
-                                 , datetime->min
-                                 , datetime->sec);
-        mcu_protocol_send(&mcu_protocol_g_tx_protocol);
 
-        /* Send CPUID */
-        //printf("[TASK_MCU_DT]Send CPUID:%s\n", BSP_CPUID_Read());
-        mcu_protocol_init(&mcu_protocol_g_tx_protocol, kMCU_PROTOCOL_DU_CPUID, BSP_CPUID_Read(), strlen(BSP_CPUID_Read()));
-        mcu_protocol_crc(&mcu_protocol_g_tx_protocol);
-        mcu_protocol_send(&mcu_protocol_g_tx_protocol);
+        uint8_t * buffer = MCU_SESSION_DU_GET(mcu_session);
+        int idx =0;
+        SDK_HEX_SET_UINT16_BE(buffer, idx, datetime->year); idx+=2;
+        SDK_HEX_SET_UINT8(buffer, idx, datetime->month); idx+=1;
+        SDK_HEX_SET_UINT8(buffer, idx, datetime->date); idx+=1;
+        SDK_HEX_SET_UINT8(buffer, idx, datetime->hour); idx+=1;
+        SDK_HEX_SET_UINT8(buffer, idx, datetime->min); idx+=1;
+        SDK_HEX_SET_UINT8(buffer, idx, datetime->sec); idx+=1;
+        mcu_session_pack(mcu_session, kMCU_PROTOCOL_DU_DATETIME, 0, 7);
+        mcu_session_send(mcu_session, 0, 0);
+
 
         os_thread_mdelay(1000);
     }

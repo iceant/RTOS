@@ -38,5 +38,8 @@
 ////
 void Board_Init(void);
 
+void Board_DeInit(void);
+
+void Board_Reboot(void);
 
 #endif /*INCLUDED_BOARD_H*/

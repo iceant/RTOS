@@ -6,7 +6,7 @@
 #include <sdk_hex.h>
 #include <sdk_mp.h>
 #include <meter_protocol.h>
-#include <mcu_protocol.h>
+#include <mcu_session.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct MeterTask_CanRxMessage_S{
@@ -118,11 +118,12 @@ static void MeterTask_HandleProtocol(void){
         , datetime->ms);
 
         uint32_t pkg_size = METER_PROTOCOL_DC_PKG_SIZE(meter_protocol);
-        MCU_PROTOCOL_DU_SET(&mcu_protocol_g_tx_protocol, meter_protocol->buffer, pkg_size);
+        //MCU_PROTOCOL_DU_SET(&mcu_protocol_g_tx_protocol, meter_protocol->buffer, pkg_size);
 
         meter_protocol_next();
 
-        mcu_protocol_send(&mcu_protocol_g_tx_protocol); /*TODO: 用一个专用线程发送，不阻塞*/
+        //mcu_protocol_send(&mcu_protocol_g_tx_protocol); /*TODO: 用一个专用线程发送，不阻塞*/
+
     }
 
 }

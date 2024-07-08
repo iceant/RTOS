@@ -4,7 +4,8 @@
 #include <os_kernel.h>
 #include "use_usart0.h"
 #include <A7670C.h>
-
+#include <mcu_session.h>
+#include <use_key.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define HW32_ADDR(ADDR) (*(volatile uint32_t*)(ADDR))
@@ -43,13 +44,24 @@ static os_thread_t BootThread;
 
 static void BootThread_Entry(void* p){
 
+#if defined(ENABLE_KEY)
+    USE_KEY_Init();
+#endif
+
+#if defined(ENABLE_OLED)
+    int OLED__line = 0;
+    OLED_TurnOn();
+    OLED_ShowString(0, OLED__line++, "Booting......     ", 12);
+#endif
+
 #if defined(ENABLE_4G)
+    OLED_ShowString(0, OLED__line++, "[4G] Enable       ", 12);
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){
         Board_Reboot();
         return;
     }
-
+    OLED_ShowString(0, OLED__line++, "[UPG] Check Upgrade", 12);
     iap_check_upgrade();
 #endif
 
@@ -64,6 +76,8 @@ int main(void){
 
 #if 1
     Board_Init();
+
+    mcu_session_init(mcu_session_get_default());
 
     /*初始化终端*/
     USE_USART0_Init();

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sdk_float_fmt.h>
 #include <meter_protocol.h>
+#include <mcu_session.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -132,7 +133,11 @@ static void BootThread_Entry(void* p){
         OLED_ShowString(0, 0, time_display_buf, 12);
 #endif
         #endif /* defined(ENABLE_DS1307) */
-        
+
+        mcu_session_t* mcu_session = mcu_session_get_default();
+        mcu_session_pack(mcu_session, kMCU_PROTOCOL_DU_CPUID, (uint8_t*)BSP_CPUID_Read(), strlen(BSP_CPUID_Read()));
+        mcu_session_send(mcu_session, 0, 0);
+
         os_thread_mdelay(1000);
     }
 
@@ -153,6 +158,8 @@ int main(void)
 {
     /* startup */
     Board_Init();
+
+    mcu_session_init(mcu_session_get_default());
     
     iap_check_upgrade();
 

@@ -19,6 +19,6 @@ extern volatile uint32_t BSP_TIM6__TickCount;
 ////
 void BSP_TIM6_Init(void);
 
-
+void BSP_TIM6_DeInit(void);
 
 #endif /*INCLUDED_BSP_TIM6_H*/

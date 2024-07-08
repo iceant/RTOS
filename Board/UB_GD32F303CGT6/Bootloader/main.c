@@ -1,67 +1,48 @@
 #include "main.h"
 #include "board.h"
-#include "mcu_protocol.h"
-#include <sdk_hex.h>
-#include <sdk_fmt.h>
-////////////////////////////////////////////////////////////////////////////////
-////
-#define HW32_ADDR(ADDR) (*(volatile uint32_t*)(ADDR))
-#define APPLICATION_ADDRESS (0x08010000U)
+#include "mcu_session.h"
+#include <os_kernel.h>
+#include <delay.h>
+#include <iap.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-typedef void (*pFunction)(void);
+#define printf(...) mcu_session_printf(mcu_session_get_default(), __VA_ARGS__);
 
+////////////////////////////////////////////////////////////////////////////////
+////
 
-static void delay_ms(uint32_t ms){
-    for(uint32_t m=0; m<ms; m++){
-        for(int i=0; i<1000; i++){
-            for(int j=0; j<32; j++){
-            }
-        }
+C__ALIGNED(OS_ALIGN_SIZE)
+static uint8_t BootThread_Stack[1024];
+static os_thread_t BootThread;
+
+static void BootThread_Entry(void* p){
+    printf("==== BOOTLOADER:%s ====", BSP_CPUID_Read());
+    delay_ms(100);
+
+    iap_check_upgrade();
+
+    /* no need to upgrade */
+    iap_jump(IAP_FW_APP_ADDRESS);
+
+    while(1){
+        mcu_session_printf(mcu_session_get_default(), "==== BOOTLOADER:%s ====", BSP_CPUID_Read());
+        os_thread_mdelay(86400000);
     }
 }
-
-static bool bootloader_need_upgrade(void){
-    return false;
-}
-
-static void bootloader_exec_upgrade(void){
-    while(1);
-}
-
-static void bootloader_jump(void* address){
-    /* Test if user code is programmed starting from address "APPLICATION_ADDRESS" */
-    {
-        /* Jump to user application */
-        uint32_t JumpAddress = HW32_ADDR(address + 4);
-        pFunction JumpToApplication = (pFunction) JumpAddress;
-        /* Initialize user application's Stack Pointer */
-        __set_MSP(HW32_ADDR(address));
-
-        BSP_USART1_DeInit();
-        __disable_irq();
-
-        JumpToApplication();
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 int main(void){
 
     Board_Init();
+    os_kernel_init();
+    mcu_session_init(mcu_session_get_default());
 
-    mcu_protocol_du_printf(&mcu_protocol_g_tx_protocol, "==== BOOTLOADER:%s ====", BSP_CPUID_Read());
-    delay_ms(100);
+    os_thread_init(&BootThread, "BootThd", BootThread_Entry, 0, BootThread_Stack, sizeof(BootThread_Stack), 20, 10);
+    os_thread_startup(&BootThread);
 
-    if(bootloader_need_upgrade()){
-        bootloader_exec_upgrade();
-    }
-
-    /* no need to upgrade */
-    bootloader_jump((void*)APPLICATION_ADDRESS);
+    os_kernel_startup();
 
 
     while(1);

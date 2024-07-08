@@ -122,6 +122,17 @@ static void can_config(uint32_t BaudRate)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BSP_CAN0_DeInit(void){
+    rcu_periph_clock_disable(CANx_CLOCK);
+    rcu_periph_clock_disable(CANx_Tx_CLOCK);
+    rcu_periph_clock_disable(CANx_Rx_CLOCK);
+    rcu_periph_clock_disable(RCU_AF);
+    can_interrupt_disable(CANx, CANx_INT_TYPE);
+    nvic_irq_disable(CANx_Rx_IRQn);
+    can_deinit(CANx);
+}
+
 void BSP_CAN0_Init(uint32_t BaudRate)
 {
     can_gpio_config();

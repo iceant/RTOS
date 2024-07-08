@@ -14,6 +14,7 @@
 ////
 #define ENABLE_USART0
 #define ENABLE_4G
-
+#define ENABLE_OLED
+#define ENABLE_KEY
 
 #endif /*INCLUDED_OS_CONFIG_H*/

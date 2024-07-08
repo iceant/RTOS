@@ -233,6 +233,7 @@ __iap__upgrade_mcu0_boot_program:
     fw_info.installed_version = fw_info.download_version;
     iap__firmware_info_write(&fw_info);
     printf("Upgraded Firmware Info Saved!\n");
+    err = IAP_RET_OK;
 
 __iap__upgrade_mcu0_boot_exit:
     fmc_lock();
