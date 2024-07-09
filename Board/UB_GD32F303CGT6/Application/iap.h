@@ -1,6 +1,7 @@
 #ifndef INCLUDED_IAP_H
 #define INCLUDED_IAP_H
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #ifndef INCLUDED_GD32F30X_H
@@ -19,6 +20,12 @@
 
 #define IAP_INFO_ADDRESS 0x08030000
 
+#define IAP_FW_BOOT_ADDRESS 0x08000000
+#define IAP_FW_APP_ADDRESS  0x08010000
+
+#define IAP_RET_OK      0
+#define IAP_RET_ERROR   (-1)
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -35,11 +42,18 @@ typedef struct iap_info_s{
     iap_firmware_info_t MCU_APP;
 }iap_info_t;
 
+typedef void (*iap_function_t)(void);
 ////////////////////////////////////////////////////////////////////////////////
 ////
 int iap_info_read(iap_info_t * iap_info);
 
 int iap_info_write(iap_info_t * iap_info);
+
+////////////////////////////////////////////////////////////////////////////////
+////
+void iap_jump(uint32_t address);
+
+int iap_check_upgrade();
 
 
 

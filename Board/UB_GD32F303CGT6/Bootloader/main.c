@@ -4,10 +4,8 @@
 #include <os_kernel.h>
 #include <delay.h>
 #include <iap.h>
+#include <use_usart1.h>
 
-////////////////////////////////////////////////////////////////////////////////
-////
-#define printf(...) mcu_session_printf(mcu_session_get_default(), __VA_ARGS__);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -17,10 +15,11 @@ static uint8_t BootThread_Stack[1024];
 static os_thread_t BootThread;
 
 static void BootThread_Entry(void* p){
-    printf("==== BOOTLOADER:%s ====", BSP_CPUID_Read());
-    delay_ms(100);
+
+    mcu_session_printf(mcu_session_get_default(), "==== BOOTLOADER:%s ====", BSP_CPUID_Read());
 
     iap_check_upgrade();
+
 
     /* no need to upgrade */
     iap_jump(IAP_FW_APP_ADDRESS);
@@ -37,9 +36,13 @@ int main(void){
 
     Board_Init();
     os_kernel_init();
-    mcu_session_init(mcu_session_get_default());
 
-    os_thread_init(&BootThread, "BootThd", BootThread_Entry, 0, BootThread_Stack, sizeof(BootThread_Stack), 20, 10);
+    mcu_session_init(mcu_session_get_default());
+    USE_USART1_Init();
+
+
+    os_thread_init(&BootThread, "BootThd", BootThread_Entry, 0
+                   , BootThread_Stack, sizeof(BootThread_Stack), 20, 10);
     os_thread_startup(&BootThread);
 
     os_kernel_startup();

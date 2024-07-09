@@ -8,6 +8,7 @@
 #include <global.h>
 #include <os_kernel.h>
 #include <iap.h>
+#include <delay.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -37,6 +38,18 @@ static int mcu_session__send(mcu_session_t *session){
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+
+int mcu_session_init(mcu_session_t * session)
+{
+    memset(session->send_buffer, 0, sizeof(session->send_buffer));
+    session->send_size = 0;
+    session->rx_handler = 0;
+    session->rx_handler_userdata = 0;
+    session->state = 0;
+    os_semaphore_init(&session->lock, "MCU_SxSem", 0, OS_QUEUE_FIFO);
+    return 0;
+}
+
 mcu_session_t* mcu_session_get_default(void){
     return &mcu_session__instance;
 }
@@ -60,12 +73,6 @@ int mcu_session_crc(mcu_session_t * session){
     return 0;
 }
 
-int mcu_session_init(mcu_session_t * session)
-{
-    memset(session->send_buffer, 0, sizeof(session->send_buffer));
-    session->send_size = 0;
-    return 0;
-}
 
 int mcu_session_printf(mcu_session_t* session, const char* fmt, ...)
 {
@@ -77,6 +84,7 @@ int mcu_session_printf(mcu_session_t* session, const char* fmt, ...)
     session->send_buffer[size+5]='\0';
     mcu_session_pack(session, kMCU_PROTOCOL_DU_PRINT, 0, size);
     mcu_session__send(session);
+    delay_ms(500);
     return 0;
 }
 
@@ -145,29 +153,57 @@ int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_siz
                 uint32_t size = SDK_HEX_GET_UINT32_BE(buffer, idx);idx+=4;
                 uint32_t version = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
                 iap_info_t iap_info;
+                iap_info_read(&iap_info);
                 if(type==IAP_FW_TYPE_MCU1_BOOT){
+                    mcu_session_printf(session, "APP> RECV UPGRADE MCU1_BOOT ver=%d, size=%d", version, size);
                     iap_info.MCU_BOOT.type = IAP_FW_TYPE_MCU1_BOOT;
                     iap_info.MCU_BOOT.size = size;
                     iap_info.MCU_BOOT.download_version = version;
                     memcpy(iap_info.MCU_BOOT.md5, buffer+idx, 16); idx+=16;
                     iap_info_write(&iap_info);
                 }else if(type==IAP_FW_TYPE_MCU1_APP){
+                    mcu_session_printf(session, "APP> RECV UPGRADE MCU1_APP ver=%d, size=%d", version, size);
                     iap_info.MCU_APP.type = IAP_FW_TYPE_MCU1_APP;
                     iap_info.MCU_APP.size = size;
                     iap_info.MCU_APP.download_version = version;
                     memcpy(iap_info.MCU_APP.md5, buffer+idx, 16); idx+=16;
                     iap_info_write(&iap_info);
                 }
-
+                mcu_session_printf(session, "APP> RECV UPGRADE REBOOT...");
                 Board_Reboot();
+            }
+            break;
+        }
+        default:{
+            if(session->rx_handler){
+                session->rx_handler(session, data, data_size, session->rx_handler_userdata);
                 break;
+            }else{
+                return -2;
             }
         }
-        default:
-            return -2;
+
     }
 
     return 0;
 }
 
+int mcu_session_timed_wait(mcu_session_t * session, uint32_t timeout_ms){
+    if(timeout_ms==OS_WAIT_INFINITY){
+        return os_semaphore_take(&session->lock, OS_WAIT_INFINITY);
+    } else{
+        return os_semaphore_take(&session->lock, os_tick_from_millisecond(timeout_ms));
+    }
+}
+
+int mcu_session_notify(mcu_session_t * session){
+    return os_semaphore_release(&session->lock);
+}
+
+
+void mcu_session_set_rx_handler(mcu_session_t * session, mcu_session_rx_handler rx_handler, void* userdata)
+{
+    session->rx_handler_userdata = userdata;
+    session->rx_handler = rx_handler;
+}
 

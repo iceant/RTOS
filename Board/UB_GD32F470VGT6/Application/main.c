@@ -31,7 +31,7 @@ static void BootThread_Entry(void* p){
     printf("[APP] Boot Thread Startup...\n");
 
 #if defined(ENABLE_OLED)
-    int OLED__line = 0;
+    int OLED__line = 1;
     OLED_TurnOn();
     OLED_ShowString(0, OLED__line++, "[OLED] OK        ", 12);
 #endif
@@ -130,7 +130,7 @@ static void BootThread_Entry(void* p){
 
         os_printf("%s\n", time_display_buf);
 #if defined(ENABLE_OLED)
-        OLED_ShowString(0, 0, time_display_buf, 12);
+        OLED_ShowString(0, 1, time_display_buf, 12);
 #endif
         #endif /* defined(ENABLE_DS1307) */
 

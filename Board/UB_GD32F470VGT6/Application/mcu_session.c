@@ -106,6 +106,15 @@ int mcu_session_timed_wait(mcu_session_t * session, uint32_t timeout_ms)
     }
 }
 
+static void delay_ms(uint32_t ms){
+    for(uint32_t m=0; m<ms; m++){
+        for(int i=0; i<1000; i++){
+            for(int j=0; j<60; j++){
+            }
+        }
+    }
+}
+
 int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_size)
 {
     if(data_size==0 || data==0) return -1;
@@ -129,11 +138,28 @@ int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_siz
 
             break;
         }
-        default:
+        case kMCU_PROTOCOL_DU_UPG_READY:{
+            printf("[APP] Recv UPG_READY");
+            delay_ms(200);
+            Board_Reboot();
+            break;
+        }
+        default:{
+            if(session->rx_handler){
+                return session->rx_handler(session, data, data_size, session->rx_handler_userdata);
+            }
             return -2;
+        }
+
     }
 
     return 0;
+}
+
+void mcu_session_set_rx_handler(mcu_session_t * session, mcu_session_rx_handler rx_handler, void* userdata)
+{
+    session->rx_handler_userdata = userdata;
+    session->rx_handler = rx_handler;
 }
 
 

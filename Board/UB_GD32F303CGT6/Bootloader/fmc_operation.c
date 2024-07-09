@@ -33,7 +33,7 @@ int fmc_page_get_by_addr(uint32_t addr, fmc_page_t* page)
 
 int fmc_erase_page_by_addr(uint32_t addr, uint32_t size)
 {
-    uint32_t i;
+    int i;
     fmc_page_t start_page;
     fmc_page_t end_page;
 
@@ -71,13 +71,12 @@ int fmc_program(uint32_t addr, uint8_t * data, uint32_t size)
 
     uint32_t *word_addr = (uint32_t*)data;
     uint32_t address = addr ;
-    uint32_t pages = PAGE(size, 4);
+    uint32_t end_address = address + size;
+
 
     /* program flash */
-    for(uint32_t i=0; i<pages; i++){
-        if(FMC_READY!=fmc_word_program(address, *word_addr++)){
-            return -1;
-        }
+    while(address < end_address){
+        fmc_word_program(address, *word_addr++);
         address += 4;
         fmc_flag_clear(FMC_FLAG_BANK0_END);
         fmc_flag_clear(FMC_FLAG_BANK0_WPERR);

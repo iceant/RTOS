@@ -10,7 +10,7 @@
 #include <md5.h>
 #include <board.h>
 #include <mcu_session.h>
-
+#include <sdk_fsm.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -230,6 +230,7 @@ static int iap__fw_download(int fw_type, const char* url, uint32_t fw_version, i
     __enable_irq();
     cpu_set_PRIMASK(0);
 
+__iap__fw_download_start:
     err = iap__http_init(url);
     if(err!=IAP_RET_OK){
         return IAP_RET_ERROR;
@@ -243,7 +244,11 @@ static int iap__fw_download(int fw_type, const char* url, uint32_t fw_version, i
         HTTPREAD_Write_Response.data = iap__download_buffer;
         HTTPREAD_Write_Response.data_len = 0;
 
-        A7670C_HTTPREAD_Write(&HTTPREAD_Write_Response, total_read, download_page_size, 12000);
+        A7670C_Result result = A7670C_HTTPREAD_Write(&HTTPREAD_Write_Response, total_read, download_page_size, 12000);
+        if(result==kA7670C_Result_TIMEOUT){
+            Http_Destroy();
+            goto __iap__fw_download_start;
+        }
         if(kA7670C_Response_Code_OK!=HTTPREAD_Write_Response.code){
             err = IAP_RET_ERROR;
             goto __iap__fw_download_exit;
@@ -439,6 +444,7 @@ __iap__upgrade_mcu0_app_program:
 
 __iap__upgrade_mcu0_app_exit:
     fmc_lock();
+    __enable_irq();
     return err;
 }
 
@@ -454,123 +460,196 @@ static int iap__upgrade_mcu0_boot(void){
 
 
 static void iap__upgrade_crc_error(mcu_session_t * session, void* userdata){
+    printf("[IAP] CRC ERROR!!!\n");
     mcu_session_notify(session);
     session->state = IAP_STATE_CRC_ERROR;
 }
 
-static int iap__upgrade_mcu1_app(void){
-    iap_firmware_info_t fw_info;
-    iap__firmware_info_read(IAP_FW_TYPE_MCU1_APP, &fw_info);
-    printf("Upgrade MCU1_APP...\n");
-    if(fw_info.download_version==fw_info.installed_version){
-        printf("[IAP] MCU1_APP download version == installed version! SKIP!!!\n");
-        return IAP_RET_OK;
-    }
+////////////////////////////////////////////////////////////////////////////////
+////
 
-    mcu_session_t* session = mcu_session_get_default();
-    os_err_t err = 0;
-    int nRetry = 3;
-    MD5_CTX md5_ctx;
-    uint8_t md5[16];
-    int page_size = 2048;
-    int total_read = 0;
-    int send_size = 0;
+#define IAP_MCU1_STATE_IDLE                     0
+#define IAP_MCU1_STATE_SEND_UPG_DATA            1
+#define IAP_MCU1_STATE_UPG_DONE                 2
 
-    uint32_t flash_id = sFLASH_ReadID();
-    if(!sFLASH_IsValidID(flash_id)){
-        return IAP_RET_ERROR;
-    }
 
-    uint32_t ext_flash_address = IAP_FW_MCU1_APP_DOWNLOAD_AREA;
 
-    while(1){
-        uint8_t * buffer = MCU_SESSION_DU_GET(session);
-        int idx = 0;
+static int iap__upgrade_mcu1_app_rx_handler(mcu_session_t* session, uint8_t* data, int data_size, void* userdata){
+    int type = MCU_BUFFER_DU_TYPE_GET(data);
+    int idx = 0;
+    uint16_t page_size = 2048;
 
-        SDK_HEX_SET_UINT8(buffer, idx, IAP_FW_TYPE_MCU1_APP); idx+=1;       /* type: MCU1_APP */
-        SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.size); idx+=4;           /* fw_size */
-        SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.download_version); idx+=4;
-        memcpy(buffer+idx, fw_info.md5, sizeof(fw_info.md5)); idx+=16;
+    switch (type) {
+        case kMCU_PROTOCOL_DU_UPG_READY: {
 
-        mcu_session_pack(session, kMCU_PROTOCOL_DU_UPGRADE, 0, idx);
-        mcu_session_send(session, iap__upgrade_crc_error, 0);
-        session->state = IAP_STATE_WAIT_UPG_READY;
-        err = mcu_session_timed_wait(session, 10000);
-        if(err==OS_ETIMEOUT){
-            if(nRetry-- == 0){
-                return IAP_RET_ERROR;
-            }else{
-                continue;
+            /* MCU1 已经准备好接受升级了，发送数据 */
+            uint8_t * buffer = MCU_BUFFER_DU_GET(data);
+            uint8_t fw_type = SDK_HEX_GET_UINT8(buffer, idx); idx+=1;
+            uint32_t fw_size = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+            uint32_t fw_version = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+            uint32_t ext_flash_address = 0;
+
+            if(fw_type==IAP_FW_TYPE_MCU1_APP){
+                printf("[IAP] receive UPG_READY MCU1_APP\n");
+                 ext_flash_address = IAP_FW_MCU1_APP_DOWNLOAD_AREA;
+            }else if(fw_type==IAP_FW_TYPE_MCU1_BOOT){
+                printf("[IAP] receive UPG_READY MCU1_BOOT\n");
+                ext_flash_address = IAP_FW_MCU1_BOOT_DOWNLOAD_AREA;
             }
-        }
-        if(session->state==IAP_STATE_CRC_ERROR){
-            continue;
-        }
 
-        if(session->state == IAP_STATE_RECV_UPG_MCU1_APP){
+            int total_page = PAGE(fw_size, page_size);
+            int this_pkg = 1; /* 开始发送第一个包 */
+            uint16_t this_pkg_size = (fw_size>page_size)?page_size:fw_size;
+            idx = 0;
+            uint8_t * send_buffer = MCU_SESSION_DU_GET(session);
+            SDK_HEX_SET_UINT8(send_buffer, idx, fw_type); idx+=1;
+            SDK_HEX_SET_UINT32_BE(send_buffer, idx, fw_size); idx+=4;
+            SDK_HEX_SET_UINT32_BE(send_buffer, idx, fw_version); idx+=4;
+            SDK_HEX_SET_UINT32_BE(send_buffer, idx, total_page); idx+=4;
+            SDK_HEX_SET_UINT32_BE(send_buffer, idx, this_pkg); idx+=4;
+            SDK_HEX_SET_UINT16_BE(send_buffer, idx, page_size); idx+=2;
+            SDK_HEX_SET_UINT16_BE(send_buffer, idx, this_pkg_size); idx+=2;
+            sFLASH_ReadBuffer(send_buffer+idx, ext_flash_address, this_pkg_size); idx+=this_pkg_size;
+
+            printf("[IAP] SEND_UPG_DATA %d/%d\n", this_pkg, total_page);
+
+            mcu_session_pack(session, kMCU_PROTOCOL_DU_SEND_UPG_DATA, 0, idx);
+            mcu_session_send(session, iap__upgrade_crc_error, 0);
+
+            session->state = IAP_MCU1_STATE_SEND_UPG_DATA;
+            mcu_session_notify(session);
             break;
         }
+        case kMCU_PROTOCOL_DU_UPG_DATA_RECV:{
+            /* MCU1 接收到数据，返回结果 */
+            idx = 0;
+            uint8_t * buffer = MCU_BUFFER_DU_GET(data);
+            uint8_t fw_type = SDK_HEX_GET_UINT8(buffer, idx); idx+=1;
+            uint32_t fw_size = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+            uint32_t fw_version = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+            uint32_t total_pkg = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+            uint32_t this_pkg = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+            uint32_t received_bytes = SDK_HEX_GET_UINT32_BE(buffer, idx); idx+=4;
+
+            uint32_t ext_flash_address = 0;
+
+            if(fw_type==IAP_FW_TYPE_MCU1_APP){
+                printf("[IAP] receive UPG_DATA_RECV MCU1_APP %d/%d\n", this_pkg, total_pkg);
+                ext_flash_address = IAP_FW_MCU1_APP_DOWNLOAD_AREA;
+            }else if(fw_type==IAP_FW_TYPE_MCU1_BOOT){
+                printf("[IAP] receive UPG_DATA_RECV MCU1_BOOT %d/%d\n", this_pkg, total_pkg);
+                ext_flash_address = IAP_FW_MCU1_BOOT_DOWNLOAD_AREA;
+            }
+
+            if(this_pkg < total_pkg){
+                this_pkg = this_pkg + 1; /* 下一个包 */
+                uint32_t remain_bytes = fw_size - received_bytes;
+                uint16_t this_pkg_size = (remain_bytes>page_size)?page_size:remain_bytes;
+                idx = 0;
+                uint8_t * send_buffer = MCU_SESSION_DU_GET(session);
+                SDK_HEX_SET_UINT8(send_buffer, idx, fw_type); idx+=1;
+                SDK_HEX_SET_UINT32_BE(send_buffer, idx, fw_size); idx+=4;
+                SDK_HEX_SET_UINT32_BE(send_buffer, idx, fw_version); idx+=4;
+                SDK_HEX_SET_UINT32_BE(send_buffer, idx, total_pkg); idx+=4;
+                SDK_HEX_SET_UINT32_BE(send_buffer, idx, this_pkg); idx+=4;
+                SDK_HEX_SET_UINT16_BE(send_buffer, idx, page_size); idx+=2;
+                SDK_HEX_SET_UINT16_BE(send_buffer, idx, this_pkg_size); idx+=2;
+                sFLASH_ReadBuffer(send_buffer+idx, ext_flash_address + received_bytes, this_pkg_size); idx+=this_pkg_size;
+
+                printf("[IAP] SEND_UPG_DATA %d/%d size=%d\n", this_pkg, total_pkg, this_pkg_size);
+
+                mcu_session_pack(session, kMCU_PROTOCOL_DU_SEND_UPG_DATA, 0, idx);
+                mcu_session_send(session, 0, 0);
+                session->state = IAP_MCU1_STATE_SEND_UPG_DATA;
+                mcu_session_notify(session);
+            }else{
+
+                iap_firmware_info_t fw_info;
+                if(fw_type==IAP_FW_TYPE_MCU1_APP){
+                    iap__firmware_info_read(IAP_FW_TYPE_MCU1_APP, &fw_info);
+                    fw_info.installed_version = fw_info.download_version;
+                    iap__firmware_info_write(&fw_info);
+                }else if(fw_type==IAP_FW_TYPE_MCU1_BOOT){
+                    iap__firmware_info_read(IAP_FW_TYPE_MCU1_BOOT, &fw_info);
+                    fw_info.installed_version = fw_info.download_version;
+                    iap__firmware_info_write(&fw_info);
+                }
+
+                session->state = IAP_MCU1_STATE_UPG_DONE;
+                mcu_session_notify(session);
+            }
+
+            break;
+
+        }
+    }
+    return 0;
+}
+
+static int iap__upgrade_mcu1_app(void){
+    int state = IAP_MCU1_STATE_IDLE;
+    mcu_session_t* session = mcu_session_get_default();
+    iap_firmware_info_t fw_info;
+    int nRetry = 3;
+    iap__firmware_info_read(IAP_FW_TYPE_MCU1_APP, &fw_info);
+    if(fw_info.download_version==fw_info.installed_version){
+        return 0; /* 已经安装 */
     }
 
-    nRetry = 3;
+    printf("[IAP] Upgrade MCU1_APP...\n");
+
+    mcu_session_set_rx_handler(session, iap__upgrade_mcu1_app_rx_handler, 0);
+
     while(1){
-        MD5Init(&md5_ctx);
-        int pages = OS_PAGE(fw_info.size, page_size);
-        for(int i=0; i<pages; ){
-            uint8_t * buffer = MCU_SESSION_DU_GET(session);
-            send_size = fw_info.size - (i * page_size);
-            send_size = (send_size > page_size)?page_size:send_size;
-            sFLASH_ReadBuffer(buffer, ext_flash_address + (i*page_size), send_size);
+        switch (session->state) {
+            case IAP_MCU1_STATE_IDLE:{
+                /* 发送升级命令 UPGRADE */
 
-            MD5Update(&md5_ctx, buffer, send_size);
+                printf("[IAP] MCU1_APP Sending UPGRADE");
 
-            mcu_session_pack(session, kMCU_PROTOCOL_DU_SEND_FW_DATA, 0, send_size);
-            mcu_session_send(session, iap__upgrade_crc_error, 0);
-            session->state = IAP_STATE_WAIT_RECV_OK;
-            err = mcu_session_timed_wait(session, 10000);
+                int idx = 0;
+                uint8_t * buffer = MCU_SESSION_DU_GET(session);
+                SDK_HEX_SET_UINT8(buffer, idx, IAP_FW_TYPE_MCU1_APP); idx+=1;
+                SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.size); idx+=4;
+                SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.download_version); idx+=4;
+                memcpy(buffer+idx, fw_info.md5, sizeof(fw_info.md5)); idx+=16;
+                mcu_session_pack(session, kMCU_PROTOCOL_DU_UPGRADE, 0, idx);
+                mcu_session_send(session, 0, 0);
 
-            if(err==OS_ETIMEOUT){
-                if(nRetry-- == 0){
-                    return IAP_RET_ERROR;
+                /* 等待 kMCU_PROTOCOL_DU_UPG_READY */
+                int err = mcu_session_timed_wait(session, 10000);
+                if(err==OS_ETIMEOUT){
+                    nRetry--;
+                    if(nRetry==0){
+                        /* 升级失败了 */
+                        return IAP_RET_ERROR;
+                    }
                 }
-                continue;
-            }
 
-            if(session->state==IAP_STATE_CRC_ERROR){
-                if(nRetry-- == 0){
-                    return IAP_RET_ERROR;
+                break;
+            }
+            case IAP_MCU1_STATE_SEND_UPG_DATA:{
+                printf("[IAP] state = IAP_MCU1_STATE_SEND_UPG_DATA\n");
+                mcu_session_send(session, 0, 0);
+                int err = mcu_session_timed_wait(session, 10000);
+                printf("[IAP] state = IAP_MCU1_STATE_SEND_UPG_DATA, Code=%d\n", err);
+                if(err==OS_ETIMEOUT){
+                    nRetry--;
+                    if(nRetry==0){
+                        /* 升级失败了 */
+                        return IAP_RET_ERROR;
+                    }
                 }
-                continue;
-            }
 
-            if(session->state==IAP_STATE_RECV_OK){
-                i+=1;
+                break;
+            }
+            case IAP_MCU1_STATE_UPG_DONE:{
+                return 0;
             }
         }
-
-        MD5Final(md5, &md5_ctx);
-
-        if(memcmp(md5, fw_info.md5, 16)!=0){
-            printf("[IAP] ERROR Wrong MD5:\n");
-            char md5_str[33];
-            SDK_HEX_ENCODE_BE(md5_str, sizeof(md5_str), fw_info.md5, sizeof(fw_info.md5));
-            printf("Remote MD5: %s\n", md5_str);
-            SDK_HEX_ENCODE_BE(md5_str, sizeof(md5_str), md5, sizeof(md5));
-            printf("Check MD5: %s\n", md5_str);
-            err = IAP_RET_ERROR;
-            continue; /*发送的数据有误，重试*/
-        }
-
-        /*升级成功*/
-        fw_info.installed_version = fw_info.download_version;
-        iap__firmware_info_write(&fw_info);
-        printf("Upgraded Firmware Info Saved!\n");
-        err = IAP_RET_OK;
-
-        break;
     }
 
-    return err;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,6 +657,60 @@ static int iap__upgrade_mcu1_app(void){
 
 
 static int iap__upgrade_mcu1_boot(void){
+    int state = IAP_MCU1_STATE_IDLE;
+    mcu_session_t* session = mcu_session_get_default();
+    iap_firmware_info_t fw_info;
+    int nRetry = 3;
+    iap__firmware_info_read(IAP_FW_TYPE_MCU1_BOOT, &fw_info);
+    if(fw_info.download_version==fw_info.installed_version){
+        return 0; /* 已经安装 */
+    }
+
+    mcu_session_set_rx_handler(session, iap__upgrade_mcu1_app_rx_handler, 0);
+
+    while(1){
+        switch (state) {
+            case IAP_MCU1_STATE_IDLE:{
+                /* 发送升级命令 UPGRADE */
+
+                int idx = 0;
+                uint8_t * buffer = MCU_SESSION_DU_GET(session);
+                SDK_HEX_SET_UINT8(buffer, idx, IAP_FW_TYPE_MCU1_BOOT); idx+=1;
+                SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.size); idx+=4;
+                SDK_HEX_SET_UINT32_BE(buffer, idx, fw_info.download_version); idx+=4;
+                memcpy(buffer+idx, fw_info.md5, sizeof(fw_info.md5)); idx+=16;
+                mcu_session_pack(session, kMCU_PROTOCOL_DU_UPGRADE, 0, idx);
+                mcu_session_send(session, 0, 0);
+
+                /* 等待 kMCU_PROTOCOL_DU_UPG_READY */
+                int err = mcu_session_timed_wait(session, 10000);
+                if(err==OS_ETIMEOUT){
+                    nRetry--;
+                    if(nRetry==0){
+                        /* 升级失败了 */
+                        return IAP_RET_ERROR;
+                    }
+                }
+
+                break;
+            }
+            case IAP_MCU1_STATE_SEND_UPG_DATA:{
+                int err = mcu_session_timed_wait(session, 10000);
+                if(err==OS_ETIMEOUT){
+                    nRetry--;
+                    if(nRetry==0){
+                        /* 升级失败了 */
+                        return IAP_RET_ERROR;
+                    }
+                }
+                break;
+            }
+            case IAP_MCU1_STATE_UPG_DONE:{
+                return 0;
+            }
+        }
+    }
+
     return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -746,7 +879,7 @@ int iap_check_upgrade(void)
     }
 
     if((upgrade_flag & IAP_UPGRADE_FLAG_MCU1_BOOT)==IAP_UPGRADE_FLAG_MCU1_BOOT){
-        err = iap__upgrade_mcu1_boot();
+//        err = iap__upgrade_mcu1_boot();
     }
 
     if((upgrade_flag & IAP_UPGRADE_FLAG_MCU0_BOOT)==IAP_UPGRADE_FLAG_MCU0_BOOT){

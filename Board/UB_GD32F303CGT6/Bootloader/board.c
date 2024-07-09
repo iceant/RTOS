@@ -4,12 +4,27 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <os_kernel.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 
 void Board_Init(void)
 {
+#if OS_ENABLE
+//    nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x000000);
+
+    SCB->CCR|=SCB_CCR_STKALIGN_Msk;
+    systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
+
+    /* Configure the NVIC Preemption Priority Bits */
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
+
+    SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */
+    NVIC_SetPriority(SysTick_IRQn, 0xFE);
+    NVIC_SetPriority(PendSV_IRQn, 0xFF);
+#endif
+
     BSP_USART1_Init();
     BSP_USART1_EnableDMATx();
     BSP_USART1_EnableRxIRQ();

@@ -134,6 +134,8 @@ static int iap__upgrade_mcu0_boot(void){
     if(fw_info.installed_version== fw_info.download_version){
         printf("[IAP] MCU0_BOOT download version == installed version! SKIP!!!\n");
         return IAP_RET_OK;
+    }else{
+        printf("[IAP] MCU0_BOOT Upgrading...\n");
     }
 
     uint32_t flash_id = sFLASH_ReadID();

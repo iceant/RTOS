@@ -6,6 +6,7 @@
 #include <A7670C.h>
 #include <mcu_session.h>
 #include <use_key.h>
+#include <use_usart2.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define HW32_ADDR(ADDR) (*(volatile uint32_t*)(ADDR))
@@ -77,12 +78,15 @@ int main(void){
 #if 1
     Board_Init();
 
-    mcu_session_init(mcu_session_get_default());
-
     /*初始化终端*/
     USE_USART0_Init();
 
+    USE_USART2_Init();
+
     printf("========== BOOTLOADER ==========\n");
+
+    mcu_session_init(mcu_session_get_default());
+
 
     os_thread_init(&BootThread, "BootThd", BootThread_Entry, 0, BootThread_Stack, sizeof(BootThread_Stack), 20, 10);
     os_thread_startup(&BootThread);

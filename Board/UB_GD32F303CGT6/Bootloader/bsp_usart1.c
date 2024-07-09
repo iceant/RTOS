@@ -103,8 +103,11 @@ void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size)
 {
     dma_parameter_struct dma_init_struct;
 
+    dma_interrupt_flag_clear(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INTF_FTFIF);
+
     /* deinitialize DMA channel7(USART0 TX) */
     dma_deinit(USART_TX_DMAx, USART_TX_DMA_CHn);
+    dma_struct_para_init(&dma_init_struct);
     dma_init_struct.direction = DMA_MEMORY_TO_PERIPHERAL;
     dma_init_struct.memory_addr = (uint32_t)txBuffer;
     dma_init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
@@ -117,18 +120,17 @@ void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size)
     dma_init(USART_TX_DMAx, USART_TX_DMA_CHn, &dma_init_struct);
     /* configure DMA mode */
     dma_circulation_disable(USART_TX_DMAx, USART_TX_DMA_CHn);
-
-    /* enable DMA channel7 */
-    dma_channel_enable(USART_TX_DMAx, USART_TX_DMA_CHn);
+    dma_memory_to_memory_disable(USART_TX_DMAx, USART_TX_DMA_CHn);
 
     /* USART DMA enable for transmission and reception */
     usart_dma_transmit_config(USARTx, USART_TRANSMIT_DMA_ENABLE);
     //usart_dma_receive_config(USART0, USART_RECEIVE_DMA_ENABLE);
 
-    /* wait DMA channel transfer complete */
-//    while(RESET == dma_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INTF_FTFIF));
-    while(RESET == dma_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_FLAG_FTF));
+    /* enable DMA channel7 */
+    dma_channel_enable(USART_TX_DMAx, USART_TX_DMA_CHn);
 
+    /* wait DMA channel transfer complete */
+    while(RESET == dma_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_FLAG_FTF));
 }
 
 void BSP_USART1_Send(uint8_t* data, int size)

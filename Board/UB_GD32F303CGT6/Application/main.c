@@ -5,18 +5,21 @@
 #include <meter_protocol.h>
 #include <mcu_session.h>
 #include "global.h"
+#include <iap.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
 C__ALIGNED(OS_ALIGN_SIZE)
 static uint8_t BootThread_Stack[1024];
 static os_thread_t BootThread;
+
 static void BootThread_Entry(void* p){
 
-    /* 等待主控MCU启动 */
-    os_thread_mdelay(5000);
+//    iap_check_upgrade();
 
     /* 通知主控，我已经启动了 */
-    mcu_session_printf(mcu_session_get_default(), "GD303 Startup");
+    mcu_session_printf(mcu_session_get_default(), "GD303 Application Startup");
 
     while(1){
         global_t * global = global_get();
@@ -48,6 +51,8 @@ int main(void){
 
 #if 1
     os_kernel_init();
+
+    mcu_session_init(mcu_session_get_default());
 
     /* 用于和 MCU 通讯 */
     USE_USART1_Init();

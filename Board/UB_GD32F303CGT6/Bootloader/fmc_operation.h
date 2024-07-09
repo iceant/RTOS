@@ -25,7 +25,6 @@ typedef struct fmc_page_s{
 ////
 int fmc_page_get_by_addr(uint32_t addr, fmc_page_t* page);
 
-
 int fmc_erase_page_by_addr(uint32_t addr, uint32_t size);
 
 int fmc_program(uint32_t addr, uint8_t * data, uint32_t size);

@@ -16,13 +16,13 @@ static uint8_t os_memory__blocks[RTOS_KERNEL_TLSF_POOL_SIZE];
 void os_memory_init(void)
 {
     int size = init_memory_pool(RTOS_KERNEL_TLSF_POOL_SIZE, os_memory__blocks);
-    printf("Memory Pool Initialized: %d/%d\n", size, RTOS_KERNEL_TLSF_POOL_SIZE);
+//    printf("Memory Pool Initialized: %d/%d\n", size, RTOS_KERNEL_TLSF_POOL_SIZE);
 }
 
 C__DESTRUCTOR(os_memory_destroy)
 {
     destroy_memory_pool(os_memory__blocks);
-    printf("destroy_memory_pool done!\n");
+//    printf("destroy_memory_pool done!\n");
 }
 
 void * os_memory_malloc(os_size_t nBytes, const char* file, os_size_t line)

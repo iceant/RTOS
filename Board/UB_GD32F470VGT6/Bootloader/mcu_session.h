@@ -62,6 +62,8 @@ typedef struct mcu_session_s mcu_session_t;
 
 typedef void (*mcu_session_on_crc_error_handler_t)(mcu_session_t* session, void* userdata);
 
+typedef int (*mcu_session_rx_handler)(mcu_session_t * session, uint8_t * data, int size, void* userdata);
+
 typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_PRINT = 0,
     kMCU_PROTOCOL_DU_ECRC=1,
@@ -69,11 +71,9 @@ typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_CPUID=3,
     kMCU_PROTOCOL_DU_CAN=4,
     kMCU_PROTOCOL_DU_UPGRADE=0xA0,
-    kMCU_PROTOCOL_DU_SEND_FW_DATA=0xA1,
-    kMCU_PROTOCOL_DU_RECVOK=0xD0,
-    kMCU_PROTOCOL_DU_RECVERR=0xDE,
-    kMCU_PROTOCOL_DU_UPG_MCU1_APP=0xFA,
-    kMCU_PROTOCOL_DU_UPG_MCU1_BOOT=0xFB,
+    kMCU_PROTOCOL_DU_UPG_READY=0xA1,
+    kMCU_PROTOCOL_DU_SEND_UPG_DATA=0xA2,
+    kMCU_PROTOCOL_DU_UPG_DATA_RECV=0xA3,
 }mcu_protocol_du_type_t;
 
 /*
@@ -91,6 +91,8 @@ typedef struct mcu_session_s{
     void* on_crc_error_handler_userdata;
     os_semaphore_t lock;
     int state;
+    mcu_session_rx_handler rx_handler;
+    void* rx_handler_userdata;
 }mcu_session_t;
 
 
@@ -116,5 +118,7 @@ int mcu_session_on_crc_error(mcu_session_t* session);
 int mcu_session_timed_wait(mcu_session_t * session, uint32_t timeout_ms);
 
 int mcu_session_notify(mcu_session_t* session);
+
+int mcu_session_set_rx_handler(mcu_session_t * session, mcu_session_rx_handler rx_handler, void* userdata);
 
 #endif /*INCLUDED_MCU_SESSION_H*/

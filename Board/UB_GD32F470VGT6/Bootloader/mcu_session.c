@@ -25,6 +25,7 @@ static mcu_session_t mcu_session__instance={0};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+//#define MCU_SESSION_SEND BSP_USART2_Send
 #define MCU_SESSION_SEND BSP_USART2_DMATx
 
 static int mcu_session__send(mcu_session_t *session){
@@ -32,6 +33,14 @@ static int mcu_session__send(mcu_session_t *session){
     return 0;
 }
 
+static void delay_ms(uint32_t ms){
+    for(uint32_t m=0; m<ms; m++){
+        for(int i=0; i<1000; i++){
+            for(int j=0; j<60; j++){
+            }
+        }
+    }
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -60,9 +69,13 @@ int mcu_session_crc(mcu_session_t * session){
 
 int mcu_session_init(mcu_session_t * session)
 {
-    memset(session->send_buffer, 0, sizeof(session->send_buffer));
+    memset(session, 0, sizeof(*session));
     session->send_size = 0;
     session->state = 0;
+    session->rx_handler = 0;
+    session->rx_handler_userdata = 0;
+    session->on_crc_error_handler = 0;
+    session->on_crc_error_handler_userdata = 0;
     os_semaphore_init(&session->lock, "MCU_SxSem", 0, OS_QUEUE_FIFO);
     return 0;
 }
@@ -86,6 +99,8 @@ int mcu_session_send(mcu_session_t * session, mcu_session_on_crc_error_handler_t
     session->on_crc_error_handler = on_crc_error_handler;
     session->on_crc_error_handler_userdata = usderdata;
     MCU_SESSION_SEND(session->send_buffer, session->send_size);
+    delay_ms(200);
+//    sdk_hex_dump("[MCU_SESSION_SEND]", session->send_buffer, session->send_size);
     return 0;
 }
 
@@ -119,6 +134,7 @@ int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_siz
     switch (MCU_BUFFER_DU_TYPE_GET(data)) {
         case kMCU_PROTOCOL_DU_PRINT:
         {
+            printf("[GD303] ");
             char * buffer = (char*)MCU_BUFFER_DU_GET(data);
             int size = MCU_BUFFER_DU_SIZE_GET(data);
             for(int i=0; i<size; i++){
@@ -127,27 +143,22 @@ int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_siz
 
             break;
         }
-        case kMCU_PROTOCOL_DU_UPG_MCU1_APP:{
-            session->state = IAP_STATE_RECV_UPG_MCU1_APP;
-
-            mcu_session_notify(session);
-            break;
+        default:{
+            if(session->rx_handler){
+                return session->rx_handler(session, data, data_size, session->rx_handler_userdata);
+            }else{
+                return -2;
+            }
         }
-        case kMCU_PROTOCOL_DU_UPG_MCU1_BOOT:{
-            session->state = IAP_STATE_RECV_UPG_MCU1_BOOT;
-
-            mcu_session_notify(session);
-            break;
-        }
-        case kMCU_PROTOCOL_DU_RECVOK:{
-            session->state = IAP_STATE_RECV_OK;
-            mcu_session_notify(session);
-            break;
-        }
-        default:
-            return -2;
     }
 
+    return 0;
+}
+
+int mcu_session_set_rx_handler(mcu_session_t * session, mcu_session_rx_handler rx_handler, void* userdata)
+{
+    session->rx_handler = rx_handler;
+    session->rx_handler_userdata = userdata;
     return 0;
 }
 

@@ -91,6 +91,11 @@ void Board_Init(void)
 
     os_kernel_init();
 
+    /*GD303 通讯*/
+    BSP_USART2_Init();
+    BSP_USART2_EnableDMATx();
+    BSP_USART2_EnableRxIRQ();
+
     sFLASH_Init(&W25QFLASH_IO);
 
     /* ------------------------------------------------------------------------------------------ */
@@ -120,10 +125,6 @@ void Board_Init(void)
     OLED_Init(&OLED_IO);
 #endif
 
-    /*GD303 通讯*/
-    BSP_USART2_Init();
-    BSP_USART2_EnableDMATx();
-    BSP_USART2_EnableRxIRQ();
 }
 
 void Board_Reboot(void){

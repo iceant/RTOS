@@ -62,16 +62,18 @@ typedef struct mcu_session_s mcu_session_t;
 
 typedef void (*mcu_session_on_crc_error_handler_t)(mcu_session_t* session, void* userdata);
 
+typedef int (*mcu_session_rx_handler)(mcu_session_t * session, void* data, int data_size, void* ud);
+
 typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_PRINT = 0,
     kMCU_PROTOCOL_DU_ECRC=1,
     kMCU_PROTOCOL_DU_DATETIME=2,
     kMCU_PROTOCOL_DU_CPUID=3,
     kMCU_PROTOCOL_DU_CAN=4,
-    kMCU_PROTOCOL_DU_UPGRADE=0xA0,
-    kMCU_PROTOCOL_DU_SEND_FW_DATA=0xA1,
-    kMCU_PROTOCOL_DU_RECVOK=0xD0,
-    kMCU_PROTOCOL_DU_RECVERR=0xDE,
+    kMCU_PROTOCOL_DU_UPGRADE=0xA0,              /* MCU0 发出升级命令 */
+    kMCU_PROTOCOL_DU_UPG_READY=0xA1,            /* MCU1 发出升级就绪命令 */
+    kMCU_PROTOCOL_DU_SEND_UPG_DATA=0xA2,            /* MCU0 传送升级数据 */
+    kMCU_PROTOCOL_DU_UPG_DATA_RECV=0xA3,            /* MCU1 接收到升级数据成功，请求下一个包 */
 }mcu_protocol_du_type_t;
 
 /*
@@ -87,6 +89,10 @@ typedef struct mcu_session_s{
     uint16_t send_size;
     mcu_session_on_crc_error_handler_t on_crc_error_handler;
     void* on_crc_error_handler_userdata;
+    int state;
+    os_semaphore_t lock;
+    mcu_session_rx_handler rx_handler;
+    void* rx_handler_userdata;
 }mcu_session_t;
 
 
@@ -108,5 +114,11 @@ int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_siz
 int mcu_session_crc(mcu_session_t * session);
 
 int mcu_session_on_crc_error(mcu_session_t* session);
+
+void mcu_session_set_rx_handler(mcu_session_t * session, mcu_session_rx_handler rx_handler, void* userdata);
+
+int mcu_session_timed_wait(mcu_session_t * session, uint32_t timeout_ms);
+
+int mcu_session_notify(mcu_session_t * session);
 
 #endif /*INCLUDED_MCU_SESSION_H*/
