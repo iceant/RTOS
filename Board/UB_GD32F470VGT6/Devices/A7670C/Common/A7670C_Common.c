@@ -241,14 +241,14 @@ void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register){
     os_list_node_t * node;
     os_list_t * head = &A7670C__RxHandler_List;
 
+    os_mutex_lock(&A7670C__handler_lock);
     for(node = OS_LIST_NEXT(head); node!=head; node= OS_LIST_NEXT(node)){
         A7670C_RxHandler_Register_T* register_p = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(register_p==Register || register_p->handler==Register->handler){
+            os_mutex_unlock(&A7670C__handler_lock);
             return;
         }
     }
-
-    os_mutex_lock(&A7670C__handler_lock);
     OS_LIST_INSERT_AFTER(&A7670C__RxHandler_List, &Register->node);
     os_mutex_unlock(&A7670C__handler_lock);
 }
