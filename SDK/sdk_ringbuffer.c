@@ -489,3 +489,49 @@ uint16_t sdk_ringbuffer_read_uint16_be(sdk_ringbuffer_t* buffer)
 
     return (((d1 & 0xFF)<<8) | (d2 & 0xFF));
 }
+
+#define sdk_isdigit(c) (c >= '0' && c <= '9')
+
+double sdk_ringbuffer_atof(sdk_ringbuffer_t* buffer, int offset){
+    // This function stolen from either Rolf Neugebauer or Andrew Tolmach.
+    // Probably Rolf.
+    double a = 0.0;
+    int e = 0;
+    int c;
+    int used = sdk_ringbuffer_used(buffer);
+    while ((c = sdk_ringbuffer_peek(buffer, offset++) /**s++*/) != '\0' && (offset<used) && sdk_isdigit(c)) {
+        a = a*10.0 + (c - '0');
+    }
+    if (c == '.') {
+        while ((c = sdk_ringbuffer_peek(buffer, offset++) /**s++*/) != '\0' && (offset<used) && sdk_isdigit(c)) {
+            a = a*10.0 + (c - '0');
+            e = e-1;
+        }
+    }
+    if (c == 'e' || c == 'E') {
+        int sign = 1;
+        int i = 0;
+        c = sdk_ringbuffer_peek(buffer, offset++) /**s++*/;
+        if (c == '+')
+            c = sdk_ringbuffer_peek(buffer, offset++) /**s++*/;
+        else if (c == '-') {
+            c = sdk_ringbuffer_peek(buffer, offset++) /**s++*/;
+            sign = -1;
+        }
+        while (sdk_isdigit(c)) {
+            i = i*10 + (c - '0');
+            c = sdk_ringbuffer_peek(buffer, offset++) /**s++*/;
+        }
+        e += i*sign;
+    }
+    while (e > 0) {
+        a *= 10.0;
+        e--;
+    }
+    while (e < 0) {
+        a *= 0.1;
+        e++;
+    }
+    return a;
+}
+

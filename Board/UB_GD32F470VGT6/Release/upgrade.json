@@ -1,1 +1,1 @@
-{"model":"DC_METER", "MCU0_BOOT":{"v":2024070308, "s":48508, "md5":"8ea74ff3e8eacce0fcf9d2ddbb561dc7","url":"http://ubattery.cn:19093/Devices/5C6633343539360648343430/MCU0_BOOT.bin"}, "MCU0_APP":{"v":2024070308, "s":272264, "md5":"e1f15264c4769147a523ede4a8eadca6","url":"http://ubattery.cn:19093/Devices/5C6633343539360648343430/MCU0_APP.bin"}}
+{"model":"DC_METER", "MCU1_APP":{"v":2024070903, "s":31600, "md5":"f17698f020954fd19aacf53d80fb8241","url":"http://ubattery.cn:19093/Devices/5C6633343539360648343430/MCU1_APP.bin"}}

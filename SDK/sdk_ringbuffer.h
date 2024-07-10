@@ -92,4 +92,6 @@ uint32_t sdk_ringbuffer_read_uint32_be(sdk_ringbuffer_t* buffer);
 uint16_t sdk_ringbuffer_read_uint16_le(sdk_ringbuffer_t* buffer);
 uint16_t sdk_ringbuffer_read_uint16_be(sdk_ringbuffer_t* buffer);
 
+double sdk_ringbuffer_atof(sdk_ringbuffer_t* buffer, int offset);
+
 #endif /*INCLUDED_SDK_RINGBUFFER_H*/

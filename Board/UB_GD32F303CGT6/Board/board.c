@@ -29,7 +29,7 @@ void Board_Reboot(void){
     SysTick->LOAD = 0;
     SysTick->VAL = 0;
     /* Clear Interrupt Enable Register & Interrupt Pending Register */
-    for (uint16_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
+    for (size_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
     {
         NVIC->ICER[i] = 0xFFFFFFFF;
         NVIC->ICPR[i] = 0xFFFFFFFF;

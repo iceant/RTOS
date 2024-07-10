@@ -47,6 +47,81 @@ static void USART0_RxThread_Entry(void* p)
         }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "lock_disable")!=-1){
             BSP_Lock_Disable();
             printf("[USE_USART0] Lock State:%d\n", BSP_Lock_State());
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.std_voltage_min")!=-1){
+            global_t* global = global_get();
+
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "meter.std_voltage_min=", "\r\n");
+            if(cut_result==0){
+                global->meter.std_voltage_min = sdk_ringbuffer_strtoul(&USART0_RxBuffer, text.start, 0, 10);
+                global_save();
+                printf("[USE_USART0] set meter.std_voltage_min=%d\n", global->meter.std_voltage_min);
+            }else{
+                printf("[USE_USART0] set meter.std_voltage_min failed!!!\n");
+            }
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.rd_voltage_min")!=-1){
+            global_t* global = global_get();
+
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "meter.rd_voltage_min=", "\r\n");
+            if(cut_result==0){
+                global->meter.rd_voltage_min = sdk_ringbuffer_strtoul(&USART0_RxBuffer, text.start, 0, 10);
+                global_save();
+                printf("[USE_USART0] set meter.rd_voltage_min=%d\n", global->meter.rd_voltage_min);
+            }else{
+                printf("[USE_USART0] set meter.rd_voltage_min failed!!!\n");
+            }
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.voltage_ratio")!=-1){
+            global_t* global = global_get();
+
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "meter.voltage_ratio=", "\r\n");
+            if(cut_result==0){
+                global->meter.voltage_ratio = sdk_ringbuffer_atof(&USART0_RxBuffer, text.start);
+                global_save();
+                printf("[USE_USART0] set meter.voltage_ratio=%d\n", global->meter.voltage_ratio);
+            }else{
+                printf("[USE_USART0] set meter.voltage_ratio failed!!!\n");
+            }
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.std_current_min")!=-1){
+            global_t* global = global_get();
+
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "meter.std_current_min=", "\r\n");
+            if(cut_result==0){
+                global->meter.std_current_min = sdk_ringbuffer_strtoul(&USART0_RxBuffer, text.start, 0, 10);
+                global_save();
+                printf("[USE_USART0] set meter.std_current_min=%d\n", global->meter.std_current_min);
+            }else{
+                printf("[USE_USART0] set meter.std_current_min failed!!!\n");
+            }
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.rd_current_min")!=-1){
+            global_t* global = global_get();
+
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "meter.rd_current_min=", "\r\n");
+            if(cut_result==0){
+                global->meter.rd_current_min = sdk_ringbuffer_strtoul(&USART0_RxBuffer, text.start, 0, 10);
+                global_save();
+                printf("[USE_USART0] set meter.rd_current_min=%d\n", global->meter.rd_current_min);
+            }else{
+                printf("[USE_USART0] set meter.rd_current_min failed!!!\n");
+            }
+        }
+        else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.current_ratio")!=-1){
+            global_t* global = global_get();
+
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "meter.current_ratio=", "\r\n");
+            if(cut_result==0){
+                global->meter.current_ratio = sdk_ringbuffer_atof(&USART0_RxBuffer, text.start);
+                global_save();
+                printf("[USE_USART0] set meter.current_ratio=%d\n", global->meter.current_ratio);
+            }else{
+                printf("[USE_USART0] set meter.current_ratio failed!!!\n");
+            }
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "global.show")!=-1){
+            global_show();
         }
 
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "\n")!=-1){

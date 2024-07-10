@@ -21,12 +21,12 @@ typedef struct global_datetime_s{
 typedef struct global_meter_s{
     uint32_t std_voltage_min;   /*  标准电压最小值 */
     uint32_t rd_voltage_min;    /*  测量电压最小值 */
-    float voltage_ratio;        /*  电压斜率    =   (标准电压最大值 - 标准电压最小值)/(测量电压最大值 - 测量电压最小值)
+    double voltage_ratio;        /* 电压斜率    =   (标准电压最大值 - 标准电压最小值)/(测量电压最大值 - 测量电压最小值)
                                     标准电压值   =   (测量电压值 - 测量电压最小值) x 电压斜率 + 标准电压最小值
                                 */
     uint32_t std_current_min;
     uint32_t rd_current_min;    /*  测量电流最小值 */
-    float current_ratio;        /*  电流斜率    =   (标准电流最大值 - 标准电流最小值)/(测量电流最大值 - 测量电流最小值)
+    double current_ratio;        /* 电流斜率    =   (标准电流最大值 - 标准电流最小值)/(测量电流最大值 - 测量电流最小值)
                                     标准电流值   =   (测量电流值 - 测量电流最小值) x 电流斜率 + 标准电流最小值
                                 */
 }global_meter_t;

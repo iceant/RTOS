@@ -323,7 +323,10 @@ static void tx_thread_entry(void* p){
 
                         A7670C_MQTT__OnConnectLost();
                     }else{
-                        printf("[MQTT] SEND SUCCESS: read_idx = %d/%d, size=%d\n", tx_queue.read_idx-1, TX_TASK_COUNT, task->tx_data_size);
+                        printf("[MQTT] SEND SUCCESS: read_idx = %d/%d, size=%d\n"
+                               , tx_queue.read_idx
+                               , TX_TASK_COUNT
+                               , task->tx_data_size);
                         break;
                     }
 
