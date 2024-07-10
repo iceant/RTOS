@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <os_kernel.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 struct A7670C_Device_S{
@@ -19,6 +20,7 @@ static A7670C_Device_T A7670C__Instance={0};
 
 static os_sem_t rx_handler_lock={0};
 static os_mutex_t A7670C__mutex={0};
+static os_mutex_t A7670C__handler_lock={0};
 static char A7670C__Printf_Buffer[256];
 
 static os_list_t A7670C__RxHandler_List={.prev=&A7670C__RxHandler_List, .next=&A7670C__RxHandler_List};
@@ -216,8 +218,8 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
 {
 //    sdk_hex_dump("[A7670C_HREQ]", buffer->buffer, sdk_ringbuffer_used(buffer));
     os_list_node_t * node=0;
-
     A7670C_RxHandler_Result result = kA7670C_RxHandler_Result_SKIP;
+    os_mutex_lock(&A7670C__handler_lock);
     for(node = A7670C__RxHandler_List.next; node!= &A7670C__RxHandler_List; node = OS_LIST_NEXT(node)){
         A7670C_RxHandler_Register_T* Register = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(is_valid_name(Register->name)){
@@ -225,11 +227,11 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
             result = Register->handler(buffer, Register->userdata);
             if(kA7670C_RxHandler_Result_DONE==result){
 //                sdk_ringbuffer_reset(buffer);
-                return result;
+                break;
             }
         }
     }
-
+    os_mutex_unlock(&A7670C__handler_lock);
     return result;
 
 }
@@ -238,13 +240,17 @@ void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register){
     OS_LIST_INIT(&Register->node);
     os_list_node_t * node;
     os_list_t * head = &A7670C__RxHandler_List;
+
     for(node = OS_LIST_NEXT(head); node!=head; node= OS_LIST_NEXT(node)){
         A7670C_RxHandler_Register_T* register_p = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(register_p==Register || register_p->handler==Register->handler){
             return;
         }
     }
+
+    os_mutex_lock(&A7670C__handler_lock);
     OS_LIST_INSERT_AFTER(&A7670C__RxHandler_List, &Register->node);
+    os_mutex_unlock(&A7670C__handler_lock);
 }
 
 void A7670C_InsertRxHandlerTail(A7670C_RxHandler_Register_T* Register){

@@ -13,7 +13,7 @@
 
 
 #define OS_CONTAINER_OF(ptr, type, member) \
-    ((type *)((char *)(ptr) - (os_uint_t)(&((type *)0)->member)))
+    ((type *)((char *)(ptr) - (size_t)(&((type *)0)->member)))
 
 
 #define OS_MIN(a, b) (((a) > (b))?(b):(a))
