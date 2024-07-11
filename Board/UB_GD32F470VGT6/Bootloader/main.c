@@ -7,6 +7,8 @@
 #include <mcu_session.h>
 #include <use_key.h>
 #include <use_usart2.h>
+#include <stdio.h>
+#include <bsp_cpuid.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define HW32_ADDR(ADDR) (*(volatile uint32_t*)(ADDR))
@@ -45,17 +47,17 @@ static os_thread_t BootThread;
 
 static void BootThread_Entry(void* p){
 
-#if defined(ENABLE_KEY)
-    USE_KEY_Init();
-#endif
-
 #if defined(ENABLE_OLED)
-    int OLED__line = 0;
+    int OLED__line = 1;
     OLED_TurnOn();
-    OLED_ShowString(0, OLED__line++, "Booting......     ", 12);
+    char buf[128];
+    int sz = snprintf(buf, sizeof(buf), "ID:%s", BSP_CPUID_Read());
+    buf[sz]='\0';
+    OLED_ShowString(0, OLED__line++, buf, 12);
 #endif
 
 #if defined(ENABLE_4G)
+    OLED__line+=1;
     OLED_ShowString(0, OLED__line++, "[4G] Enable       ", 12);
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){
@@ -82,6 +84,10 @@ int main(void){
     USE_USART0_Init();
 
     USE_USART2_Init();
+
+#if defined(ENABLE_KEY)
+    USE_KEY_Init();
+#endif
 
     printf("========== BOOTLOADER ==========\n");
 

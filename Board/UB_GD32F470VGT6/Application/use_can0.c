@@ -306,7 +306,7 @@ static void USE_CAN0__RxThreadEntry(void* p){
                 rCurrent = current_real_value(current);
                 rVoltage = voltage_real_value(voltage * VOLTAGE_PRECISION);
 
-                if(USE_CAN0_LatestSnapshot.Current==0 && USE_CAN0_LatestSnapshot.Voltage==0){
+                if(USE_CAN0_LatestSnapshot.Current==0 || USE_CAN0_LatestSnapshot.Voltage==0){
                     if(USE_CAN0__State!=USE_CAN0_STATE_CHARGE_IDLE){
                         /* 之前在充电，现在停止了 */
                         USE_CAN0__State = USE_CAN0_STATE_CHARGE_IDLE;

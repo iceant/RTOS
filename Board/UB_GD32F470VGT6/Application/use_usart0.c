@@ -122,6 +122,17 @@ static void USART0_RxThread_Entry(void* p)
             }
         }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "global.show")!=-1){
             global_show();
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "mqtt.server")!=-1){
+            global_t* global = global_get();
+            sdk_ringbuffer_text_t text;
+            int cut_result = sdk_ringbuffer_cut(&text, &USART0_RxBuffer, 0, used, "mqtt.server=", "\r\n");
+            if(cut_result==0){
+                sdk_ringbuffer_memcpy((uint8_t*)global->mqtt.Server, &USART0_RxBuffer, text.start, text.end-text.start);
+                global_save();
+                printf("[USE_USART0] set mqtt.server=%s\n", global->mqtt.Server);
+            }else{
+                printf("[USE_USART0] set mqtt.server failed!!!\n");
+            }
         }
 
         if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "\n")!=-1){

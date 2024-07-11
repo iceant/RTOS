@@ -62,7 +62,7 @@ typedef struct global_s{
 #define GLOBAL_DEFAULT_THREAD_PRIORITY 20
 #define GLOBAL_DEFAULT_THREAD_TTICKS   10
 
-#define GLOBAL_MQTT_SERVER              "tcp://mqtt.ubattery.cn:11883"
+#define GLOBAL_MQTT_SERVER              "tcp://ubattery.cn:11883"
 #define GLOBAL_MQTT_USERNAME            "guest"
 #define GLOBAL_MQTT_PASSWORD            "guest"
 
