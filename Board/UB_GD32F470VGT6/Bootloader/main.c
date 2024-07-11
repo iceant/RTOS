@@ -57,14 +57,13 @@ static void BootThread_Entry(void* p){
 #endif
 
 #if defined(ENABLE_4G)
-    OLED__line+=1;
-    OLED_ShowString(0, OLED__line++, "[4G] Enable       ", 12);
+    OLED_ShowString(0, 3, "[4G] Enable       ", 12);
     A7670C_Result result = A7670C_Startup();
     if(result!=kA7670C_Result_OK){
         Board_Reboot();
         return;
     }
-    OLED_ShowString(0, OLED__line++, "[UPG] Check Upgrade", 12);
+    OLED_ShowString(0, 4, "[UPG] Check Upgrade", 12);
     iap_check_upgrade();
 #endif
 

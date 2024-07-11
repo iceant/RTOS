@@ -803,7 +803,9 @@ int iap_check_upgrade(void)
         printf("\tSize: %d\n", Size_Node->valueint);
         printf("\tMD5: %s\n", MD5_Node->valuestring);
         printf("\tURL: %s\n", URL_Node->valuestring);
-
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] Download MCU0_BOOT", 12);
+#endif
         err = iap__fw_download(IAP_FW_TYPE_MCU0_BOOT, URL_Node->valuestring, Version_Node->valueint, Size_Node->valueint, MD5_Node->valuestring);
         if(err==0){
             upgrade_flag |= IAP_UPGRADE_FLAG_MCU0_BOOT;
@@ -823,7 +825,9 @@ int iap_check_upgrade(void)
         printf("\tSize: %d\n", Size_Node->valueint);
         printf("\tMD5: %s\n", MD5_Node->valuestring);
         printf("\tURL: %s\n", URL_Node->valuestring);
-
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] Download MCU0_APP", 12);
+#endif
         err = iap__fw_download(IAP_FW_TYPE_MCU0_APP, URL_Node->valuestring, Version_Node->valueint, Size_Node->valueint, MD5_Node->valuestring);
         if(err==0){
             upgrade_flag |= IAP_UPGRADE_FLAG_MCU0_APP;
@@ -843,7 +847,9 @@ int iap_check_upgrade(void)
         printf("\tSize: %d\n", Size_Node->valueint);
         printf("\tMD5: %s\n", MD5_Node->valuestring);
         printf("\tURL: %s\n", URL_Node->valuestring);
-
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] UPG MCU1_BOOT", 12);
+#endif
         err = iap__fw_download(IAP_FW_TYPE_MCU1_BOOT, URL_Node->valuestring, Version_Node->valueint, Size_Node->valueint, MD5_Node->valuestring);
         if(err==0){
             upgrade_flag |= IAP_UPGRADE_FLAG_MCU1_BOOT;
@@ -864,6 +870,10 @@ int iap_check_upgrade(void)
         printf("\tMD5: %s\n", MD5_Node->valuestring);
         printf("\tURL: %s\n", URL_Node->valuestring);
 
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] UPG MCU1_APP ", 12);
+#endif
+
         err = iap__fw_download(IAP_FW_TYPE_MCU1_APP, URL_Node->valuestring, Version_Node->valueint, Size_Node->valueint, MD5_Node->valuestring);
         if(err==0){
             upgrade_flag |= IAP_UPGRADE_FLAG_MCU1_APP;
@@ -871,18 +881,30 @@ int iap_check_upgrade(void)
     }
 
     if((upgrade_flag & IAP_UPGRADE_FLAG_MCU0_APP)==IAP_UPGRADE_FLAG_MCU0_APP){
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] UPG MCU0_APP ", 12);
+#endif
         err = iap__upgrade_mcu0_app();
     }
 
     if((upgrade_flag & IAP_UPGRADE_FLAG_MCU1_APP)==IAP_UPGRADE_FLAG_MCU1_APP){
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] UPG MCU1_APP ", 12);
+#endif
         err = iap__upgrade_mcu1_app();
     }
 
     if((upgrade_flag & IAP_UPGRADE_FLAG_MCU1_BOOT)==IAP_UPGRADE_FLAG_MCU1_BOOT){
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] UPG MCU1_BOOT", 12);
+#endif
 //        err = iap__upgrade_mcu1_boot();
     }
 
     if((upgrade_flag & IAP_UPGRADE_FLAG_MCU0_BOOT)==IAP_UPGRADE_FLAG_MCU0_BOOT){
+#if defined(ENABLE_OLED)
+        OLED_ShowString(0, 4, "[UPG] UPG MCU0_BOOT", 12);
+#endif
         err = iap__upgrade_mcu0_boot();
     }
 
