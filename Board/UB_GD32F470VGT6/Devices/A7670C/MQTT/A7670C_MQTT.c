@@ -484,9 +484,13 @@ A7670C_Result A7670C_MQTT_Publish(
         , A7670C_Bool dup
 ){
     A7670C_Result result = kA7670C_Result_ERROR;
-    int nRetry;
+    int nRetry = 10;
     
-    while(A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY);
+    while((A7670C_GetStartupState()!=A7670C_STARTUP_STATE_READY)){
+        if(nRetry-- <= 0){
+            return result;
+        }
+    }
     
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
         nRetry = 1;

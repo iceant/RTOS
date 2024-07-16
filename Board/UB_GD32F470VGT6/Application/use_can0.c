@@ -355,22 +355,39 @@ static void USE_CAN0__RxThreadEntry(void* p){
                 }
 
 
-                if((BSP_TIM6__TickCount-nCount)>=1000 && (USE_CAN0__State==USE_CAN0_STATE_CHARGE_WIP)){
+                if((BSP_TIM6__TickCount-nCount)>=1000){
                     nCount = BSP_TIM6__TickCount;
-                    sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
-                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %F", USE_CAN0__ShowBuf, 3);
-                    OLED_ShowString(1, 2, OLED_Buffer, 12);
-                    os_printf("%s ", OLED_Buffer);
 
-                    sdk_ultoa(USE_CAN0_LatestSnapshot.Voltage, USE_CAN0__ShowBuf, 10);
-                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %F", USE_CAN0__ShowBuf, 4);
-                    OLED_ShowString(1, 3, OLED_Buffer, 12);
-                    os_printf("%s ", OLED_Buffer);
+                    if(USE_CAN0_LatestSnapshot.Current!=0){
+                        sdk_ultoa(USE_CAN0_LatestSnapshot.Current, USE_CAN0__ShowBuf, 10);
+                        sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Current: %F", USE_CAN0__ShowBuf, 3);
+                        OLED_ShowString(1, 2, OLED_Buffer, 12);
+                        os_printf("%s ", OLED_Buffer);
+                    }else{
+                        sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "                    ");
+                        OLED_ShowString(1, 2, OLED_Buffer, 12);
+//                        os_printf("%s ", OLED_Buffer);
+                    }
 
-                    sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
-                    sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy : %F", USE_CAN0__ShowBuf, 7);
-                    OLED_ShowString(1,5, OLED_Buffer, 12);
-                    os_printf("%s\n", OLED_Buffer);
+                    if(USE_CAN0_LatestSnapshot.Voltage!=0){
+                        sdk_ultoa(USE_CAN0_LatestSnapshot.Voltage, USE_CAN0__ShowBuf, 10);
+                        sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Voltage: %F", USE_CAN0__ShowBuf, 4);
+                        OLED_ShowString(1, 3, OLED_Buffer, 12);
+                        os_printf("%s ", OLED_Buffer);
+                    }
+                    else{
+                        sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "                    ");
+                        OLED_ShowString(1, 3, OLED_Buffer, 12);
+//                        os_printf("%s ", OLED_Buffer);
+                    }
+
+                    if(USE_CAN0__State==USE_CAN0_STATE_CHARGE_WIP){
+                        sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
+                        sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy : %F", USE_CAN0__ShowBuf, 7);
+                        OLED_ShowString(1,5, OLED_Buffer, 12);
+                        os_printf("%s\n", OLED_Buffer);
+                    }
+
                 }
 
                 USE_CAN0_LatestSnapshot.Current = rCurrent;

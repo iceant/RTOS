@@ -52,8 +52,36 @@ static FIL mqtt__f_object;
 static os_mutex_t mqtt__f_lock;
 static char mqtt__f_name[256];
 static mqtt_tx_task_t mqtt__f_task;
+
+C__ALIGNED(OS_ALIGN_SIZE)
+static uint8_t mqtt_startup_stack[STACK_SIZE];
+static os_thread_t mqtt_startup_thread;
+static os_semaphore_t mqtt_startup_sem;
+static bool mqtt_startup_flag = false;
 ////////////////////////////////////////////////////////////////////////////////
 ////
+static void mqtt_startup_thread_entry(void* p){
+    while(1){
+        os_semaphore_take(&mqtt_startup_sem, OS_WAIT_INFINITY);
+        do{
+            printf("[MQTT] Reset ...");
+            MQTT_Reset();
+
+            global_t * global = global_get();
+            if(global->network_state == GLOBAL_NETWORK_STATE_MQTT_DOWNSTREAM_TOPIC_SUBSCRIBED){
+                mqtt_startup_flag = false;
+                break;
+            }else{
+                os_thread_mdelay(1000);
+            }
+        }while(1);
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
 
 static int mqtt_queue_meta_write(mqtt_tx_queue_t* queue)
 {
@@ -134,6 +162,7 @@ static int mqtt_queue_data_write(mqtt_tx_queue_t * queue, mqtt_tx_task_t * task)
             return -2;
         }
         f_close(&mqtt__f_object);
+        printf("[MQTT] data write %s success!\n", mqtt__f_name);
         return 0;
     }
     return -3;
@@ -192,7 +221,7 @@ static int mqtt_tx_queue_init(mqtt_tx_queue_t* queue){
 
 static int mqtt_tx_queue_blocked_put(mqtt_tx_queue_t* queue, uint8_t * data, int data_size){
 
-    int next_write_idx;
+    int next_write_idx=0;
 
     while(1){
         next_write_idx = queue->write_idx + 1;
@@ -260,6 +289,10 @@ static int mqtt_tx_queue_write_unlock(mqtt_tx_queue_t* queue){
 static int mqtt_tx_queue_write_to_fs(mqtt_tx_queue_t * queue, mqtt_tx_task_t * task)
 {
     int err = 0;
+    if(global_get()->fatfs.state!=GLOBAL_FATFS_STATE_MOUNT_SUCCESS){
+        /* 没有 SDK 卡，跳过 */
+        return err;
+    }
 
     os_mutex_lock(&mqtt__f_lock);
     {
@@ -286,7 +319,6 @@ static A7670C_Result MQTT__cmd_info(void){
 
 static void A7670C_MQTT__RxDataHandler(void* data, int data_size, void* userdata)
 {
-//    sdk_hex_dump("A7670C_MQTT__RxDataHandler", data, data_size);
     if(strstr((char*)data, "reboot")){
         Board_Reboot();
     }else if(strstr((char*)data, "cpuid")){
@@ -295,46 +327,43 @@ static void A7670C_MQTT__RxDataHandler(void* data, int data_size, void* userdata
 }
 
 static void A7670C_MQTT__OnConnectLost(void){
-    MQTT_Reset();
+    if(mqtt_startup_flag==false){
+        mqtt_startup_flag = true;
+        os_semaphore_release(&mqtt_startup_sem);
+    }
 }
 
+/* 发送线程，用于数据发送 */
 static void tx_thread_entry(void* p){
-    int nRetry = 3;
+//    int nRetry = 3;
     A7670C_Result result;
     MQTT_TxThreadReady = true;
     mqtt_tx_task_t * task = 0;
+
     while(1){
+        global_t* global = global_get();
+
         while((task = mqtt_tx_queue_blocked_pop(&tx_queue))!=0){
-
-             global_t* global = global_get();
-
             if(global->network_state>=GLOBAL_NETWORK_STATE_MQTT_INITIALIZED /* MQTT 可用 */){
-                nRetry = 3;
-                do{
-                    result = A7670C_MQTT_Publish(&session, global->mqtt.Topic_Upstream
-                            , task->tx_buffer, task->tx_data_size
-                            , kA7670C_Qos_0
-                            , 60, kA7670C_Bool_No, kA7670C_Bool_No);
 
-                    if(result!=kA7670C_Result_OK){
-                        printf("[MQTT] Publish Failed!\r\n");
-                        /* 发送失败，记录到文件系统中 */
-                        mqtt_tx_queue_write_to_fs(&tx_queue, task);
+                result = A7670C_MQTT_Publish(&session, global->mqtt.Topic_Upstream
+                        , task->tx_buffer, task->tx_data_size
+                        , kA7670C_Qos_0
+                        , 60, kA7670C_Bool_No, kA7670C_Bool_No);
 
-                        A7670C_MQTT__OnConnectLost();
-                    }else{
-                        printf("[MQTT] SEND SUCCESS: read_idx = %d/%d, size=%d\n"
-                               , tx_queue.read_idx
-                               , TX_TASK_COUNT
-                               , task->tx_data_size);
-                        break;
-                    }
+                if(result!=kA7670C_Result_OK){
+                    printf("[MQTT] Publish Failed!\r\n");
+                    global->network_state = GLOBAL_NETWORK_STATE_INITIALIZED;
+                    mqtt_tx_queue_write_to_fs(&tx_queue, task);
+                    A7670C_MQTT__OnConnectLost();
+                }else{
+                    printf("[MQTT] SEND SUCCESS: read_idx = %d/%d, size=%d\n"
+                           , tx_queue.read_idx
+                           , TX_TASK_COUNT
+                           , task->tx_data_size);
+                    break;
+                }
 
-                    if(nRetry--==0){
-                        break;
-                    }
-
-                }while(1);
             }else{
                 /* MQTT 不可用 */
                 mqtt_tx_queue_write_to_fs(&tx_queue, task);
@@ -342,6 +371,8 @@ static void tx_thread_entry(void* p){
         }
         mqtt_tx_queue_write_unlock(&tx_queue);
     }
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -393,8 +424,16 @@ int MQTT_Init(void)
 
     os_thread_init(&tx_thread, "MQTT_TX_THD", tx_thread_entry, 0
             , stack, STACK_SIZE, 20
-            , 20);
+            , 10);
     os_thread_startup(&tx_thread);
+
+
+    os_semaphore_init(&mqtt_startup_sem, "MQTT_Rst_Sem", 0, OS_QUEUE_FIFO);
+    os_thread_init(&mqtt_startup_thread, "MQTT_Rst_THD", mqtt_startup_thread_entry, 0
+            , mqtt_startup_stack, STACK_SIZE, 20
+            , 10);
+    os_thread_startup(&mqtt_startup_thread);
+
 
     return 0;
 }
@@ -407,9 +446,22 @@ int MQTT_Publish(void* data, int data_size)
 //    }
 
     return mqtt_tx_queue_blocked_put(&tx_queue, data, data_size);
+
+//    global_t* global = global_get();
+//    if(global->network_state >= GLOBAL_NETWORK_STATE_MQTT_INITIALIZED) {
+//        return mqtt_tx_queue_blocked_put(&tx_queue, data, data_size);
+//    }else{
+//        printf("[MQTT] Network ERROR, Publish Skipped!");
+//    }
+//    return -1;
 }
 
+static bool MQTT_Reset_Flag = false;
 int MQTT_Reset(void){
+
+    if(MQTT_Reset_Flag==true) return 0;
+    MQTT_Reset_Flag = true;
+
     int nRetry = 3;
     printf("[MQTT] Try To Reconnect...\r\n");
     global_t* global = global_get();
@@ -422,7 +474,6 @@ int MQTT_Reset(void){
         A7670c_result = A7670C_Startup();
         os_thread_mdelay(1000);
     }while(A7670c_result!=kA7670C_Result_OK);
-
 
     global->network_state = GLOBAL_NETWORK_STATE_INITIALIZED;
 
@@ -463,5 +514,7 @@ int MQTT_Reset(void){
 
     global->network_state = GLOBAL_NETWORK_STATE_MQTT_DOWNSTREAM_TOPIC_SUBSCRIBED;
 
+    printf("[MQTT] Reset Done!\n");
+    MQTT_Reset_Flag = false;
     return 0;
 }

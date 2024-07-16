@@ -5,7 +5,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#define OLED_STATE_IDLE     (0)
+#define OLED_STATE_READY    (1)
+#define OLED_STATE_EIO      (-1)
+
+////////////////////////////////////////////////////////////////////////////////
+////
 static OLED_IO_T * OLED__device;
+static int OLED_State = OLED_STATE_IDLE;
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
 
 //OLED的显存
 //存放格式如下.
@@ -113,6 +124,7 @@ void Write_IIC_Command(unsigned char IIC_Command)
 //    uint8_t data[]={0x00, IIC_Command};
     int err = OLED__device->send(OLED_ADDRESS, 0x00, &IIC_Command, 1);
     if(err<0){
+        OLED_State = OLED_STATE_EIO;
         printf("OLED Write CMD 0x%02X Failed! Err=%d\n", IIC_Command, err);
     }
 }
@@ -134,6 +146,7 @@ void Write_IIC_Data(unsigned char IIC_Data)
 //    int err = OLED__device->send(OLED_ADDRESS, data, 2);
     int err = OLED__device->send(OLED_ADDRESS, 0x40, &IIC_Data, 1);
     if(err<0){
+        OLED_State = OLED_STATE_EIO;
         printf("OLED Write Data 0x%02X Failed! Err=%d\n", IIC_Data, err);
     }
 }
@@ -155,6 +168,8 @@ void OLED_WR_Byte(unsigned dat,unsigned cmd)
 ********************************************/
 void fill_picture(unsigned char fill_Data)
 {
+    if(OLED_State!=OLED_STATE_READY) return;
+
     unsigned char m,n;
     for(m=0;m<8;m++)
     {
@@ -191,31 +206,44 @@ void Delay_1ms(unsigned int Del_1ms)
 
 void OLED_Set_Pos(unsigned char x, unsigned char y)
 {
+#if defined(ENABLE_OLED)
+    if(OLED_State!=OLED_STATE_READY) return;
     OLED_WR_Byte(0xb0+y,OLED_CMD);
     OLED_WR_Byte((((x+2)&0xf0)>>4)|0x10,OLED_CMD);
     OLED_WR_Byte(((x+2)&0x0f),OLED_CMD);
+#endif
 }
 
 //开启OLED显示
 void OLED_Display_On(void)
 {
+#if defined(ENABLE_OLED)
     OLED_WR_Byte(0X8D,OLED_CMD);  //SET DCDC命令
     OLED_WR_Byte(0X14,OLED_CMD);  //DCDC ON
     OLED_WR_Byte(0XAF,OLED_CMD);  //DISPLAY ON
+    if(OLED_State!=OLED_STATE_EIO){
+        OLED_State=OLED_STATE_READY;
+    }
+#endif
 }
+
 
 //关闭OLED显示
 void OLED_Display_Off(void)
 {
+#if defined(ENABLE_OLED)
+    if(OLED_State!=OLED_STATE_READY) return;
     OLED_WR_Byte(0X8D,OLED_CMD);  //SET DCDC命令
     OLED_WR_Byte(0X10,OLED_CMD);  //DCDC OFF
     OLED_WR_Byte(0XAE,OLED_CMD);  //DISPLAY OFF
+#endif
 }
 
 //清屏函数,清完屏,整个屏幕是黑色的!和没点亮一样!!!
 void OLED_Clear(void)
 {
 #if defined(ENABLE_OLED)
+    if(OLED_State!=OLED_STATE_READY) return;
     uint8_t i,n;
     for(i=0;i<8;i++)
     {
@@ -229,6 +257,8 @@ void OLED_Clear(void)
 
 void OLED_On(void)
 {
+#if defined(ENABLE_OLED)
+    if(OLED_State!=OLED_STATE_READY) return;
     uint8_t i,n;
     for(i=0;i<8;i++)
     {
@@ -237,6 +267,7 @@ void OLED_On(void)
         OLED_WR_Byte (0x10,OLED_CMD);      //设置显示位置—列高地址
         for(n=0;n<128;n++)OLED_WR_Byte(1,OLED_DATA);
     } //更新显示
+#endif
 }
 
 //在指定位置显示一个字符,包括部分字符
@@ -246,6 +277,8 @@ void OLED_On(void)
 //size:选择字体 16/12
 void OLED_ShowChar(uint8_t x,uint8_t y,uint8_t chr,uint8_t Char_Size)
 {
+#if defined(ENABLE_OLED)
+    if(OLED_State!=OLED_STATE_READY) return;
     unsigned char c=0,i=0;
     c=chr-' ';//得到偏移后的值
     if(x>Max_Column-1){x=0;y=y+2;}
@@ -266,6 +299,7 @@ void OLED_ShowChar(uint8_t x,uint8_t y,uint8_t chr,uint8_t Char_Size)
             OLED_WR_Byte(F6x8[c][i], OLED_DATA);
         }
     }
+#endif
 }
 
 //m^n函数
@@ -305,6 +339,7 @@ void OLED_ShowNum(uint8_t x,uint8_t y,uint32_t num,uint8_t len,uint8_t size2)
 void OLED_ShowString(uint8_t x,uint8_t y,uint8_t *chr,uint8_t Char_Size)
 {
 #if defined(ENABLE_OLED)
+    if(OLED_State!=OLED_STATE_READY) return;
     unsigned char j=0;
     while (chr[j]!='\0')
     {
@@ -355,6 +390,7 @@ void OLED_DrawBMP(unsigned char x0, unsigned char y0,unsigned char x1, unsigned 
 void OLED_Init(OLED_IO_T * device)
 {
     OLED__device = device;
+    OLED_State = OLED_STATE_IDLE;
 }
 
 void OLED_TurnOn(void){
@@ -393,7 +429,11 @@ void OLED_TurnOn(void){
     OLED_WR_Byte(0x14,OLED_CMD);//
     
     OLED_WR_Byte(0xAF,OLED_CMD);//--turn on oled panel
-    
+
+    if(OLED_State!=OLED_STATE_EIO){
+        OLED_State=OLED_STATE_READY;
+    }
+
     OLED_Clear();
 }
 

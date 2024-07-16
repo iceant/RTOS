@@ -88,6 +88,13 @@ typedef struct A7670C_RxHandler_Register_S{
     void* userdata;
 }A7670C_RxHandler_Register_T;
 
+typedef enum A7670C_State_Enum{
+    kA7670C_State_Idle = 0,     /* 模块未使用 */
+    kA7670C_State_Startup,      /* 模块启动中 */
+    kA7670C_State_AT_Send,      /* AT 命令请求中 */
+    kA7670C_State_AT_Timeout,   /* AT 命令请求超时 */
+    kA7670C_State_AT_OK,        /* AT 命令请求完成 */
+}A7670C_State;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C__STATIC_FORCEINLINE void A7670C_NopDelay(uint32_t delay){
@@ -167,5 +174,8 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer);
 void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register);
 void A7670C_InsertRxHandlerTail(A7670C_RxHandler_Register_T* Register);
 void A7670C_RemoveRxHandler(A7670C_RxHandler_Register_T* Register);
+
+A7670C_State A7670C_GetState(void);
+void A7670C_SetState(A7670C_State state);
 
 #endif /* INCLUDED_A7670C_COMMON_H */

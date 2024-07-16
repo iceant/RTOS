@@ -65,6 +65,8 @@ __A7670C__Boot:
 //        A7670C_NopDelay(DELAY_TIME);
 //    }
 
+    A7670C_SetState(kA7670C_State_Startup);
+
     while(!A7670C_IsPowerOn()){
         os_printf("[A7670C] Power is Off!\r\n");
         A7670C_PowerOn();
