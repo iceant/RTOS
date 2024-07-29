@@ -46,42 +46,46 @@ static void BootThread_Entry(void* p){
 #endif
 
 #if defined(ENABLE_4G)
-    A7670C_Result result = A7670C_Startup();
-    if(result!=kA7670C_Result_OK){
-        Board_Reboot();
-        return;
-    }
+    if(global_get()->network_disable==false){
+        A7670C_Result result = A7670C_Startup();
+        if(result!=kA7670C_Result_OK){
+            Board_Reboot();
+            return;
+        }
 #if defined(ENABLE_OLED)
-    OLED_ShowString(0, OLED__line++, "[4G] OK          ", 12);
+        OLED_ShowString(0, OLED__line++, "[4G] OK          ", 12);
 #endif
-    global_load_net_info();
+        global_load_net_info();
+    }
 #endif
 
 
 #if defined(ENABLE_4G)
-    /* 启动网络对时 */
+    if(global_get()->network_disable==false) {
+        /* 启动网络对时 */
 #if defined(ENABLE_DS1307)
-    Task_TimeSync_Init();
-    os_thread_mdelay(2000);
+        Task_TimeSync_Init();
+        os_thread_mdelay(2000);
 #if defined(ENABLE_OLED)
-    OLED_ShowString(0, OLED__line++, "[NTP] OK          ", 12);
+        OLED_ShowString(0, OLED__line++, "[NTP] OK          ", 12);
 #endif
 #endif
 
 #if defined(ENABLE_MQTT)
-    /*启动MQTT*/
-    err = MQTT_Init();
-    if(err!=0){
-        Board_Reboot();
-    }
-    #endif /*defined(ENABLE_MQTT)*/
-
+        /*启动MQTT*/
+        err = MQTT_Init();
+        if (err != 0) {
+            Board_Reboot();
+        }
 #if defined(ENABLE_OLED)
-    OLED_ShowString(0, OLED__line++, "[MQTT] OK          ", 12);
+        OLED_ShowString(0, OLED__line++, "[MQTT] OK          ", 12);
 #endif
 
-    Task_HeartBeat_Init();
-#endif
+#endif /*defined(ENABLE_MQTT)*/
+
+        Task_HeartBeat_Init();
+    }
+#endif /* defined(ENABLE_4G) */
 
 #if defined(ENABLE_GD32F303)
     /* 与 GD32F303CGT6 通讯 */
@@ -129,9 +133,10 @@ static void BootThread_Entry(void* p){
                 , sec);
 
         os_printf("%s\n", time_display_buf);
-#if defined(ENABLE_OLED)
+
+        #if defined(ENABLE_OLED)
         OLED_ShowString(0, 1, time_display_buf, 12);
-#endif
+        #endif /*defined(ENABLE_OLED)*/
         #endif /* defined(ENABLE_DS1307) */
 
         mcu_session_t* mcu_session = mcu_session_get_default();

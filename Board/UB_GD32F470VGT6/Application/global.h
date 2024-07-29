@@ -18,18 +18,23 @@ typedef struct global_datetime_s{
     uint8_t     sec;
 }global_datetime_t;
 
-typedef struct global_meter_s{
+typedef struct global_voltage_calibration_s{
+    bool enabled;
+    uint32_t rd_voltage_max;    /* 分段最大值 */
     uint32_t std_voltage_min;   /*  标准电压最小值 */
     uint32_t rd_voltage_min;    /*  测量电压最小值 */
     double voltage_ratio;        /* 电压斜率    =   (标准电压最大值 - 标准电压最小值)/(测量电压最大值 - 测量电压最小值)
-                                    标准电压值   =   (测量电压值 - 测量电压最小值) x 电压斜率 + 标准电压最小值
-                                */
-    uint32_t std_current_min;
+                                    标准电压值   =   (测量电压值 - 测量电压最小值) x 电压斜率 + 标准电压最小值 */
+}global_voltage_calibration_t;
+
+ typedef struct global_current_calibration_s{
+    bool enabled;
+    uint32_t rd_current_max;    /*  分段最大值 */
+    uint32_t std_current_min;   /*  标准电流最小值 */
     uint32_t rd_current_min;    /*  测量电流最小值 */
     double current_ratio;        /* 电流斜率    =   (标准电流最大值 - 标准电流最小值)/(测量电流最大值 - 测量电流最小值)
-                                    标准电流值   =   (测量电流值 - 测量电流最小值) x 电流斜率 + 标准电流最小值
-                                */
-}global_meter_t;
+                                    标准电流值   =   (测量电流值 - 测量电流最小值) x 电流斜率 + 标准电流最小值 */
+}global_current_calibration_t;
 
 typedef struct global_fatfs_s{
     int state;
@@ -44,9 +49,18 @@ typedef struct glboal_mqtt_s{
     char Password[32];
 }glboal_mqtt_t;
 
+typedef struct global_version_s{
+    uint32_t version;
+}global_version_t;
+
+#pragma pack(1)
 typedef struct global_s{
+    uint32_t version;
+    bool network_disable;
+    global_voltage_calibration_t voltage_calibrations[4];
+    global_current_calibration_t current_calibrations[4];
+
     global_datetime_t datetime;
-    global_meter_t meter;
     glboal_mqtt_t mqtt;
     char IMEI[16];
     char ICCID[21];
@@ -54,9 +68,13 @@ typedef struct global_s{
     global_fatfs_t fatfs;
     int network_state;
 }global_t;
+#pragma pack()
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
+#define GLOBAL_VERSION 2024072901
+
 #define GLOBAL_SIZE sizeof(global_t)
 
 #define GLOBAL_DEFAULT_THREAD_PRIORITY 20

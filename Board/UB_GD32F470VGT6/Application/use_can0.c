@@ -112,6 +112,24 @@ static void USE_CAN0__RxHandler(can_receive_message_struct* rxMsg, void* userdat
 
 static uint32_t voltage_real_value(uint32_t voltage){
     global_t* global = global_get();
+
+    for(size_t i=0; i<OS_ARRAY_SIZE(global->voltage_calibrations); i++){
+        if(!global->voltage_calibrations[i].enabled) continue;
+
+        if((voltage >= global->voltage_calibrations[i].rd_voltage_min)
+            && (voltage <= global->voltage_calibrations[i].rd_voltage_max)){
+            uint32_t rd_voltage_min = global->voltage_calibrations[i].rd_voltage_min;
+            double voltage_ratio = global->voltage_calibrations[i].voltage_ratio;
+            uint32_t std_voltage_min = global->voltage_calibrations[i].std_voltage_min;
+
+            return (uint32_t)(((voltage - rd_voltage_min) * voltage_ratio) + std_voltage_min);
+
+        }
+    }
+
+    return voltage;
+
+#if 0
     if(global->meter.std_voltage_min!=-1U && global->meter.rd_voltage_min!=-1U){
         if(voltage<=global->meter.rd_voltage_min){
             return 0;
@@ -120,10 +138,29 @@ static uint32_t voltage_real_value(uint32_t voltage){
     }else{
         return voltage;
     }
+#endif
 }
 
 static uint32_t current_real_value(uint32_t current){
     global_t* global = global_get();
+
+    for(size_t i=0; i<OS_ARRAY_SIZE(global->current_calibrations); i++){
+        if(!global->current_calibrations[i].enabled) continue;
+
+        if((current >= global->current_calibrations[i].rd_current_min)
+           && (current <= global->current_calibrations[i].rd_current_max)){
+            uint32_t rd_current_min = global->current_calibrations[i].rd_current_min;
+            double current_ratio = global->current_calibrations[i].current_ratio;
+            uint32_t std_current_min = global->current_calibrations[i].std_current_min;
+
+            return (uint32_t)(((current - rd_current_min) * current_ratio) + std_current_min);
+
+        }
+    }
+
+    return current;
+
+#if 0
     if(global->meter.std_current_min!=-1U && global->meter.rd_current_min!=-1U){
         if(current<=global->meter.rd_current_min){
             return 0;
@@ -132,6 +169,7 @@ static uint32_t current_real_value(uint32_t current){
     }else{
         return current;
     }
+#endif
 }
 
 

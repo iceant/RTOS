@@ -24,7 +24,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct global_save_s{
-    global_meter_t meter;
+    uint32_t version;
+    bool network_disable;
+    global_voltage_calibration_t voltage_calibrations[4];
+    global_current_calibration_t current_calibrations[4];
 }global_save_t;
 
 #define GLOBAL_SAVE_SIZE sizeof(global_save_t)
@@ -93,10 +96,68 @@ int global_init(void){
         #if defined(ENABLE_SPI_FLASH)
         global_read();
         #endif
-        if(global__instance.meter.std_current_min==-1U || global__instance.meter.std_voltage_min==-1U){
-            global__instance.meter.current_ratio=1.0f;
-            global__instance.meter.voltage_ratio=1.0f;
-            printf("[GLOBAL] No Saved Value!\n");
+
+        if(global__instance.version!=GLOBAL_VERSION){
+            global__instance.version = GLOBAL_VERSION;
+            global__instance.network_disable = false;
+
+            /* 电压分段校准 10V ~ 50V*/
+            global__instance.voltage_calibrations[0].enabled=true;
+            global__instance.voltage_calibrations[0].rd_voltage_min=100000;
+            global__instance.voltage_calibrations[0].rd_voltage_max=500000;
+            global__instance.voltage_calibrations[0].std_voltage_min=99999;
+            global__instance.voltage_calibrations[0].voltage_ratio=0.999910475f;
+
+            /* 电压分段校准 50V ~ 100V*/
+            global__instance.voltage_calibrations[1].enabled=true;
+            global__instance.voltage_calibrations[1].rd_voltage_min=500000;
+            global__instance.voltage_calibrations[1].rd_voltage_max=1000000;
+            global__instance.voltage_calibrations[1].std_voltage_min=499964;
+            global__instance.voltage_calibrations[1].voltage_ratio=0.999967820f;
+
+            /* 电压分段校准 100V ~ 200V*/
+            global__instance.voltage_calibrations[2].enabled=true;
+            global__instance.voltage_calibrations[2].rd_voltage_min=1000000;
+            global__instance.voltage_calibrations[2].rd_voltage_max=2000000;
+            global__instance.voltage_calibrations[2].std_voltage_min=999948;
+            global__instance.voltage_calibrations[2].voltage_ratio=1.000142100f;
+
+            /* 电压分段校准 200V ~ 1100V*/
+            global__instance.voltage_calibrations[3].enabled=true;
+            global__instance.voltage_calibrations[3].rd_voltage_min=2000000;
+            global__instance.voltage_calibrations[3].rd_voltage_max=10999999;
+            global__instance.voltage_calibrations[3].std_voltage_min=2000090;
+            global__instance.voltage_calibrations[3].voltage_ratio=0.999887293f;
+
+
+            for(int i=0; i<4; i++){
+                global__instance.current_calibrations[i].enabled=false;
+                global__instance.current_calibrations[i].rd_current_max=-1;
+                global__instance.current_calibrations[i].std_current_min=-1;
+                global__instance.current_calibrations[i].rd_current_min=-1;
+                global__instance.current_calibrations[i].current_ratio=1.0f;
+            }
+
+            /* 电流分段校准 5 ~ 50 A */
+            global__instance.current_calibrations[0].enabled=true;
+            global__instance.current_calibrations[0].rd_current_min=5000;
+            global__instance.current_calibrations[0].rd_current_max=5100;
+            global__instance.current_calibrations[0].std_current_min=4997;
+            global__instance.current_calibrations[0].current_ratio=0.998320759f;
+
+//            /* 电流分段校准 50 ~ 150 A, 效果不好*/
+//            global__instance.current_calibrations[2].enabled=true;
+//            global__instance.current_calibrations[2].rd_current_min=50000;
+//            global__instance.current_calibrations[2].rd_current_max=151000;
+//            global__instance.current_calibrations[2].std_current_min=50120;
+//            global__instance.current_calibrations[2].current_ratio=0.999726435f;
+
+            /* 电流分段校准 150 ~ 250 A */
+            global__instance.current_calibrations[1].enabled=true;
+            global__instance.current_calibrations[1].rd_current_min=150000;
+            global__instance.current_calibrations[1].rd_current_max=251000;
+            global__instance.current_calibrations[1].std_current_min=150252;
+            global__instance.current_calibrations[1].current_ratio=0.998483987f;
         }
 
         global_set_str(global__instance.mqtt.ClientID, BSP_CPUID_Read());
@@ -113,6 +174,7 @@ int global_init(void){
         global_set_str(global__instance.mqtt.Topic_Downstream, buf);
 
         global__instance.meter_state = GLOBAL_METER_STATE_IDLE;
+        global__instance.network_state = GLOBAL_NETWORK_STATE_IDLE;
         
         global__state = GLOBAL_STATE_INIT;
     }
@@ -134,12 +196,31 @@ void global_show(void){
     printf("\tIMEI:%s\n", global__instance.IMEI);
     printf("\tICCID:%s\n", global__instance.ICCID);
     printf("METER:\n");
-    printf("\tstd_voltage_min:%d\n", global__instance.meter.std_voltage_min);
-    printf("\tstd_current_min:%d\n", global__instance.meter.std_current_min);
-    printf("\trd_voltage_min:%d\n", global__instance.meter.rd_voltage_min);
-    printf("\trd_current_min:%d\n", global__instance.meter.rd_current_min);
-    printf("\tcurrent_ratio:%f\n", global__instance.meter.current_ratio);
-    printf("\tvoltage_ratio:%f\n", global__instance.meter.voltage_ratio);
+    for(int i=0; i<4; i++){
+        for(int j=0; j<i; j++){
+            printf("\t");
+        }
+        printf("\tvoltage_calibrations.%d.enabled=%s\n", i, global__instance.voltage_calibrations[i].enabled?"true":"false");
+        printf("\tvoltage_calibrations.%d.rf_voltage_max=%d\n", i, global__instance.voltage_calibrations[i].rd_voltage_max);
+        printf("\tvoltage_calibrations.%d.std_voltage_min=%d\n", i, global__instance.voltage_calibrations[i].std_voltage_min);
+        printf("\tvoltage_calibrations.%d.rd_voltage_min=%d\n", i, global__instance.voltage_calibrations[i].rd_voltage_min);
+        printf("\tvoltage_calibrations.%d.voltage_ratio=%d\n", i, global__instance.voltage_calibrations[i].voltage_ratio);
+
+    }
+    for(int i=0; i<4; i++){
+        for(int j=0; j<i; j++){
+            printf("\t");
+        }
+        printf("\tcurrent_calibrations.%d.enabled=%s\n", i, global__instance.current_calibrations[i].enabled?"true":"false");
+        printf("\tcurrent_calibrations.%d.rd_current_max=%d\n", i, global__instance.current_calibrations[i].rd_current_max);
+        printf("\tcurrent_calibrations.%d.std_current_min=%d\n", i, global__instance.current_calibrations[i].std_current_min);
+        printf("\tcurrent_calibrations.%d.rd_current_min=%d\n", i, global__instance.current_calibrations[i].rd_current_min);
+        printf("\tcurrent_calibrations.%d.current_ratio=%d\n", i, global__instance.current_calibrations[i].current_ratio);
+
+    }
+
+    printf("NETWORK:\n");
+    printf("\tnetwork_disable:%s\n", global__instance.network_disable?"true":"false");
 }
 
 global_t* global_get(void){
@@ -149,7 +230,7 @@ global_t* global_get(void){
 int global_save(void){
     #if defined(ENABLE_SPI_FLASH)
     global_save_t save;
-    memcpy(&save.meter, &global__instance.meter, sizeof(save.meter));
+    memcpy(&save, &global__instance, sizeof(save));
     int sectors = PAGE(GLOBAL_SAVE_SIZE, sFLASH_SECTOR_SIZE);
     for(int i=0; i<sectors; i++){
         sFLASH_EraseSector(GLOBAL_SAVE_ADDRESS_START);
@@ -163,19 +244,15 @@ int global_save(void){
 int global_read(void){
     #if defined(ENABLE_SPI_FLASH)
     global_save_t save;
-    char buf[32];
+
     sFLASH_ReadBuffer((uint8_t*)&save, GLOBAL_SAVE_ADDRESS_START, GLOBAL_SAVE_SIZE);
-    memcpy(&global__instance.meter, &save.meter, sizeof(global__instance.meter));
-    printf("[GLOBAL] Read: meter:\n");
-    printf("[GLOBAL] \t std_voltage_min: %d\n", save.meter.std_voltage_min);
-    printf("[GLOBAL] \t rd_voltage_min: %d\n", save.meter.rd_voltage_min);
-    printf("[GLOBAL] \t std_current_min: %d\n", save.meter.std_current_min);
-    printf("[GLOBAL] \t rd_current_min: %d\n", save.meter.rd_current_min);
-    sdk_ultoa(save.meter.voltage_ratio, buf, 10);
-    printf("[GLOBAL] \t voltage_ratio: %s\n", buf);
-    sdk_ultoa(save.meter.current_ratio, buf, 10);
-    printf("[GLOBAL] \t current_ratio: %s\n", buf);
-    #endif
+    if(save.version!=GLOBAL_VERSION){
+        // TODO: support read from old version
+        return -1;
+    }
+    memcpy(&global__instance, &save, sizeof(save));
+    #endif /*defined(ENABLE_SPI_FLASH)*/
+
     return 0;
 }
 

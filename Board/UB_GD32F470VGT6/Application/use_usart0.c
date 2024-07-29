@@ -47,7 +47,9 @@ static void USART0_RxThread_Entry(void* p)
         }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "lock_disable")!=-1){
             BSP_Lock_Disable();
             printf("[USE_USART0] Lock State:%d\n", BSP_Lock_State());
-        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.std_voltage_min")!=-1){
+        }
+#if 0
+        else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.std_voltage_min")!=-1){
             global_t* global = global_get();
 
             sdk_ringbuffer_text_t text;
@@ -120,7 +122,9 @@ static void USART0_RxThread_Entry(void* p)
             }else{
                 printf("[USE_USART0] set meter.current_ratio failed!!!\n");
             }
-        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "global.show")!=-1){
+        }
+#endif
+        else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "global.show")!=-1){
             global_show();
         }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "mqtt.server")!=-1){
             global_t* global = global_get();
