@@ -174,6 +174,7 @@ void USARTx_IRQHandler(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#if 0
 C__ALIGNED(OS_ALIGN_SIZE)
 static char os_printf__buffer[OS_PRINTF_BUFFER_SIZE];
 
@@ -215,6 +216,7 @@ int os_printf(const char* fmt, ...){
 
     return len;
 }
+#endif
 
 
 

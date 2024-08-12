@@ -70,6 +70,11 @@
 #include <os_critical.h>
 #endif /*INCLUDED_OS_CRITICAL_H*/
 
+#ifndef INCLUDED_OS_EXCEPTION_H
+#include <os_exception.h>
+#endif /*INCLUDED_OS_EXCEPTION_H*/
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

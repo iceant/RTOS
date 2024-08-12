@@ -1,6 +1,8 @@
 #ifndef INCLUDED_GLOBAL_H
 #define INCLUDED_GLOBAL_H
 
+#include <sdk_mp.h>
+
 typedef struct global_datetime_s{
     int year;
     unsigned char month;
@@ -13,6 +15,7 @@ typedef struct global_datetime_s{
 typedef struct global_s{
     char CPUID[25];
     global_datetime_t datetime;
+    sdk_mp_t power_wms;
 }global_t;
 
 ////////////////////////////////////////////////////////////////////////////////

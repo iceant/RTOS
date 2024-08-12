@@ -66,6 +66,13 @@ void Board_DeInit(void)
     rcu_periph_clock_disable(RCU_GPIOF);
     rcu_periph_clock_disable(RCU_GPIOG);
 
+#if defined(ENABLE_LED)
+    BSP_LED1_Init();
+    BSP_LED2_Init();
+    BSP_LED3_Init();
+    BSP_LED4_Init();
+#endif
+
     BSP_I2C0_DeInit();
     BSP_SPI0_DeInit();
     BSP_USART2_DeInit();
@@ -131,7 +138,7 @@ void Board_Reboot(void){
     __disable_irq();                     // 可以使用这个函数 关闭总中断
     __set_FAULTMASK(1);        //关闭中断,确保跳转过程中 不会进入中断,导致跳转失败
     Board_DeInit();
-    cpu_reboot();
+    NVIC_SystemReset();
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////

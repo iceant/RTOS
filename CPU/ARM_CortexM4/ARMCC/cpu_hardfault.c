@@ -3,7 +3,7 @@
 #include <cpu_types.h>
 #include <cpu_registers.h>
 #include "cpu_functions.h"
-
+#include <os_thread.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -253,6 +253,11 @@ typedef struct __attribute__((packed)) ContextStateFrame {
     uint32_t xpsr;
 } sContextStateFrame;
 
+////////////////////////////////////////////////////////////////////////////////
+////
+typedef void (*cpu_exception_handler_t)(void*);
+
+extern cpu_exception_handler_t cpu_exception_handler;
 
 static void show_cfsr(unsigned long cfsr);
 
@@ -275,6 +280,11 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     unsigned long cfsr;
     unsigned long bus_fault_address;
     unsigned long memmanage_fault_address;
+
+    if(cpu_exception_handler){
+        cpu_exception_handler(frame);
+        return;
+    }
 
     //
     // In case we received a hard fault because of a breakpoint instruction, we return.
@@ -354,7 +364,7 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
     printf("-- MISC --\n");
     printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
-    printf("STACK:0x%p\n", (unsigned long*)frame);
+    printf("Thread:%s\n", os_thread_self()->name);
 
     /* 尝试自动处理 */
 

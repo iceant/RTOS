@@ -133,7 +133,6 @@ void Board_4GPower_Enable(void){
 ////
 
 void Board_Init(void){
-    cpu_uint_t level = cpu_interrupt_disable();
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x010000);
 
 //    SCB->CCR|=SCB_CCR_STKALIGN_Msk;
@@ -148,7 +147,6 @@ void Board_Init(void){
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
 //    SystemCoreClock = 240000000U;
-
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/OS_TICKS_PER_SECOND); /* 10ms = tick */
@@ -156,11 +154,12 @@ void Board_Init(void){
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
 
 
+
     /* ------------------------------------------------------------------------------------------ */
     /* ---- 打开 5V 电源 ----*/
-//    Board_5V_Init();
+    Board_5V_Init();
 //    Board_5V_Disable();
-//    Board_5V_Enable();
+    Board_5V_Enable();
 
 //    Board_Metering_GPIO_Init();
 //    Board_Metering_Disable();
@@ -259,9 +258,6 @@ void Board_Init(void){
     BSP_Key_Init(0);
     #endif
 
-
-    /* ------------------------------------------------------------------------------------------ */
-
 }
 
 void Board_Reboot(void){
@@ -280,7 +276,7 @@ void Board_Reboot(void){
     }
 
     Board_DeInit();
-    cpu_reboot();
+    NVIC_SystemReset();
 }
 
 void Board_DeInit(void)

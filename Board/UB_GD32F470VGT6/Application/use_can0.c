@@ -10,7 +10,7 @@
 #include "meter_protocol.h"
 #include <mqtt.h>
 #include <sdk_crc16.h>
-
+#include <mcu_session.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef struct USE_CAN0_RxRecord_S{
@@ -113,21 +113,27 @@ static void USE_CAN0__RxHandler(can_receive_message_struct* rxMsg, void* userdat
 static uint32_t voltage_real_value(uint32_t voltage){
     global_t* global = global_get();
 
+    uint32_t result = voltage;
+
+#if defined(GLOBAL_CALIBRATION_ENABLE) && (GLOBAL_CALIBRATION_ENABLE==1)
     for(size_t i=0; i<OS_ARRAY_SIZE(global->voltage_calibrations); i++){
         if(!global->voltage_calibrations[i].enabled) continue;
 
-        if((voltage >= global->voltage_calibrations[i].rd_voltage_min)
-            && (voltage <= global->voltage_calibrations[i].rd_voltage_max)){
-            uint32_t rd_voltage_min = global->voltage_calibrations[i].rd_voltage_min;
-            double voltage_ratio = global->voltage_calibrations[i].voltage_ratio;
-            uint32_t std_voltage_min = global->voltage_calibrations[i].std_voltage_min;
+        if((voltage >= global->voltage_calibrations[i].rd_min)
+            && (voltage <= global->voltage_calibrations[i].rd_max)){
+            uint32_t rd_base = global->voltage_calibrations[i].rd_base;
+            double ratio = global->voltage_calibrations[i].ratio;
+            uint32_t std_base = global->voltage_calibrations[i].std_base;
 
-            return (uint32_t)(((voltage - rd_voltage_min) * voltage_ratio) + std_voltage_min);
-
+            result =  (uint32_t)(((voltage - rd_base) * ratio) + std_base);
+            break;
         }
     }
+#endif
 
-    return voltage;
+//    printf("RdVol:%d, UseVol:%d\n", voltage, result);
+
+    return result;
 
 #if 0
     if(global->meter.std_voltage_min!=-1U && global->meter.rd_voltage_min!=-1U){
@@ -144,21 +150,25 @@ static uint32_t voltage_real_value(uint32_t voltage){
 static uint32_t current_real_value(uint32_t current){
     global_t* global = global_get();
 
+    uint32_t result = current;
+
+#if defined(GLOBAL_CALIBRATION_CURRENT_ENABLE) && (GLOBAL_CALIBRATION_CURRENT_ENABLE==1)
     for(size_t i=0; i<OS_ARRAY_SIZE(global->current_calibrations); i++){
         if(!global->current_calibrations[i].enabled) continue;
 
-        if((current >= global->current_calibrations[i].rd_current_min)
-           && (current <= global->current_calibrations[i].rd_current_max)){
-            uint32_t rd_current_min = global->current_calibrations[i].rd_current_min;
-            double current_ratio = global->current_calibrations[i].current_ratio;
-            uint32_t std_current_min = global->current_calibrations[i].std_current_min;
+        if((current >= global->current_calibrations[i].rd_min)
+           && (current <= global->current_calibrations[i].rd_max)){
+            uint32_t rd_base = global->current_calibrations[i].rd_base;
+            double ratio = global->current_calibrations[i].ratio;
+            uint32_t std_base = global->current_calibrations[i].std_base;
 
-            return (uint32_t)(((current - rd_current_min) * current_ratio) + std_current_min);
-
+            result =  (uint32_t)(((current - rd_base) * ratio) + std_base);
+            break;
         }
     }
+#endif
 
-    return current;
+    return result;
 
 #if 0
     if(global->meter.std_current_min!=-1U && global->meter.rd_current_min!=-1U){
@@ -300,6 +310,25 @@ static void USE_CAN0_HandleMeterProtocol(int state){
     }
 }
 
+static uint8_t USE_CAN0__SendEnergyToGD303Buffer[17]={0};
+static void USE_CAN0__SendEnergyToGD303(void){
+/*
+ * START:   0xBE, 0xEF
+ * DU_SIZE: <uint16_t,BE>
+ * DU_TYPE: <uint8_t>  0xD0
+ * DU     : <nBits:uint8_t=16>,<uint8_t[nBits]>
+ * CRC    : uint16_t LE
+ */
+//    USE_CAN0_LatestSnapshot.EnergySum
+
+    mcu_session_t* session = mcu_session_get_default();
+    int nBytes = sdk_mp_nbytes();
+    USE_CAN0__SendEnergyToGD303Buffer[0] = nBytes;
+    memcpy(USE_CAN0__SendEnergyToGD303Buffer+1, USE_CAN0_LatestSnapshot.EnergySum, nBytes);
+    mcu_session_pack(session, kMCU_PROTOCOL_DU_PWR, USE_CAN0__SendEnergyToGD303Buffer, nBytes+1);
+    mcu_session_send(session, 0, 0);
+}
+
 
 static void USE_CAN0__RxThreadEntry(void* p){
 
@@ -349,14 +378,18 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         /* 之前在充电，现在停止了 */
                         USE_CAN0__State = USE_CAN0_STATE_CHARGE_IDLE;
                         global_get()->meter_state = GLOBAL_METER_STATE_IDLE;
-                        /*
-                         1. 显示最终的电能
-                         */
+
+                        /* 发送给 GD303 处理脉冲 */
+
+                        USE_CAN0__SendEnergyToGD303();
+
+                        /* 显示最终的电能 */
                         sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
                         sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy: %F", USE_CAN0__ShowBuf, 7);
                         OLED_Clear();
                         OLED_ShowString(1,5, OLED_Buffer, 12);
 
+                        /* 处理打包发送 */
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_IDLE);
                     }
                 }
@@ -371,6 +404,8 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.EnergySum, 0, 0);
                         sdk_mp_fromintu(USE_CAN0_LatestSnapshot.EnergyWH, 0, 0);
                         nCount = BSP_TIM6__TickCount;
+
+                        USE_CAN0__SendEnergyToGD303();
 
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_START);
                         
@@ -388,6 +423,10 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         /*转换为人类可阅读的值*/
                         sdk_mp_div(USE_CAN0_LatestSnapshot.EnergyWH, USE_CAN0_LatestSnapshot.EnergySum, USE_CAN0__EnergyRatio, &USE_CAN0_LatestSnapshot.EnergyWH);
 
+                        /* 将电能发给GD303 */
+                        USE_CAN0__SendEnergyToGD303();
+
+                        /* 处理打包 */
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_WIP);
                     }
                 }

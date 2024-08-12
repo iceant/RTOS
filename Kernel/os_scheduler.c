@@ -37,21 +37,20 @@ static cpu_atomic_t os_scheduler__stop_nest={0};                    /* 进入关
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-
-C__STATIC_FORCEINLINE os_thread_t * os_scheduler__pop_highest(void){
-    register os_priority_t highest_priority = os_priority_get_highest();
+static os_thread_t * os_scheduler__pop_highest(void){
+    os_priority_t highest_priority = os_priority_get_highest();
     if(highest_priority==OS_PRIORITY_INVALID){
         /* No Task In Ready Table */
         return 0;
     }
-    register os_list_t * head = &os_scheduler__ready_list[highest_priority];
+    os_list_t * head = &os_scheduler__ready_list[highest_priority];
     if(OS_LIST_IS_EMPTY(head)){
         os_priority_unmark(highest_priority);
         return 0;
     }
-    register os_list_node_t *node = OS_LIST_NEXT(head);
-    register os_thread_t * thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
-    OS_LIST_REMOVE(&thread->ready_node);
+    os_list_node_t *node = OS_LIST_NEXT(head);
+    os_thread_t * thread = OS_CONTAINER_OF(node, os_thread_t, ready_node);
+    OS_LIST_REMOVE(node);
     if(OS_LIST_IS_EMPTY(head)){
         os_priority_unmark(highest_priority);
     }

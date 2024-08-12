@@ -222,12 +222,15 @@ static int mqtt_tx_queue_init(mqtt_tx_queue_t* queue){
 static int mqtt_tx_queue_blocked_put(mqtt_tx_queue_t* queue, uint8_t * data, int data_size){
 
     int next_write_idx=0;
-
+    cpu_uint_t level;
     while(1){
+        level = cpu_interrupt_disable();
         next_write_idx = queue->write_idx + 1;
         if(next_write_idx == TX_TASK_COUNT){
             next_write_idx = 0;
         }
+        cpu_interrupt_enable(level);
+
         if(next_write_idx==queue->read_idx){
             os_semaphore_take(&queue->write_lock, OS_WAIT_INFINITY);
         }else{
@@ -238,13 +241,14 @@ static int mqtt_tx_queue_blocked_put(mqtt_tx_queue_t* queue, uint8_t * data, int
 
     int copy_size = OS_MIN(data_size, TX_BUFFER_SZ);
 
+    printf("[MQTT] Put Into %d/%d \n", queue->write_idx, TX_TASK_COUNT);
+
+    level = cpu_interrupt_disable();
     mqtt_tx_task_t* task = &queue->tasks[queue->write_idx];
     memcpy(task->tx_buffer, data, copy_size);
     task->tx_data_size = copy_size;
-
-    printf("[MQTT] Put Into %d/%d \n", queue->write_idx, TX_TASK_COUNT);
-
     queue->write_idx = next_write_idx;
+    cpu_interrupt_enable(level);
 
     os_semaphore_release(&queue->read_lock);
 
@@ -409,13 +413,14 @@ int MQTT_Init(void)
     printf("[MQTT] Subscribe %s\n", global->mqtt.Topic_Downstream);
     result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream
                                            , kA7670C_Qos_0, kA7670C_Bool_Unspecified);
+    printf("MQTT Sub Downstream Topic Result: %d\n", result);
     while(result!=kA7670C_Result_OK){
-        printf("MQTT Sub Downstream Topic Result: %d\n", result);
         if(nRetry-- ==0){
             return -2;
         }
         result = A7670C_MQTT_SubscribeOneTopic(&session, global->mqtt.Topic_Downstream
                                                , kA7670C_Qos_0, kA7670C_Bool_Unspecified);
+        printf("MQTT Sub Downstream Topic Result: %d\n", result);
     }
 
     global->network_state=GLOBAL_NETWORK_STATE_MQTT_DOWNSTREAM_TOPIC_SUBSCRIBED;

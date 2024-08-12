@@ -154,10 +154,15 @@ static int A7670C_IO_Send(uint8_t* data, int size){
     BSP_USART1_Lock();
 //    sdk_hex_dump("A7670C_IO_Send", data, size);
     sdk_ringbuffer_reset(&A7670C_RxBuffer);
-    BSP_USART1_DMATx(data, size);
-//    BSP_USART1_Send(data, size);
+//    BSP_USART1_DMATx(data, size);
+    BSP_USART1_Send(data, size);
     BSP_USART1_UnLock();
     return size;
+}
+
+
+static void A7670C_IO_Timeout(void){
+    os_sem_release(&A7670C_IO_RxSem);
 }
 
 
@@ -167,7 +172,8 @@ static int A7670C_IO_Send(uint8_t* data, int size){
 //    A7670C_power_reset.off();
 //}
 
-static A7670C_IO_T  A7670C_IO={.send=A7670C_IO_Send, .wait=A7670C_IO_Wait, .notify =A7670C_IO_Notify};
+static A7670C_IO_T  A7670C_IO={.send=A7670C_IO_Send, .wait=A7670C_IO_Wait, .notify =A7670C_IO_Notify, .timeout=A7670C_IO_Timeout};
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,17 @@
 #endif /*INCLUDED_BSP_TIM6_H*/
 
 
+#ifndef INCLUDED_BSP_USART0_H
+#include <bsp_usart0.h>
+#endif /*INCLUDED_BSP_USART0_H*/
+
+#ifndef INCLUDED_BSP_TIM2_H
+#include <bsp_tim2.h>
+#endif /*INCLUDED_BSP_TIM2_H*/
+
+#ifndef INCLUDED_BSP_PULSE_H
+#include <bsp_pulse.h>
+#endif /*INCLUDED_BSP_PULSE_H*/
 
 
 

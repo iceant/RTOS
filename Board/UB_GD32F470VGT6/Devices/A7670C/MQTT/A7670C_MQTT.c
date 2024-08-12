@@ -320,11 +320,16 @@ A7670C_Result A7670C_MQTT_SubscribeOneTopic(
         , A7670C_Qos qos
         , A7670C_Bool dup
 ){
-    A7670C_Result result;
+    A7670C_Result result = kA7670C_Result_ERROR;
     A7670C_CMQTTSUB_Write_Response CMQTTSUB_Write_Response;
     
     if(session->state>=kA7670C_MQTT_State_CONNECT && session->state<kA7670C_MQTT_State_DISC){
         result = A7670C_CMQTTSUB_Write2(&CMQTTSUB_Write_Response, session->client_index, topic, qos, dup, 12000);
+        if(result!=kA7670C_Result_OK){
+            printf("[MQTT] A7670C_CMQTTSUB_Write2=%d\n", result);
+            return result;
+        }
+
         if(CMQTTSUB_Write_Response.code!=kA7670C_Response_Code_OK){
             return kA7670C_Result_ERROR;
         }
@@ -336,7 +341,7 @@ A7670C_Result A7670C_MQTT_SubscribeOneTopic(
         return kA7670C_Result_OK;
     }
     
-    return kA7670C_Result_ERROR;
+    return result;
 }
 
 A7670C_Result A7670C_MQTT_SubscribeTopics(

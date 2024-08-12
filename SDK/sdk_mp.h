@@ -85,4 +85,6 @@ void  sdk_mp_fmtu   (int code, va_list_box *box,
                      int put(int c, void *cl), void *cl,
                      unsigned char flags[], int width, int precision);
 
+int sdk_mp_nbytes(void);
+
 #endif /* INCLUDED_SDK_MP_H */

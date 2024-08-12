@@ -35,8 +35,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static int nbits  = SDK_MP_NBITS;
-static int nbytes = (32-1)/8 + 1;
-static int shift  = (32-1)%8;
+static int nbytes = (SDK_MP_NBITS-1)/8 + 1;
+static int shift  = (SDK_MP_NBITS-1)%8;
 static unsigned char msb = 0xFF;
 static unsigned char temp[16 + 16 + 16 + 2*16+2];
 static sdk_mp_t tmp[] = {temp, temp+1*16, temp+2*16, temp+3*16};
@@ -897,4 +897,8 @@ void sdk_mp_fmt(int code, va_list_box *box,
     sdk_fmt_putd(buf, strlen(buf), put, cl, flags,
                  width, precision);
     OS_FREE(buf);
+}
+
+int sdk_mp_nbytes(void){
+    return nbytes;
 }

@@ -32,6 +32,24 @@
 #include <bsp_lock.h>
 #endif /*INCLUDED_BSP_LOCK_H*/
 
+#ifndef INCLUDED_BSP_LED1_H
+#include <bsp_led1.h>
+#endif /*INCLUDED_BSP_LED1_H*/
+
+#ifndef INCLUDED_BSP_LED2_H
+#include <bsp_led2.h>
+#endif /*INCLUDED_BSP_LED2_H*/
+
+#ifndef INCLUDED_BSP_LED3_H
+#include <bsp_led3.h>
+#endif /*INCLUDED_BSP_LED3_H*/
+
+#ifndef INCLUDED_BSP_LED4_H
+#include <bsp_led4.h>
+#endif /*INCLUDED_BSP_LED4_H*/
+
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

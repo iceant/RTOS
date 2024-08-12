@@ -42,6 +42,7 @@ typedef struct A7670C_IO_S{
     int (*send)(uint8_t * data, int size);
     os_err_t (*wait)(os_tick_t tick);
     os_err_t (*notify)(void);
+    void (*timeout)(void);
 }A7670C_IO_T;
 
 

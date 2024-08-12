@@ -27,7 +27,7 @@ os_priority_t os_priority_get_highest(void){
 //        priority += OS_UINTPTR_BITS;
 //        table_p++;
 //    }
-    for(int i=0; i<OS_PRIORITY_TABLE_SIZE; i++){
+    for(os_size_t i=0; i<OS_PRIORITY_TABLE_SIZE; i++){
         table_p = &os_priority__table[i];
         if(table_p==0){
             priority+=OS_UINTPTR_BITS;
@@ -37,7 +37,7 @@ os_priority_t os_priority_get_highest(void){
     }
     
     priority += (os_priority_t)cpu_CLZ(cpu_RBIT(*table_p));
-    return (priority==OS_PRIORITY_MAX)?OS_PRIORITY_INVALID:(priority);
+    return (priority>=OS_PRIORITY_MAX)?OS_PRIORITY_INVALID:(priority);
 }
 
 //void os_priority_mark(os_priority_t priority)

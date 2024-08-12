@@ -5,13 +5,19 @@
 ////
 static global_t global__instance={0};
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 void global_init(void){
     memset(&global__instance, 0, sizeof(global__instance));
+
+    printf("sdk_mp_set(128)\n");
+    sdk_mp_set(128);
+    printf("sdk_fmt_register('P')\n");
+    sdk_fmt_register('P', sdk_mp_fmt);
+    printf("sdk_mp_new(...)\n");
+    sdk_mp_new(0, &global__instance.power_wms);
+    printf("global_init done!\n");
 }
 
 global_t* global_get(void)

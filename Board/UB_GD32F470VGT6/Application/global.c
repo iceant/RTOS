@@ -26,15 +26,14 @@
 typedef struct global_save_s{
     uint32_t version;
     bool network_disable;
-    global_voltage_calibration_t voltage_calibrations[4];
-    global_current_calibration_t current_calibrations[4];
 }global_save_t;
 
 #define GLOBAL_SAVE_SIZE sizeof(global_save_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static   global_t global__instance;
+static global_t global__instance __attribute__((section(".bss.RAM_Array")))={0};
+//static global_t global__instance ={0};
 static int global__state=GLOBAL_STATE_IDLE;
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -62,7 +61,7 @@ static A7670C_Result global__fetch_IMEI_ICCID(void){
         result = A7670C_ICCID_Read(&ICCID_Read_Response, 12000);
 
         if(ICCID_Read_Response.code == kA7670C_Response_Code_OK){
-//            os_printf("CCID: %s\n", ICCID_Read_Response.ICCID);
+            os_printf("CCID: %s\n", ICCID_Read_Response.ICCID);
 //            sdk_hex_dump("ICCID", ICCID_Read_Response.ICCID, sizeof(ICCID_Read_Response.ICCID));
             memcpy(global__instance.ICCID, ICCID_Read_Response.ICCID, sizeof(ICCID_Read_Response.ICCID));
             break;
@@ -90,7 +89,13 @@ int global_load_net_info(void){
     return 0;
 }
 
+#define VOLTAGE(v) (v*10000)
+#define CURRENT(c) (c*1000)
+
 int global_init(void){
+
+    printf("global_t size:%d\n", sizeof(global_t));
+
     if(global__state==GLOBAL_STATE_IDLE){
         memset(&global__instance, 0, sizeof(global__instance));
         #if defined(ENABLE_SPI_FLASH)
@@ -101,63 +106,209 @@ int global_init(void){
             global__instance.version = GLOBAL_VERSION;
             global__instance.network_disable = false;
 
-            /* 电压分段校准 10V ~ 50V*/
-            global__instance.voltage_calibrations[0].enabled=true;
-            global__instance.voltage_calibrations[0].rd_voltage_min=100000;
-            global__instance.voltage_calibrations[0].rd_voltage_max=500000;
-            global__instance.voltage_calibrations[0].std_voltage_min=99999;
-            global__instance.voltage_calibrations[0].voltage_ratio=0.999910475f;
-
-            /* 电压分段校准 50V ~ 100V*/
-            global__instance.voltage_calibrations[1].enabled=true;
-            global__instance.voltage_calibrations[1].rd_voltage_min=500000;
-            global__instance.voltage_calibrations[1].rd_voltage_max=1000000;
-            global__instance.voltage_calibrations[1].std_voltage_min=499964;
-            global__instance.voltage_calibrations[1].voltage_ratio=0.999967820f;
-
-            /* 电压分段校准 100V ~ 200V*/
-            global__instance.voltage_calibrations[2].enabled=true;
-            global__instance.voltage_calibrations[2].rd_voltage_min=1000000;
-            global__instance.voltage_calibrations[2].rd_voltage_max=2000000;
-            global__instance.voltage_calibrations[2].std_voltage_min=999948;
-            global__instance.voltage_calibrations[2].voltage_ratio=1.000142100f;
-
-            /* 电压分段校准 200V ~ 1100V*/
-            global__instance.voltage_calibrations[3].enabled=true;
-            global__instance.voltage_calibrations[3].rd_voltage_min=2000000;
-            global__instance.voltage_calibrations[3].rd_voltage_max=10999999;
-            global__instance.voltage_calibrations[3].std_voltage_min=2000090;
-            global__instance.voltage_calibrations[3].voltage_ratio=0.999887293f;
-
-
-            for(int i=0; i<4; i++){
-                global__instance.current_calibrations[i].enabled=false;
-                global__instance.current_calibrations[i].rd_current_max=-1;
-                global__instance.current_calibrations[i].std_current_min=-1;
-                global__instance.current_calibrations[i].rd_current_min=-1;
-                global__instance.current_calibrations[i].current_ratio=1.0f;
+#if defined(GLOBAL_CALIBRATION_ENABLE) && (GLOBAL_CALIBRATION_ENABLE==1)
+            for(os_size_t i=0; i< OS_ARRAY_SIZE(global__instance.voltage_calibrations); i++){
+                global__instance.voltage_calibrations[i].enabled=false;
+                global__instance.voltage_calibrations[i].std_base=-1;
+                global__instance.voltage_calibrations[i].rd_base=-1;
+                global__instance.voltage_calibrations[i].rd_min=-1;
+                global__instance.voltage_calibrations[i].rd_max=-1;
+                global__instance.voltage_calibrations[i].ratio=1.0f;
             }
 
-            /* 电流分段校准 5 ~ 50 A */
-            global__instance.current_calibrations[0].enabled=true;
-            global__instance.current_calibrations[0].rd_current_min=5000;
-            global__instance.current_calibrations[0].rd_current_max=5100;
-            global__instance.current_calibrations[0].std_current_min=4997;
-            global__instance.current_calibrations[0].current_ratio=0.998320759f;
+            /* 电压分段校准 0~10V*/
+            int idx = 0;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(0);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(10);
+            global__instance.voltage_calibrations[idx].ratio=1.01009899f;
 
-//            /* 电流分段校准 50 ~ 150 A, 效果不好*/
-//            global__instance.current_calibrations[2].enabled=true;
-//            global__instance.current_calibrations[2].rd_current_min=50000;
-//            global__instance.current_calibrations[2].rd_current_max=151000;
-//            global__instance.current_calibrations[2].std_current_min=50120;
-//            global__instance.current_calibrations[2].current_ratio=0.999726435f;
+            /* 电压分段校准 10 ~ 15V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(10);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(15);
+            global__instance.voltage_calibrations[idx].ratio=1.006644295f;
 
-            /* 电流分段校准 150 ~ 250 A */
-            global__instance.current_calibrations[1].enabled=true;
-            global__instance.current_calibrations[1].rd_current_min=150000;
-            global__instance.current_calibrations[1].rd_current_max=251000;
-            global__instance.current_calibrations[1].std_current_min=150252;
-            global__instance.current_calibrations[1].current_ratio=0.998483987f;
+            /* 电压分段校准 15 ~ 20V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(15);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(20);
+            global__instance.voltage_calibrations[idx].ratio=1.004929648f;
+
+            /* 电压分段校准 20 ~ 30V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(20);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(30);
+            global__instance.voltage_calibrations[idx].ratio=1.003224114f;
+
+            /* 电压分段校准 30 ~ 40V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(30);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(40);
+            global__instance.voltage_calibrations[idx].ratio=1.002408546f;
+
+            /* 电压分段校准 40 ~ 50V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(40);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(50);
+            global__instance.voltage_calibrations[idx].ratio=1.001931844f;
+
+            /* 电压分段校准 50 ~ 70V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(50);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(70);
+            global__instance.voltage_calibrations[idx].ratio=1.001369099f;
+
+            /* 电压分段校准 70 ~ 90V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(70);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(90);
+            global__instance.voltage_calibrations[idx].ratio=1.001070089f;
+
+            /* 电压分段校准 90 ~ 100V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(90);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(100);
+            global__instance.voltage_calibrations[idx].ratio=1.000948849f;
+
+            /* 电压分段校准 100 ~ 120V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(100);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(120);
+            global__instance.voltage_calibrations[idx].ratio=1.000733945f;
+
+            /* 电压分段校准 120 ~ 150V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(120);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(150);
+            global__instance.voltage_calibrations[idx].ratio=1.000293529f;
+
+            /* 电压分段校准 150 ~ 200V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(150);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(200);
+            global__instance.voltage_calibrations[idx].ratio=1.000545273f;
+
+            /* 电压分段校准 250 ~ 400V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(250);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(400);
+            global__instance.voltage_calibrations[idx].ratio=1.000392452f;
+
+            /* 电压分段校准 400 ~ 450V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(400);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(450);
+            global__instance.voltage_calibrations[idx].ratio=0.999810047f;
+
+            /* 电压分段校准 450 ~ 750V */
+            idx = idx+1;
+            global__instance.voltage_calibrations[idx].enabled=true;
+            global__instance.voltage_calibrations[idx].rd_base=0;
+            global__instance.voltage_calibrations[idx].std_base=0;
+            global__instance.voltage_calibrations[idx].rd_min=VOLTAGE(450);
+            global__instance.voltage_calibrations[idx].rd_max=VOLTAGE(750);
+            global__instance.voltage_calibrations[idx].ratio=0.999892225f;
+
+            /* --------------------------------------------------------------------------------------------------- */
+#if defined(GLOBAL_CALIBRATION_CURRENT_ENABLE) && (GLOBAL_CALIBRATION_CURRENT_ENABLE==1)
+            for(os_size_t i=0; i< OS_ARRAY_SIZE(global__instance.current_calibrations); i++){
+                global__instance.current_calibrations[i].enabled=false;
+                global__instance.current_calibrations[i].std_base=-1;
+                global__instance.current_calibrations[i].rd_base=-1;
+                global__instance.current_calibrations[i].rd_min=-1;
+                global__instance.current_calibrations[i].rd_max=-1;
+                global__instance.current_calibrations[i].ratio=1.0f;
+            }
+
+            /* 电流分段校准 7.5 ~ 30 A */
+            idx = 0;
+            global__instance.current_calibrations[idx].enabled=true;
+            global__instance.current_calibrations[idx].rd_base=0;
+            global__instance.current_calibrations[idx].std_base=0;
+            global__instance.current_calibrations[idx].rd_min=CURRENT(7.5);
+            global__instance.current_calibrations[idx].rd_max=CURRENT(30);
+            global__instance.current_calibrations[idx].ratio=0.999083312f;
+
+            /* 电流分段校准 50 ~ 70 A */
+            idx+=1;
+            global__instance.current_calibrations[idx].enabled=true;
+            global__instance.current_calibrations[idx].rd_base=0;
+            global__instance.current_calibrations[idx].std_base=0;
+            global__instance.current_calibrations[idx].rd_min=CURRENT(50);
+            global__instance.current_calibrations[idx].rd_max=CURRENT(70);
+            global__instance.current_calibrations[idx].ratio=0.998414343f;
+
+            /* 电流分段校准 70 ~ 75 A */
+            idx+=1;
+            global__instance.current_calibrations[idx].enabled=true;
+            global__instance.current_calibrations[idx].rd_base=0;
+            global__instance.current_calibrations[idx].std_base=0;
+            global__instance.current_calibrations[idx].rd_min=CURRENT(70);
+            global__instance.current_calibrations[idx].rd_max=CURRENT(75);
+            global__instance.current_calibrations[idx].ratio=1.000504942f;
+
+            /* 电流分段校准 75 ~ 200 A */
+            idx+=1;
+            global__instance.current_calibrations[idx].enabled=true;
+            global__instance.current_calibrations[idx].rd_base=0;
+            global__instance.current_calibrations[idx].std_base=0;
+            global__instance.current_calibrations[idx].rd_min=CURRENT(75);
+            global__instance.current_calibrations[idx].rd_max=CURRENT(200);
+            global__instance.current_calibrations[idx].ratio=0.999770506f;
+
+            /* 电流分段校准 200 ~ 250 A */
+            idx+=1;
+            global__instance.current_calibrations[idx].enabled=true;
+            global__instance.current_calibrations[idx].rd_base=0;
+            global__instance.current_calibrations[idx].std_base=0;
+            global__instance.current_calibrations[idx].rd_min=CURRENT(200);
+            global__instance.current_calibrations[idx].rd_max=CURRENT(250);
+            global__instance.current_calibrations[idx].ratio=0.999350887f;
+#endif
+
+#endif
         }
 
         global_set_str(global__instance.mqtt.ClientID, BSP_CPUID_Read());
@@ -195,29 +346,37 @@ void global_show(void){
     printf("HWINFO:\n");
     printf("\tIMEI:%s\n", global__instance.IMEI);
     printf("\tICCID:%s\n", global__instance.ICCID);
-    printf("METER:\n");
-    for(int i=0; i<4; i++){
-        for(int j=0; j<i; j++){
-            printf("\t");
-        }
-        printf("\tvoltage_calibrations.%d.enabled=%s\n", i, global__instance.voltage_calibrations[i].enabled?"true":"false");
-        printf("\tvoltage_calibrations.%d.rf_voltage_max=%d\n", i, global__instance.voltage_calibrations[i].rd_voltage_max);
-        printf("\tvoltage_calibrations.%d.std_voltage_min=%d\n", i, global__instance.voltage_calibrations[i].std_voltage_min);
-        printf("\tvoltage_calibrations.%d.rd_voltage_min=%d\n", i, global__instance.voltage_calibrations[i].rd_voltage_min);
-        printf("\tvoltage_calibrations.%d.voltage_ratio=%d\n", i, global__instance.voltage_calibrations[i].voltage_ratio);
 
-    }
-    for(int i=0; i<4; i++){
-        for(int j=0; j<i; j++){
+#if defined(GLOBAL_CALIBRATION_ENABLE) && (GLOBAL_CALIBRATION_ENABLE==1)
+    printf("METER:\n");
+//    for(os_size_t i=0; i< OS_ARRAY_SIZE(global__instance.voltage_calibrations); i++){
+//        for(os_size_t j=0; j<2; j++){
+//            printf("\t");
+//        }
+//        printf("\tvoltage_calibrations.%d.enabled=%s\n", i, global__instance.voltage_calibrations[i].enabled?"true":"false");
+//        printf("\tvoltage_calibrations.%d.std_base=%d\n", i, global__instance.voltage_calibrations[i].std_base);
+//        printf("\tvoltage_calibrations.%d.rd_base=%d\n", i, global__instance.voltage_calibrations[i].rd_base);
+//        printf("\tvoltage_calibrations.%d.rd_min=%d\n", i, global__instance.voltage_calibrations[i].rd_min);
+//        printf("\tvoltage_calibrations.%d.rd_max=%d\n", i, global__instance.voltage_calibrations[i].rd_max);
+//        printf("\tvoltage_calibrations.%d.ratio=%f\n", i, global__instance.voltage_calibrations[i].ratio);
+//
+//    }
+#if defined(GLOBAL_CALIBRATION_CURRENT_ENABLE) && (GLOBAL_CALIBRATION_CURRENT_ENABLE==1)
+    for(os_size_t i=0; i< OS_ARRAY_SIZE(global__instance.current_calibrations); i++){
+        for(os_size_t j=0; j<2; j++){
             printf("\t");
         }
         printf("\tcurrent_calibrations.%d.enabled=%s\n", i, global__instance.current_calibrations[i].enabled?"true":"false");
-        printf("\tcurrent_calibrations.%d.rd_current_max=%d\n", i, global__instance.current_calibrations[i].rd_current_max);
-        printf("\tcurrent_calibrations.%d.std_current_min=%d\n", i, global__instance.current_calibrations[i].std_current_min);
-        printf("\tcurrent_calibrations.%d.rd_current_min=%d\n", i, global__instance.current_calibrations[i].rd_current_min);
-        printf("\tcurrent_calibrations.%d.current_ratio=%d\n", i, global__instance.current_calibrations[i].current_ratio);
+        printf("\tcurrent_calibrations.%d.std_base=%d\n", i, global__instance.current_calibrations[i].std_base);
+        printf("\tcurrent_calibrations.%d.rd_base=%d\n", i, global__instance.current_calibrations[i].rd_base);
+        printf("\tcurrent_calibrations.%d.rd_min=%d\n", i, global__instance.current_calibrations[i].rd_min);
+        printf("\tcurrent_calibrations.%d.rd_max=%d\n", i, global__instance.current_calibrations[i].rd_max);
+        printf("\tcurrent_calibrations.%d.ratio=%f\n", i, global__instance.current_calibrations[i].ratio);
 
     }
+#endif
+
+#endif
 
     printf("NETWORK:\n");
     printf("\tnetwork_disable:%s\n", global__instance.network_disable?"true":"false");

@@ -74,6 +74,7 @@ typedef enum mcu_protocol_du_type_enum{
     kMCU_PROTOCOL_DU_UPG_READY=0xA1,            /* MCU1 发出升级就绪命令 */
     kMCU_PROTOCOL_DU_SEND_UPG_DATA=0xA2,            /* MCU0 传送升级数据 */
     kMCU_PROTOCOL_DU_UPG_DATA_RECV=0xA3,            /* MCU1 接收到升级数据成功，请求下一个包 */
+    kMCU_PROTOCOL_DU_PWR=0xD0,                  /* MCU0 发出功率 */
 }mcu_protocol_du_type_t;
 
 /*

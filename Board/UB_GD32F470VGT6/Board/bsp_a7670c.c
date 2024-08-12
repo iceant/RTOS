@@ -113,6 +113,8 @@ static bool A7670C_RxThreadFlag = false;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+//#define A7670C_IO_DEBUG
+
 static void A7670C_IO_RxThd(void* parameter){
     printf("[BSP_A7670C] OK\r\n");
     #if defined(A7670C_IO_DEBUG)
@@ -121,10 +123,10 @@ static void A7670C_IO_RxThd(void* parameter){
     int used = 0;
     A7670C_RxThreadFlag = true;
     while(1){
-        while((used=sdk_ringbuffer_used(&A7670C_RxBuffer))==0){
+        while((used= sdk_ringbuffer_used(&A7670C_RxBuffer))==0){
             os_sem_take(&A7670C_IO_RxSem, OS_WAIT_INFINITY);
         }
-        
+
         #if defined(A7670C_IO_DEBUG)
         if(latest_used!=used){
             latest_used = used;
@@ -135,6 +137,7 @@ static void A7670C_IO_RxThd(void* parameter){
         A7670C_HandleRequest(&A7670C_RxBuffer);
     }
 }
+#undef A7670C_IO_DEBUG
 
 static os_err_t A7670C_IO_Wait(os_tick_t tick){
     #if defined(A7670C_IO_DEBUG)
@@ -150,14 +153,31 @@ static os_err_t A7670C_IO_Notify(void){
     return os_semaphore_release(&A7670C_WaitSem);
 }
 
+
+#define A7670C_IO_DEBUG
 static int A7670C_IO_Send(uint8_t* data, int size){
     BSP_USART1_Lock();
-//    sdk_hex_dump("A7670C_IO_Send", data, size);
     sdk_ringbuffer_reset(&A7670C_RxBuffer);
-    BSP_USART1_DMATx(data, size);
-//    BSP_USART1_Send(data, size);
+
+
+//#if defined(A7670C_IO_DEBUG)
+//    sdk_hex_dump("[A7670C_IO_Send]", data, size);
+//#endif
+
+//    BSP_USART1_DMATx(data, size);
+    BSP_USART1_Send(data, size);
+//
+//#if defined(A7670C_IO_DEBUG)
+//    printf("[A7670C_IO_Send] Done!\n");
+//#endif
+
     BSP_USART1_UnLock();
     return size;
+}
+#undef A7670C_IO_DEBUG
+
+static void A7670C_IO_Timeout(void){
+    os_sem_release(&A7670C_IO_RxSem);
 }
 
 
@@ -167,7 +187,7 @@ static int A7670C_IO_Send(uint8_t* data, int size){
 //    A7670C_power_reset.off();
 //}
 
-static A7670C_IO_T  A7670C_IO={.send=A7670C_IO_Send, .wait=A7670C_IO_Wait, .notify =A7670C_IO_Notify};
+static A7670C_IO_T  A7670C_IO={.send=A7670C_IO_Send, .wait=A7670C_IO_Wait, .notify =A7670C_IO_Notify, .timeout=A7670C_IO_Timeout};
 
 
 ////////////////////////////////////////////////////////////////////////////////

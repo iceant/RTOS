@@ -24,7 +24,7 @@ do{                     \
     OS_LIST_NEXT(N) = OS_LIST_PREV(N) = (N); \
 }while(0)
 
-#define OS_LIST_IS_EMPTY(N) (OS_LIST_NEXT(N)==(N))
+#define OS_LIST_IS_EMPTY(N) (OS_LIST_PREV(N)==(N))
 
 /*
     Np <-- N <-- Nn

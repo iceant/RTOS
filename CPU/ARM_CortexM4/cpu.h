@@ -54,6 +54,10 @@
 
 void cpu_init(void);
 
+typedef void (*cpu_exception_handler_t)(void*);
 
+extern cpu_exception_handler_t cpu_exception_handler;
+
+void cpu_set_exception_handler(cpu_exception_handler_t handler);
 
 #endif /*INCLUDED_CPU_H*/

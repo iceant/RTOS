@@ -22,24 +22,34 @@ static os_thread_t BootThread;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
+static char time_display_buf[32];
 
 static void BootThread_Entry(void* p){
-    char time_display_buf[32];
     int err;
 
     printf("[APP] Boot Thread Startup...\n");
 
-#if defined(ENABLE_OLED)
-    int OLED__line = 1;
-    OLED_TurnOn();
-    OLED_ShowString(0, OLED__line++, "[OLED] OK        ", 12);
+#if defined(ENABLE_LED)
+    BSP_LED1_On();
+    BSP_LED2_Off();
+    BSP_LED3_Off();
+    BSP_LED4_Off();
 #endif
 
+#if defined(ENABLE_OLED)
+    os_critical_enter();
+    int OLED__line = 1;
+    printf("[OLED] TurnOn\n");
+    OLED_TurnOn();
+    printf("[OLED] OK\n");
+    OLED_ShowString(0, OLED__line++, "[OLED] OK        ", 12);
+    os_critical_leave();
+#endif
 
 #if defined(ENABLE_SPI_FLASH)
     uint32_t FlashID = sFLASH_ReadID();
-    os_printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
+    printf("FlashID: %d(0x%08x)\r\n", FlashID, FlashID);
+    printf("[EXT_FLASH] OK\n");
 #if defined(ENABLE_OLED)
     OLED_ShowString(0, OLED__line++, "[EXT_FLASH] OK   ", 12);
 #endif
@@ -47,11 +57,13 @@ static void BootThread_Entry(void* p){
 
 #if defined(ENABLE_4G)
     if(global_get()->network_disable==false){
+        printf("[A7670C] Startup\n");
         A7670C_Result result = A7670C_Startup();
         if(result!=kA7670C_Result_OK){
             Board_Reboot();
             return;
         }
+        printf("[A7670C] OK\n");
 #if defined(ENABLE_OLED)
         OLED_ShowString(0, OLED__line++, "[4G] OK          ", 12);
 #endif
@@ -64,8 +76,10 @@ static void BootThread_Entry(void* p){
     if(global_get()->network_disable==false) {
         /* 启动网络对时 */
 #if defined(ENABLE_DS1307)
+        printf("[NTP] Startup\n");
         Task_TimeSync_Init();
         os_thread_mdelay(2000);
+        printf("[NTP] OK\n");
 #if defined(ENABLE_OLED)
         OLED_ShowString(0, OLED__line++, "[NTP] OK          ", 12);
 #endif
@@ -73,17 +87,20 @@ static void BootThread_Entry(void* p){
 
 #if defined(ENABLE_MQTT)
         /*启动MQTT*/
+        printf("[MQTT] Startup\n");
         err = MQTT_Init();
         if (err != 0) {
             Board_Reboot();
         }
+        printf("[MQTT] OK\n");
 #if defined(ENABLE_OLED)
         OLED_ShowString(0, OLED__line++, "[MQTT] OK          ", 12);
 #endif
 
 #endif /*defined(ENABLE_MQTT)*/
-
+        printf("[HeartBeat] Startup\n");
         Task_HeartBeat_Init();
+        printf("[HeartBeat] OK\n");
     }
 #endif /* defined(ENABLE_4G) */
 
@@ -101,7 +118,9 @@ static void BootThread_Entry(void* p){
 
 
 #if defined(ENABLE_CAN0)
+    printf("[METER] Startup\n");
     USE_CAN0_Init();
+    printf("[METER] OK\n");
 #if defined(ENABLE_OLED)
     OLED_ShowString(0, OLED__line++, "[METER] OK          ", 12);
 #endif
@@ -148,21 +167,27 @@ static void BootThread_Entry(void* p){
 
 }
 
+
+static void main__cpu_exception_handler(void* sp){
+    Board_Reboot();
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 
 #if (USE_RELEASE_VERSION)
-/*!
-    \brief    main function
-    \param[in]  none
-    \param[out] none
-    \retval     none
-*/
 int main(void)
 {
+
     /* startup */
     Board_Init();
+
+#if defined(ENABLE_LED)
+    BSP_LED1_On();
+    BSP_LED2_On();
+    BSP_LED3_On();
+    BSP_LED4_On();
+#endif
 
     mcu_session_init(mcu_session_get_default());
     
@@ -214,6 +239,8 @@ int main(void)
 int main(void)
 {
     Board_Init();
+
+    global_init();
 
     os_thread_init(&BootThread, "Boot", BootThread_Entry, 0
             , BootThread_Stack, sizeof(BootThread_Stack), 30,10);

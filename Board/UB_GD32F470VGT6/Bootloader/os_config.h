@@ -16,5 +16,6 @@
 #define ENABLE_4G
 #define ENABLE_OLED
 #define ENABLE_KEY
+#define ENABLE_LED
 
 #endif /*INCLUDED_OS_CONFIG_H*/

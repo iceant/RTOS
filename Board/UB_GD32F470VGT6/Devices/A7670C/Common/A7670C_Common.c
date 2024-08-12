@@ -167,16 +167,16 @@ A7670C_Result A7670C_RequestWithArgs(const char* name, A7670C_RxHandler_T rxHand
     va_list ap;
     A7670C_Result err=kA7670C_Result_ERROR;
     A7670C_RxHandler_Register_T Register;
-    
-    OS_LIST_INIT(&Register.node);
-    Register.handler = rxHandler;
-    Register.userdata = userdata;
-    size_t name_size = strlen(name);
-    memcpy(Register.name, name, name_size);
-    Register.name[name_size]='\0';
-
     A7670C_Lock();
     {
+
+        OS_LIST_INIT(&Register.node);
+        Register.handler = rxHandler;
+        Register.userdata = userdata;
+        size_t name_size = strlen(name);
+        memcpy(Register.name, name, name_size);
+        Register.name[name_size]='\0';
+
         va_start(ap, fmt);
         memset(A7670C__Printf_Buffer, 0, sizeof(A7670C__Printf_Buffer));
         int size = vsnprintf(A7670C__Printf_Buffer, sizeof(A7670C__Printf_Buffer), fmt, ap);
@@ -192,7 +192,6 @@ A7670C_Result A7670C_RequestWithArgs(const char* name, A7670C_RxHandler_T rxHand
             A7670C_SetState(kA7670C_State_AT_OK);
         }
         A7670C_RemoveRxHandler(&Register);
-        
     }
     A7670C_UnLock();
 
@@ -203,6 +202,8 @@ A7670C_Result A7670C_TimedWait(os_tick_t ticks)
 {
     os_err_t  err = A7670C__Instance.IO->wait(ticks);
     if(err==OS_ETIMEOUT){
+        A7670C_HandlerInProcessFlag = false;
+        A7670C__Instance.IO->timeout();
         printf("[A7670C_COM] Thd:%s A7670C_TimedWait Timeout!\n", os_thread_self()->name);
     }
     return (err==OS_ETIMEOUT)?kA7670C_Result_TIMEOUT:kA7670C_Result_OK;
@@ -240,7 +241,7 @@ A7670C_RxHandler_Result A7670C_HandleRequest(sdk_ringbuffer_t* buffer)
         A7670C_RxHandler_Register_T* Register = OS_CONTAINER_OF(node, A7670C_RxHandler_Register_T, node);
         if(is_valid_name(Register->name)){
             result = Register->handler(buffer, Register->userdata);
-            if(kA7670C_RxHandler_Result_DONE==result){
+            if(kA7670C_RxHandler_Result_DONE==result || kA7670C_RxHandler_Result_CONTINUE==result){
                 break;
             }
         }
@@ -261,7 +262,7 @@ void A7670C_InsertRxHandlerHead(A7670C_RxHandler_Register_T* Register){
             return;
         }
     }
-    while(A7670C_HandlerInProcessFlag==true);
+    while(A7670C_HandlerInProcessFlag);
     OS_LIST_INSERT_AFTER(&A7670C__RxHandler_List, &Register->node);
 }
 
@@ -275,13 +276,13 @@ void A7670C_InsertRxHandlerTail(A7670C_RxHandler_Register_T* Register){
             return;
         }
     }
-    while(A7670C_HandlerInProcessFlag==true);
+    while(A7670C_HandlerInProcessFlag);
     OS_LIST_INSERT_BEFORE(&A7670C__RxHandler_List, &Register->node);
 }
 
 void A7670C_RemoveRxHandler(A7670C_RxHandler_Register_T* Register)
 {
-    while(A7670C_HandlerInProcessFlag==true);
+    while(A7670C_HandlerInProcessFlag);
     OS_LIST_REMOVE(&Register->node);
 }
 

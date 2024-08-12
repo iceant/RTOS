@@ -281,6 +281,11 @@ static struct {
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+typedef void (*cpu_exception_handler_t)(void*);
+
+extern cpu_exception_handler_t cpu_exception_handler;
+////////////////////////////////////////////////////////////////////////////////
+////
 
 
 
@@ -305,6 +310,11 @@ void HardFault_Handler_C(unsigned long * stack_p, unsigned int lr_value)
     unsigned long cfsr;
     unsigned long bus_fault_address;
     unsigned long memmanage_fault_address;
+
+    if(cpu_exception_handler){
+        cpu_exception_handler(stack_p);
+        return;
+    }
     
     //
     // In case we received a hard fault because of a breakpoint instruction, we return.

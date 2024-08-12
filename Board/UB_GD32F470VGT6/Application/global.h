@@ -9,6 +9,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#define GLOBAL_CALIBRATION_MAX_SIZE 16
+
+#define GLOBAL_CALIBRATION_ENABLE           1
+#define GLOBAL_CALIBRATION_CURRENT_ENABLE   0
+
+////////////////////////////////////////////////////////////////////////////////
+////
 typedef struct global_datetime_s{
     uint16_t    year;
     uint8_t     month;
@@ -18,23 +25,17 @@ typedef struct global_datetime_s{
     uint8_t     sec;
 }global_datetime_t;
 
-typedef struct global_voltage_calibration_s{
+#if defined(GLOBAL_CALIBRATION_ENABLE) && (GLOBAL_CALIBRATION_ENABLE==1)
+typedef struct global_calibration_s{
     bool enabled;
-    uint32_t rd_voltage_max;    /* 分段最大值 */
-    uint32_t std_voltage_min;   /*  标准电压最小值 */
-    uint32_t rd_voltage_min;    /*  测量电压最小值 */
-    double voltage_ratio;        /* 电压斜率    =   (标准电压最大值 - 标准电压最小值)/(测量电压最大值 - 测量电压最小值)
-                                    标准电压值   =   (测量电压值 - 测量电压最小值) x 电压斜率 + 标准电压最小值 */
-}global_voltage_calibration_t;
-
- typedef struct global_current_calibration_s{
-    bool enabled;
-    uint32_t rd_current_max;    /*  分段最大值 */
-    uint32_t std_current_min;   /*  标准电流最小值 */
-    uint32_t rd_current_min;    /*  测量电流最小值 */
-    double current_ratio;        /* 电流斜率    =   (标准电流最大值 - 标准电流最小值)/(测量电流最大值 - 测量电流最小值)
-                                    标准电流值   =   (测量电流值 - 测量电流最小值) x 电流斜率 + 标准电流最小值 */
-}global_current_calibration_t;
+    uint32_t std_base;          /* 标准最小值 */
+    uint32_t rd_base;           /* 测量最小值 */
+    uint32_t rd_min;            /* 测量分段最小值 */
+    uint32_t rd_max;            /* 测量分段最大值 */
+    double   ratio;             /* 斜率   =    (std_val - std_base)/(rd_val - rd_base) */
+                                /* 标准值  =   (rd_val - rd_base) x ratio + std_base */
+}global_calibration_t;
+#endif
 
 typedef struct global_fatfs_s{
     int state;
@@ -53,12 +54,17 @@ typedef struct global_version_s{
     uint32_t version;
 }global_version_t;
 
-#pragma pack(1)
 typedef struct global_s{
     uint32_t version;
     bool network_disable;
-    global_voltage_calibration_t voltage_calibrations[4];
-    global_current_calibration_t current_calibrations[4];
+
+#if defined(GLOBAL_CALIBRATION_ENABLE) && (GLOBAL_CALIBRATION_ENABLE==1)
+    global_calibration_t voltage_calibrations[GLOBAL_CALIBRATION_MAX_SIZE];
+#if defined(GLOBAL_CALIBRATION_CURRENT_ENABLE) && (GLOBAL_CALIBRATION_CURRENT_ENABLE==1)
+    global_calibration_t current_calibrations[GLOBAL_CALIBRATION_MAX_SIZE];
+#endif
+
+#endif
 
     global_datetime_t datetime;
     glboal_mqtt_t mqtt;
@@ -68,19 +74,18 @@ typedef struct global_s{
     global_fatfs_t fatfs;
     int network_state;
 }global_t;
-#pragma pack()
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define GLOBAL_VERSION 2024072901
+#define GLOBAL_VERSION 2024080801
 
 #define GLOBAL_SIZE sizeof(global_t)
 
 #define GLOBAL_DEFAULT_THREAD_PRIORITY 20
 #define GLOBAL_DEFAULT_THREAD_TTICKS   10
 
-#define GLOBAL_MQTT_SERVER              "tcp://ubattery.cn:11883"
+#define GLOBAL_MQTT_SERVER              "tcp://mqtt.ubattery.cn:11883"
 #define GLOBAL_MQTT_USERNAME            "guest"
 #define GLOBAL_MQTT_PASSWORD            "guest"
 
@@ -99,6 +104,7 @@ typedef struct global_s{
 #define GLOBAL_NETWORK_STATE_INITIALIZED                        1
 #define GLOBAL_NETWORK_STATE_MQTT_INITIALIZED                   2
 #define GLOBAL_NETWORK_STATE_MQTT_DOWNSTREAM_TOPIC_SUBSCRIBED   3
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

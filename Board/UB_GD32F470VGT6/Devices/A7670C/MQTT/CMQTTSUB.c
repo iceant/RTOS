@@ -98,20 +98,23 @@ typedef struct A7670C_CMQTTSUB_Write2_Request{
     bool send_flag;
 }A7670C_CMQTTSUB_Write2_Request;
 
+static uint8_t token[]={0x3E, 0x0D, 0x0A}; /* >\r\n */
 static A7670C_RxHandler_Result Write2_Handler(sdk_ringbuffer_t *buffer, void* ud)
 {
     A7670C_CMQTTSUB_Write2_Request* result = (A7670C_CMQTTSUB_Write2_Request*)ud;
-    
-    if(sdk_ringbuffer_find_str(buffer, 0, ">\r\n")!=-1 /*接收结束: 成功*/ && result->send_flag==false){
-        A7670C_Send((uint8_t*)result->topic, result->topic_length);
-//        sdk_ringbuffer_reset(buffer);
+
+    printf("[CMQTTSUB] send_flag=%d\n", result->send_flag);
+
+    int find = sdk_ringbuffer_find(buffer, 0, token, OS_ARRAY_SIZE(token));
+    if(find!=-1 && result->send_flag==false){
+        sdk_hex_dump("[CMQTTSUB-0]", buffer->buffer, sdk_ringbuffer_used(buffer));
+        sdk_ringbuffer_reset(buffer);
         result->send_flag = true;
-        return kA7670C_RxHandler_Result_CONTINUE; /*清空buffer*/
+        A7670C_Send((uint8_t*)result->topic, result->topic_length);
+        return kA7670C_RxHandler_Result_CONTINUE;
     }
 
-//    if(result->send_flag==false){
-//        return kA7670C_RxHandler_Result_CONTINUE;
-//    }
+    sdk_hex_dump("[CMQTTSUB-x]", buffer->buffer, sdk_ringbuffer_used(buffer));
 
     sdk_ringbuffer_text_t find_text;
     int find_status = sdk_ringbuffer_cut(&find_text, buffer, 0, sdk_ringbuffer_used(buffer), "+CMQTTSUB: ", "\r\n");
@@ -159,7 +162,7 @@ A7670C_Result A7670C_CMQTTSUB_Write2(A7670C_CMQTTSUB_Write_Response* result
         , uint32_t timeout_ms)
 {
     result->err_code=-1;
-    int topic_length = strlen(topic);
+    int topic_length = strlen(topic)+1;
     A7670C_CMQTTSUB_Write2_Request request = {.response = result, .topic = topic, .topic_length=topic_length, .send_flag=false};
     A7670C_Result err;
     if(dup==kA7670C_Bool_Unspecified){
@@ -180,7 +183,6 @@ A7670C_Result A7670C_CMQTTSUB_Write2(A7670C_CMQTTSUB_Write_Response* result
                 );
         
     }
-    
     
     return err;
 }

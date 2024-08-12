@@ -9,6 +9,7 @@
 #include <os_kernel.h>
 #include <iap.h>
 #include <delay.h>
+#include <sdk_mp.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -172,6 +173,22 @@ int mcu_session_on_receive(mcu_session_t * session, uint8_t * data, int data_siz
                 mcu_session_printf(session, "APP> RECV UPGRADE REBOOT...");
                 Board_Reboot();
             }
+            break;
+        }
+        case kMCU_PROTOCOL_DU_PWR:{
+/*
+ * START:   0xBE, 0xEF
+ * DU_SIZE: <uint16_t,BE>
+ * DU_TYPE: <uint8_t>  0xD0
+ * DU     : <nBits:uint8_t=16>,<uint8_t[nBits]>
+ * CRC    : uint16_t LE
+ */
+            int idx = 0;
+            uint8_t * buffer = MCU_BUFFER_DU_GET(data);
+            uint8_t nBytes = SDK_HEX_GET_UINT8(buffer, idx);idx+=1;
+            global_t* global = global_get();
+            memcpy(global->power_wms, buffer+1, nBytes);
+
             break;
         }
         default:{

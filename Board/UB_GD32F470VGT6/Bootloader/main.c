@@ -47,6 +47,13 @@ static os_thread_t BootThread;
 
 static void BootThread_Entry(void* p){
 
+#if defined(ENABLE_LED)
+    BSP_LED1_On();
+    BSP_LED2_On();
+    BSP_LED3_On();
+    BSP_LED4_On();
+#endif
+
 #if defined(ENABLE_OLED)
     int OLED__line = 1;
     OLED_TurnOn();
@@ -79,6 +86,8 @@ int main(void){
 #if 1
     Board_Init();
 
+    printf("========== BOOTLOADER ==========\n");
+
     /*初始化终端*/
     USE_USART0_Init();
 
@@ -87,8 +96,6 @@ int main(void){
 #if defined(ENABLE_KEY)
     USE_KEY_Init();
 #endif
-
-    printf("========== BOOTLOADER ==========\n");
 
     mcu_session_init(mcu_session_get_default());
 

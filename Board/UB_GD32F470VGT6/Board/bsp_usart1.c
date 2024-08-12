@@ -1,6 +1,7 @@
 #include <bsp_usart1.h>
 #include <os_kernel.h>
 #include <stdio.h>
+#include <sdk_hex.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -23,6 +24,8 @@
 #define USART_TX_DMAx               DMA0
 #define USART_TX_DMA_CHn            DMA_CH6
 #define USART_TX_SUBPERIx           DMA_SUBPERI4
+#define USART_TX_DMA_IRQn           DMA0_Channel6_IRQn
+#define USART_TX_DMA_IRQHandler     DMA0_Channel6_IRQHandler
 
 #define USARTx_IRQn                 USART1_IRQn
 #define USARTx_IRQHandler           USART1_IRQHandler
@@ -33,6 +36,13 @@ static void*                        BSP_USART__RxHandlerUserdata = 0;
 static os_mutex_t BSP_USART1__Mutex;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
+void BSP_USART1_DeInit(void){
+    usart_deinit(USARTx);
+    rcu_periph_clock_disable(USART_TX_DMA_CLOCK);
+    rcu_periph_clock_disable(USART_CLOCK);
+    rcu_periph_clock_disable(USART_TX_GPIO_CLOCK);
+    rcu_periph_clock_disable(USART_RX_GPIO_CLOCK);
+}
 
 void BSP_USART1_Init(void)
 {
@@ -70,43 +80,32 @@ void BSP_USART1_Init(void)
     os_mutex_init(&BSP_USART1__Mutex);
 }
 
-void BSP_USART1_DeInit(void){
-    usart_deinit(USARTx);
-    rcu_periph_clock_disable(USART_CLOCK);
-    rcu_periph_clock_disable(USART_TX_GPIO_CLOCK);
-    rcu_periph_clock_disable(USART_RX_GPIO_CLOCK);
-}
-
-
 void BSP_USART1_SetRxHandler(BSP_USART1_RxHandler rxHandler, void* userdata)
 {
-	BSP_USART__RxHandler = rxHandler;
-	BSP_USART__RxHandlerUserdata = userdata;
+    BSP_USART__RxHandler = rxHandler;
+    BSP_USART__RxHandlerUserdata = userdata;
 }
 
 void BSP_USART1_EnableRxIRQ(void)
 {
-	nvic_irq_enable(USARTx_IRQn, 0, 1);
-	usart_interrupt_enable(USARTx, USART_INT_RBNE);
+    nvic_irq_enable(USARTx_IRQn, 0, 1);
+    usart_interrupt_enable(USARTx, USART_INT_RBNE);
 }
 
 void BSP_USART1_EnableDMATx(void)
 {
     /* enable DMA1 */
     rcu_periph_clock_enable(USART_TX_DMA_CLOCK);
-}
 
-void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size)
-{
     dma_single_data_parameter_struct dma_init_struct;
-    
+
     /* deinitialize DMA channel7(USART0 TX) */
     dma_deinit(USART_TX_DMAx, USART_TX_DMA_CHn);
     dma_init_struct.direction = DMA_MEMORY_TO_PERIPH;
-    dma_init_struct.memory0_addr = (uint32_t)txBuffer;
+    dma_init_struct.memory0_addr = (uint32_t)0;
     dma_init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
     dma_init_struct.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
-    dma_init_struct.number = size;
+    dma_init_struct.number = 0;
     dma_init_struct.periph_addr = USARTx_DATA_ADDRESS;
     dma_init_struct.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
     dma_init_struct.priority = DMA_PRIORITY_ULTRA_HIGH;
@@ -114,15 +113,50 @@ void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size)
     /* configure DMA mode */
     dma_circulation_disable(USART_TX_DMAx, USART_TX_DMA_CHn);
     dma_channel_subperipheral_select(USART_TX_DMAx, USART_TX_DMA_CHn, USART_TX_SUBPERIx);
-    /* enable DMA channel7 */
-    dma_channel_enable(USART_TX_DMAx, USART_TX_DMA_CHn);
+
+    dma_flow_controller_config(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_FLOW_CONTROLLER_DMA);
 
     /* USART DMA enable for transmission and reception */
     usart_dma_transmit_config(USARTx, USART_TRANSMIT_DMA_ENABLE);
-    //usart_dma_receive_config(USART0, USART_RECEIVE_DMA_ENABLE);
-    
+//    usart_dma_receive_config(USARTx, USART_RECEIVE_DMA_ENABLE);
+
+
+}
+
+#define BSP_USART1_SHOW_FLAG(FLAG) printf("usart_interrupt_flag_get(%s):%d\n", #FLAG, usart_interrupt_flag_get(USARTx, FLAG))
+#define BSP_USART1_DMA_FLAG(FLAG) printf("dma_flag_get(%s):%d\n", #FLAG, dma_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, FLAG))
+
+//static __IO FlagStatus g_transfer_complete = RESET;
+void BSP_USART1_DMATx(uint8_t* txBuffer, uint32_t size)
+{
+    sdk_hex_dump(__FUNCTION__ , txBuffer, size);
+
+    dma_channel_disable(USART_TX_DMAx, USART_TX_DMA_CHn);
+
+    dma_memory_address_config(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_MEMORY_0, (uint32_t)txBuffer);
+    dma_transfer_number_config(USART_TX_DMAx, USART_TX_DMA_CHn, size);
+
+    dma_flag_clear(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_FLAG_FTF);
+
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_FTF);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_TAE);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_FEE);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_SDE);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_HTF);
+
+    /* enable DMA channel7 */
+    dma_channel_enable(USART_TX_DMAx, USART_TX_DMA_CHn);
+
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_FTF);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_TAE);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_FEE);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_SDE);
+//    BSP_USART1_DMA_FLAG(DMA_FLAG_HTF);
+
+
     /* wait DMA channel transfer complete */
     while(RESET == dma_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_FLAG_FTF));
+
 
 }
 
@@ -152,7 +186,7 @@ void USARTx_IRQHandler(void)
 {
     os_interrupt_enter();
     if((RESET != usart_interrupt_flag_get(USARTx, USART_INT_FLAG_RBNE)) &&
-        (RESET != usart_flag_get(USARTx, USART_FLAG_RBNE))) 
+       (RESET != usart_flag_get(USARTx, USART_FLAG_RBNE)))
     {
         /* receive data */
         uint16_t ch = usart_data_receive(USARTx);
@@ -160,14 +194,43 @@ void USARTx_IRQHandler(void)
             BSP_USART__RxHandler(ch, BSP_USART__RxHandlerUserdata);
         }
     }
-    
-    if(RESET!=usart_interrupt_flag_get(USARTx, USART_INT_FLAG_ERR_ORERR) 
-        && (RESET!=usart_flag_get(USARTx, USART_FLAG_ORERR)))
+
+    if(RESET!=usart_interrupt_flag_get(USARTx, USART_INT_FLAG_ERR_ORERR)
+       && (RESET!=usart_flag_get(USARTx, USART_FLAG_ORERR)))
     {
         usart_flag_clear(USARTx, USART_FLAG_ORERR);
         usart_data_receive(USARTx);
     }
+
     os_interrupt_exit();
 }
+
+#if 1
+void USART_TX_DMA_IRQHandler(void)
+{
+    os_interrupt_enter();
+    if(dma_interrupt_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_FTF)!=RESET) {
+        dma_interrupt_flag_clear(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_FTF);
+        printf("DMA_INT_FLAG_FTF\n");
+    }
+
+    if(dma_interrupt_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_TAE)!=RESET) {
+        dma_interrupt_flag_clear(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_TAE);
+        printf("DMA_INT_FLAG_TAE\n");
+    }
+
+    if(dma_interrupt_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_FEE)!=RESET) {
+        dma_interrupt_flag_clear(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_FEE);
+        printf("DMA_INT_FLAG_FEE\n");
+    }
+
+    if(dma_interrupt_flag_get(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_HTF)!=RESET) {
+        dma_interrupt_flag_clear(USART_TX_DMAx, USART_TX_DMA_CHn, DMA_INT_FLAG_HTF);
+        printf("DMA_INT_FLAG_HTF\n");
+    }
+
+    os_interrupt_exit();
+}
+#endif
 
 
