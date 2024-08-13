@@ -22,4 +22,5 @@ void BSP_TIM2_DeInit(void);
 
 void BSP_TIM2_SetHandler(BSP_TIM2_Handler handler);
 
+
 #endif /*INCLUDED_BSP_TIM2_H*/

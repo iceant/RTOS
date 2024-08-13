@@ -9,18 +9,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-typedef struct use_pulse_s{
-    uint32_t nTick;
-    uint32_t nCount;
-}use_pulse_t;
-
-#define OBJECT_SIZE sizeof(use_pulse_t)
-#define OBJECT_COUNT 21
-#define BLOCK_SIZE (OBJECT_SIZE * OBJECT_COUNT)
-
-C__ALIGNED(OS_ALIGN_SIZE)
-static uint8_t  use_pulse__block[BLOCK_SIZE];
-static sdk_ring_t use_pulse__ring;
+//typedef struct use_pulse_s{
+//    uint32_t nTick;
+//    uint32_t nCount;
+//}use_pulse_t;
+//
+//#define OBJECT_SIZE sizeof(use_pulse_t)
+//#define OBJECT_COUNT 21
+//#define BLOCK_SIZE (OBJECT_SIZE * OBJECT_COUNT)
+//
+//C__ALIGNED(OS_ALIGN_SIZE)
+//static uint8_t  use_pulse__block[BLOCK_SIZE];
+//static sdk_ring_t use_pulse__ring;
 
 //C__ALIGNED(OS_ALIGN_SIZE)
 //static uint8_t use_pulse__thread_stack[1024];
@@ -69,7 +69,6 @@ static void use_pulse_tim2_thread_entry(void* p){
     sdk_mp_new(0, &power_sum);
     sdk_mp_new(0, &power_sub);
 
-    uint32_t nCount = 0;
     uint32_t nSum = 0;
 
     /* P = 3600 x 1000000 */
@@ -85,22 +84,22 @@ static void use_pulse_tim2_thread_entry(void* p){
             cpu_interrupt_enable(level);
         }
 
-        /* power_sub = 现有电量 - 已处理电量 */
-        sdk_mp_sub(power_sub, power_wms, power_sum, &power_sub);
-
         if(sdk_mp_cmp(power_wms, power_sum)<0){
             sdk_mp_fromintu(power_sum, 0, 0);
             sdk_mp_fromintu(power_sub, 0, 0);
             nSum = 0;
-            nCount = 0;
             continue;
         }
+
+        /* power_sub = 现有电量 - 已处理电量 */
+        sdk_mp_sub(power_sub, power_wms, power_sum, 0);
 
         /* 剩余电量 > 常量 */
         if(sdk_mp_cmp(power_sub, use_pulse__power_constants)>0){
             /* 删除一个常量 */
-            sdk_mp_add(power_sum, power_sum, use_pulse__power_constants, &power_sum);
+            sdk_mp_add(power_sum, power_sum, use_pulse__power_constants, 0);
             nSum += 1;
+
             BSP_Pulse_Generate(1);
 //            sdk_fmt_print("Power:%P, Sub:%P, Sum:%P, nSum=%d\n", global->power_wms, 10, power_sub, 10, power_sum, 10, nSum);
             /* 1Tick = 100微秒, 发送脉冲 */
@@ -115,7 +114,7 @@ static void use_pulse_tim2_thread_entry(void* p){
 
 void use_pulse_init(void)
 {
-    sdk_ring_init(&use_pulse__ring, use_pulse__block, OBJECT_COUNT, OBJECT_SIZE);
+//    sdk_ring_init(&use_pulse__ring, use_pulse__block, OBJECT_COUNT, OBJECT_SIZE);
 
 //    os_semaphore_init(&use_pulse__sem, "PulseSem", 0, OS_QUEUE_FIFO);
 //    os_thread_init(&use_pulse__thread, "PulseThd", use_pulse_thread_entry,0

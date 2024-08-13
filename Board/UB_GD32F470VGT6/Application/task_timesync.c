@@ -107,6 +107,7 @@ static int Task_TimeSync_Sync(void){
 static void Task_TimeSync_ThreadEntry(void* p){
     int err = 0;
     while(1){
+        if(global_get()->network_disable) continue;
         err = Task_TimeSync_Sync();
         if(err!=0){
             printf("[TASK_NTC] Sync Failed! Code=%d\n", err);

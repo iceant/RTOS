@@ -346,6 +346,7 @@ static void tx_thread_entry(void* p){
 
     while(1){
         global_t* global = global_get();
+        if(global->network_disable) continue;
 
         while((task = mqtt_tx_queue_blocked_pop(&tx_queue))!=0){
             if(global->network_state>=GLOBAL_NETWORK_STATE_MQTT_INITIALIZED /* MQTT 可用 */){
@@ -449,6 +450,10 @@ int MQTT_Publish(void* data, int data_size)
 //        printf("[MQTT] A7670C Is Not Ready!!!\n");
 //        return -1;
 //    }
+
+    if(global_get()->network_disable){
+        return -1;
+    }
 
     return mqtt_tx_queue_blocked_put(&tx_queue, data, data_size);
 

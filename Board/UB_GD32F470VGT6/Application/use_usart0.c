@@ -47,6 +47,12 @@ static void USART0_RxThread_Entry(void* p)
         }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "lock_disable")!=-1){
             BSP_Lock_Disable();
             printf("[USE_USART0] Lock State:%d\n", BSP_Lock_State());
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "net.disable")!=-1){
+            global_get()->network_disable = true;
+//            Board_Reboot();
+        }else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "net.enable")!=-1){
+            global_get()->network_disable = false;
+//            Board_Reboot();
         }
 #if 0
         else if(sdk_ringbuffer_find_str(&USART0_RxBuffer, 0, "meter.std_voltage_min")!=-1){
