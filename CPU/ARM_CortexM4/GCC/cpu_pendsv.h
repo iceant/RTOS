@@ -1,6 +1,0 @@
-#ifndef INCLUDED_CPU_PENDSV_H
-#define INCLUDED_CPU_PENDSV_H
-
-
-
-#endif /*INCLUDED_CPU_PENDSV_H*/

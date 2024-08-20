@@ -1,4 +1,0 @@
-#ifndef INCLUDED_CGNSSCMD_H
-#define INCLUDED_CGNSSCMD_H
-
-#endif /* INCLUDED_CGNSSCMD_H */
