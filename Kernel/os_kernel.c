@@ -5,7 +5,7 @@ os_err_t os_kernel_init(void)
     os_err_t err;
 
     err = os_memory_init();
-    err = os_priority_init();
+    os_scheduler_init();
 
     return err;
 }

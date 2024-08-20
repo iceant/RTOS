@@ -23,6 +23,10 @@
 #include <os_priority.h>
 #endif /*INCLUDED_OS_PRIORITY_H*/
 
+#ifndef INCLUDED_OS_SCHEDULER_H
+#include <os_scheduler.h>
+#endif /*INCLUDED_OS_SCHEDULER_H*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
