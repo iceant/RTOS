@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.5)
+project(CPU C)
+enable_language(ASM)
+
+if(NOT DEFINED CPU_MODEL)
+    message(FATAL_ERROR "[${PROJECT_NAME}] Missing `CPU_MODEL` Option!!!")
+endif ()
+
+add_subdirectory(../Compiler ${CMAKE_CURRENT_BINARY_DIR}/Compiler)
+
+file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/${CPU_MODEL}/*.c)
+foreach (item IN LISTS SOURCES)
+    message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
+endforeach ()
+
+file(GLOB COMPILER_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/${CPU_MODEL}/${CMAKE_C_COMPILER_ID}/*.c)
+foreach (item IN LISTS COMPILER_SOURCES)
+    message(STATUS "[${PROJECT_NAME}] SOURCE: ${item}")
+endforeach ()
+
+
+add_library(${PROJECT_NAME} ${SOURCES} ${COMPILER_SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${CPU_MODEL})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${CPU_MODEL}/${CMAKE_C_COMPILER_ID})
+target_link_libraries(${PROJECT_NAME} PUBLIC Compiler)
