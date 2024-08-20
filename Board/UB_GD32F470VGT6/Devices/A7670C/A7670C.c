@@ -17,12 +17,12 @@
 static A7670C_RxHandler_Result A7670C_AT__Handler(sdk_ringbuffer_t * buffer, void* ud){
     if(sdk_ringbuffer_find_str(buffer, 0, "AT\r\r\nOK\r\n")!=-1
         || sdk_ringbuffer_find_str(buffer, 0, "*ATREADY: 1")!=-1){
-//        sdk_hex_dump("[AT]", buffer->buffer, sdk_ringbuffer_used(buffer));
+        sdk_hex_dump("[AT]", buffer->buffer, sdk_ringbuffer_used(buffer));
         sdk_ringbuffer_reset(buffer);
         A7670C_Notify();
         return kA7670C_RxHandler_Result_DONE;
     }else{
-        sdk_hex_dump("AT", buffer->buffer, sdk_ringbuffer_used(buffer));
+        sdk_hex_dump("[AT_N]", buffer->buffer, sdk_ringbuffer_used(buffer));
     }
     return kA7670C_RxHandler_Result_CONTINUE;
 }
@@ -92,20 +92,22 @@ __A7670C__Boot:
             printf("[A7670C] Reset...");
             A7670C_Reset();
         }
+
+        while(1){
+            printf("[A7670C] wait for AT ready 2 ...\n");
+            result = A7670C_AT(1000);
+            if(result==kA7670C_Result_OK){
+                break;
+            }
+            if(nRetry++==10){
+                printf("Try from Power On...\n");
+                goto __A7670C__Boot;
+            }
+            A7670C_DelayMS(2000);
+        }
+
     }
 
-    while(1){
-        printf("[A7670C] wait for AT ready...\n");
-        result = A7670C_AT(1000);
-        if(result==kA7670C_Result_OK){
-            break;
-        }
-        if(nRetry++==10){
-            printf("Try from Power On...\n");
-            goto __A7670C__Boot;
-        }
-        A7670C_DelayMS(2000);
-    }
 
 
     A7670C_SetStartupState(A7670C_STARTUP_STATE_UNINITIALIZED);
@@ -202,7 +204,9 @@ __A7670C__Boot:
             A7670C_NopDelay(DELAY_TIME);
         }
 //    }
-    
+
+
+#if 0
     nRetry = 0;
     while(1){
         printf("[A7670C] UE system info...");
@@ -217,9 +221,10 @@ __A7670C__Boot:
         if(nRetry++==10){
             return kA7670C_Result_TIMEOUT;
         }
+        printf("nRetry:%d\n", nRetry);
         A7670C_NopDelay(DELAY_TIME);
     }
-
+#endif
 
     nRetry = 0;
     while(1){
@@ -230,6 +235,7 @@ __A7670C__Boot:
             printf("CGACT Record Count: %d\n", CGACT_Read_Response.record_count);
             break;
         }
+        printf("retry %d...\n", nRetry);
         if(nRetry++==10){
             return kA7670C_Result_TIMEOUT;
         }

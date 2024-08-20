@@ -386,8 +386,11 @@ static void USE_CAN0__RxThreadEntry(void* p){
                         /* 显示最终的电能 */
                         sdk_mp_tostr(USE_CAN0__ShowBuf, sizeof(USE_CAN0__ShowBuf), 10, USE_CAN0_LatestSnapshot.EnergyWH);
                         sdk_fmt_sfmt((char*)OLED_Buffer, sizeof(OLED_Buffer), "Energy: %F", USE_CAN0__ShowBuf, 7);
+                        sdk_fmt_print("%s\n", OLED_Buffer);
+
                         OLED_Clear();
                         OLED_ShowString(1,5, OLED_Buffer, 12);
+
 
                         /* 处理打包发送 */
                         USE_CAN0_HandleMeterProtocol(USE_CAN0_STATE_CHARGE_IDLE);

@@ -139,14 +139,15 @@ A7670C_Result A7670C_RequestWithCmd(const char* name, A7670C_RxHandler_T rxHandl
     A7670C_Result err = kA7670C_Result_ERROR;
     A7670C_RxHandler_Register_T Register;
 
+    A7670C_Lock();
+
     OS_LIST_INIT(&Register.node);
     Register.handler = rxHandler;
     Register.userdata = userdata;
     size_t name_size = strlen(name);
     memcpy(Register.name, name, name_size);
-    Register.name[name_size]='\0';
-    
-    A7670C_Lock();
+    Register.name[name_size+1]='\0';
+
     A7670C_InsertRxHandlerHead(&Register);
     A7670C_SetState(kA7670C_State_AT_Send);
     A7670C_Send((uint8_t*)command, strlen(command));
@@ -157,6 +158,7 @@ A7670C_Result A7670C_RequestWithCmd(const char* name, A7670C_RxHandler_T rxHandl
         A7670C_SetState(kA7670C_State_AT_OK);
     }
     A7670C_RemoveRxHandler(&Register);
+
     A7670C_UnLock();
 
     return err;
@@ -175,7 +177,7 @@ A7670C_Result A7670C_RequestWithArgs(const char* name, A7670C_RxHandler_T rxHand
         Register.userdata = userdata;
         size_t name_size = strlen(name);
         memcpy(Register.name, name, name_size);
-        Register.name[name_size]='\0';
+        Register.name[name_size+1]='\0';
 
         va_start(ap, fmt);
         memset(A7670C__Printf_Buffer, 0, sizeof(A7670C__Printf_Buffer));

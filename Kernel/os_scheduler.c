@@ -379,7 +379,7 @@ os_err_t os_scheduler_schedule(int policy)
         /* 放回调度表，下次再调度 */
         os_scheduler__ready_list_push(next_thread, kOsSchedulerPushType_FRONT);
         OS_SCHEDULER_UNLOCK();
-        return OS_SCHEDULER_EINWORK;
+        return OS_SCHEDULER_ESWITCH;
     }else{
         #if defined(OS_SCHEDULER_DEBUG_ENABLE)
         os_printf("[schd-dbg] switch %s \n",next_thread->name);

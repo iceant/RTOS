@@ -2,14 +2,17 @@
 #include <bsp_tim2.h>
 #include <os_kernel.h>
 #include <delay.h>
+#include "global.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#if 0
+
+#if defined(BSP_PULSE_USE_TIMER)
 #define TIMERx      TIMER11
 #define TIMER_CHx   TIMER_CH_1
 #define RCU_TIMERx  RCU_TIMER11
-#define TIMER_PSC (SystemCoreClock/1000000-1)
+#define BSP_PULSE_TIMER_PSC (SystemCoreClock/1000000-1)
 
 static void timer_set(uint16_t per,uint16_t psc)
 {
@@ -20,8 +23,8 @@ static void timer_set(uint16_t per,uint16_t psc)
     rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_AF);
 
-//    gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_15);
-    gpio_init(GPIOB,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_15);
+    gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_15);
+//    gpio_init(GPIOB,GPIO_MODE_AF_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_15);
     timer_deinit(TIMERx);
 
     timer_structure.alignedmode=TIMER_COUNTER_EDGE;
@@ -61,39 +64,53 @@ static void timer_set(uint16_t per,uint16_t psc)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+#define BSP_Pulse_Off()     (GPIO_BOP(GPIOB) = GPIO_PIN_15)
+#define BSP_Pulse_On()      (GPIO_BC(GPIOB) = GPIO_PIN_15)
+
 void BSP_Pulse_Init(void){
     rcu_periph_clock_enable(RCU_GPIOB);
     gpio_init(GPIOB,GPIO_MODE_OUT_PP,GPIO_OSPEED_50MHZ,GPIO_PIN_15);
-    GPIO_BC(GPIOB) = GPIO_PIN_15;
+    BSP_Pulse_Off();
 }
 
 C__STATIC_FORCEINLINE void tick_wait(uint32_t end){
     if(end > BSP_TIM2__Ticks){
-        while(end > BSP_TIM2__Ticks);
+        while(end >= BSP_TIM2__Ticks);
     }else{
         while(BSP_TIM2__Ticks>=0xFFFFFFFFU);
-        while(end > BSP_TIM2__Ticks);
+        while(end >= BSP_TIM2__Ticks);
     }
 }
 
+static uint32_t target_ticks;
 void BSP_Pulse_Generate(uint32_t pulse_width_in_ticks){
 
-#if 1
-    GPIO_BOP(GPIOB)=GPIO_PIN_15; /* ON */
+#if !defined(BSP_PULSE_USE_TIMER)
+    os_critical_enter();
+
+    BSP_Pulse_On();
+
     cpu_uint_t level = cpu_interrupt_disable();
-    uint32_t target_ticks = BSP_TIM2__Ticks + pulse_width_in_ticks;
+    if(global_get()->pulse_tick>1){
+        target_ticks = BSP_TIM2__Ticks + pulse_width_in_ticks + pulse_width_in_ticks*0.7;
+    }else{
+        target_ticks = BSP_TIM2__Ticks + pulse_width_in_ticks + pulse_width_in_ticks * 7;
+    }
     cpu_interrupt_enable(level);
     tick_wait(target_ticks);
 
-    GPIO_BC(GPIOB) = GPIO_PIN_15; /* OFF */
-
+    BSP_Pulse_Off();
     level = cpu_interrupt_disable();
-    target_ticks = BSP_TIM2__Ticks + pulse_width_in_ticks;
+    target_ticks = BSP_TIM2__Ticks + pulse_width_in_ticks  ;
     cpu_interrupt_enable(level);
     tick_wait(target_ticks);
+
+    os_critical_leave();
 #endif
 
-//    timer_set(9, TIMER_PSC);
+#if defined(BSP_PULSE_USE_TIMER)
+    timer_set(99, BSP_PULSE_TIMER_PSC);
+#endif
 
 //    os_critical_enter();
 //    GPIO_BOP(GPIOB)=GPIO_PIN_15;

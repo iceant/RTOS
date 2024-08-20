@@ -1,0 +1,6 @@
+#ifndef INCLUDED_USE_USART0_H
+#define INCLUDED_USE_USART0_H
+
+void USE_USART0_Init(void);
+
+#endif /*INCLUDED_USE_USART0_H*/

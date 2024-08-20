@@ -15,4 +15,7 @@
 #define OS_ENABLE 1
 #endif
 
+
+#define BSP_PULSE_USE_TIMER
+
 #endif /*INCLUDED_OS_CONFIG_H*/

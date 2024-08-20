@@ -166,7 +166,7 @@ static int A7670C_IO_Send(uint8_t* data, int size){
 
 //    BSP_USART1_DMATx(data, size);
     BSP_USART1_Send(data, size);
-//
+
 //#if defined(A7670C_IO_DEBUG)
 //    printf("[A7670C_IO_Send] Done!\n");
 //#endif

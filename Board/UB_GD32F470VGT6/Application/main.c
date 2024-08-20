@@ -37,13 +37,13 @@ static void BootThread_Entry(void* p){
 #endif
 
 #if defined(ENABLE_OLED)
-    os_critical_enter();
+//    os_critical_enter();
     int OLED__line = 1;
     printf("[OLED] TurnOn\n");
     OLED_TurnOn();
     printf("[OLED] OK\n");
     OLED_ShowString(0, OLED__line++, "[OLED] OK        ", 12);
-    os_critical_leave();
+//    os_critical_leave();
 #endif
 
 #if defined(ENABLE_SPI_FLASH)
@@ -58,6 +58,7 @@ static void BootThread_Entry(void* p){
 #if defined(ENABLE_4G)
     if(global_get()->network_disable==false){
         printf("[A7670C] Startup\n");
+        OLED_ShowString(0, OLED__line++, "[4G] STARTING    ", 12);
         A7670C_Result result = A7670C_Startup();
         if(result!=kA7670C_Result_OK){
             Board_Reboot();

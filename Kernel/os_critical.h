@@ -27,7 +27,10 @@ C__STATIC_FORCEINLINE os_err_t os_critical_enter(void)
 }
 
 C__STATIC_FORCEINLINE os_err_t os_critical_leave(void){
-    os_scheduler_nest_decrease();
+    os_uint_t value = os_scheduler_nest_decrease();
+    if(value==0){
+        os_scheduler_schedule(OS_SCHEDULER_POLICY_YIELD_NOACTION);
+    }
     return OS_EOK;
 }
 

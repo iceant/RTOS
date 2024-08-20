@@ -7,6 +7,7 @@
 #include "global.h"
 #include <iap.h>
 #include <use_pulse.h>
+#include <use_usart0.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -21,8 +22,9 @@ static void BootThread_Entry(void* p){
     /* 通知主控，我已经启动了 */
     mcu_session_printf(mcu_session_get_default(), "GD303 Application Startup");
     printf("[GD303] SystemCoreClock: %d\n", SystemCoreClock);
+    printf("[GD303] pulse.enable: %d\n", global_get()->pulse_enable);
     while(1){
-#if 1
+#if 0
         global_t * global = global_get();
         /* 每秒发送一次数据，测试TIMER的精度 */
         mcu_session_printf(mcu_session_get_default(), "Tick:%d, ID:%s, %04d-%02d-%02d %02d:%02d:%02d.%d"
@@ -40,9 +42,9 @@ static void BootThread_Entry(void* p){
 
 #endif
 
-#if 0
+#if 1
         printf("Tim2.Tick:%u, Tim6.Tick=%u\n", BSP_TIM2__Ticks, BSP_TIM6__TickCount);
-//        BSP_Pulse_Generate(1);
+        BSP_Pulse_Generate(1);
         os_thread_mdelay(1000);
 #endif
 
@@ -66,6 +68,8 @@ int main(void){
     global_init();
 
     mcu_session_init(mcu_session_get_default());
+
+    USE_USART0_Init();
 
     /* 用于和 MCU 通讯 */
     USE_USART1_Init();

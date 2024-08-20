@@ -15,9 +15,10 @@ void use_pulse_init(void);
 
 void use_pulse_generate(uint32_t nTick, uint32_t nCount);
 
+bool use_pulse_is_enable(void);
 
+void use_pulse_enable(void);
 
-
-
+void use_pulse_disable(void);
 
 #endif /*INCLUDED_USE_PULSE_H*/

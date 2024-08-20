@@ -11,6 +11,11 @@
 #include <os_types.h>
 #endif /*INCLUDED_OS_TYPES_H*/
 
+#ifndef INCLUDED_OS_SCHEDULER_H
+#include <os_scheduler.h>
+#endif /*INCLUDED_OS_SCHEDULER_H*/
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

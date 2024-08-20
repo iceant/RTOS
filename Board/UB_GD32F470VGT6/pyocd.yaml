@@ -1,16 +1,8 @@
 pack:
   - ../../Pack/GigaDevice.GD32F4xx_DFP.3.2.0.pack
 
-target_override:
-  gd32f470vg
+target_override: gd32f470vg
+# Global options
+auto_unlock: false
+frequency: 8000000 # Set 8 MHz SWD default for all probes
 
-probes:
-  29A509317F281FB6DC9254C4D064247F:
-    target_override:
-      gd32f470vg
-
-  602712602:
-    target_override:
-      gd32f470vg
-    frequency:
-      1000000
