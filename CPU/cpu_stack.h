@@ -17,5 +17,6 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
 );
 
 int cpu_stack_switch(void** from_stack_p, void** to_stack_p);
+int cpu_stack_switch_use_svc(void** from_stack_p, void** to_stack_p);
 
 #endif /*INCLUDED_CPU_STACK_H*/

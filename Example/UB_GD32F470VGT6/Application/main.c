@@ -12,17 +12,23 @@ static void boot_thread_entry(void* p){
     uint32_t nCount = 0;
     while(1){
         printf("nCount: %u\n", nCount++);
-        for(int i=0; i<0x3fffff; i++){}
+//        for(int i=0; i<0x3fffff; i++);
+        os_thread_delay(10);
     }
 }
 
 static size_t idle_count = 0;
+
 static void idle_action(void* p){
     printf("idle...(%u)\n", idle_count++);
+    for(int i=0; i<0x3fffff; i++);
+//    os_thread_mdelay(1000);
 }
 
 int main(void){
     Board_Init();
+
+    idle_count = 0;
 
     printf("Board Init Done!\n");
     printf("SystemCoreClock:%u\n", SystemCoreClock);

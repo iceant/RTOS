@@ -25,6 +25,7 @@
 extern volatile os_thread_t * os_scheduler__current_thread;
 extern volatile os_size_t os_scheduler__lock_nest;
 extern volatile os_size_t os_scheduler__interrupt_nest;
+extern volatile os_bool_t os_scheduler__need_schedule_flag;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -32,7 +33,7 @@ extern volatile os_size_t os_scheduler__interrupt_nest;
 #define OS_SCHEDULER_ERR_LOCKED                     0x1002
 #define OS_SCHEDULER_ERR_NOT_START                  0x1003
 #define OS_SCHEDULER_ERR_CURR_THREAD_RUNNING        0x1004
-#define OS_SCHEDULER_ERR_NEED_SCHEDULE              0x1005
+#define OS_SCHEDULER_ERR_NO_NEED_SCHEDULE           0x1005
 
 
 
@@ -45,6 +46,10 @@ os_err_t os_scheduler_startup(void);
 os_err_t os_scheduler_schedule(void);
 
 os_err_t os_scheduler_systick(void);
+
+os_err_t os_scheduler_schedule_in_thread(void);
+
+void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t tick);
 
 os_err_t os_scheduler_readylist_push_back(os_thread_t * thread);
 

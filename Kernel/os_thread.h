@@ -23,6 +23,11 @@
 #include <os_tick.h>
 #endif /*INCLUDED_OS_TICK_H*/
 
+#ifndef INCLUDED_OS_TIMER_H
+#include <os_timer.h>
+#endif /*INCLUDED_OS_TIMER_H*/
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -41,6 +46,7 @@ typedef struct os_thread_s{
     os_tick_t remain_ticks;
     os_list_node_t ready_node;
     os_list_node_t pend_node;
+    os_timer_t     timer_node;
     int state;
     os_err_t error;
     void* userdata;
@@ -57,6 +63,10 @@ typedef struct os_thread_s{
 #define OS_THREAD_STATE_YIELD               (4)
 #define OS_THREAD_STATE_PENDING             (5)
 #define OS_THREAD_STATE_PEND_TIMEOUT        (6)
+#define OS_THREAD_STATE_TIMEWAIT            (7)
+#define OS_THREAD_STATE_TIMEWAIT_TIMEOUT    (8)
+
+#define OS_THREAD_ERROR_TIMEOUT             (-1)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -75,5 +85,8 @@ os_thread_t * os_thread_self(void);
 
 os_err_t os_thread_resume(os_thread_t * thread);
 
+void os_thread_delay(os_tick_t ticks);
+
+void os_thread_mdelay(os_int_t ms);
 
 #endif /*INCLUDED_OS_THREAD_H*/

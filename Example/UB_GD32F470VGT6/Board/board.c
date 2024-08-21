@@ -29,6 +29,7 @@ void Board_Init(void){
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/1000u); /* 1ms = tick */
+    NVIC_SetPriority(SVCall_IRQn, 0xFE);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
 
     Board_5V_Init();

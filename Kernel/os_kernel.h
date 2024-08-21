@@ -39,6 +39,10 @@
 #include <os_idle.h>
 #endif /*INCLUDED_OS_IDLE_H*/
 
+#ifndef INCLUDED_OS_TIMER_H
+#include <os_timer.h>
+#endif /*INCLUDED_OS_TIMER_H*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

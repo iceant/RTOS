@@ -7,12 +7,18 @@
 volatile os_thread_t*         os_scheduler__current_thread;
 volatile os_size_t            os_scheduler__interrupt_nest;
 volatile os_size_t            os_scheduler__lock_nest;
+volatile os_bool_t            os_scheduler__need_schedule_flag;
 
 static volatile os_priority_t os_scheduler__highest_priority;
 static volatile os_thread_t*  os_scheduler__highest_thread;
 static os_bool_t              os_scheduler__startup_flag;
 static volatile os_size_t     os_scheduler__systick_ticks;
-static os_bool_t              os_scheduler__need_schedule_flag;
+
+#if defined(__CC_ARM)
+void __svc( 0 ) os_scheduler__svc( void ) ;
+#elif defined(__GNUC__)
+#define os_scheduler__svc() __asm volatile ("svc #0":::"memory")
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -31,12 +37,41 @@ os_err_t os_scheduler_init(void){
     return OS_ERR_OK;
 }
 
+os_err_t os_scheduler_schedule_in_thread(void)
+{
+
+    if(os_scheduler__interrupt_nest > 0u){
+        return OS_SCHEDULER_ERR_IN_IRQ;
+    }
+
+    if(os_scheduler__lock_nest > 0u){
+        return OS_SCHEDULER_ERR_LOCKED;
+    }
+
+    os_scheduler__highest_priority = os_priority_highest();
+    os_scheduler__highest_thread = os_readylist_pop(os_scheduler__highest_priority);
+
+    if(os_scheduler__current_thread->state==OS_THREAD_STATE_YIELD){
+        os_readylist_push_back((os_thread_t*)os_scheduler__current_thread);
+    }
+
+    void** from_stack_p = &os_scheduler__current_thread->sp;
+
+    os_scheduler__highest_thread->state = OS_THREAD_STATE_RUNNING;
+    os_scheduler__highest_thread->remain_ticks = os_scheduler__highest_thread->init_ticks;
+
+    cpu_stack_switch_use_svc((void** )from_stack_p,(void** )&os_scheduler__highest_thread->sp);
+
+    os_scheduler__current_thread = os_scheduler__highest_thread;
+    os_scheduler__need_schedule_flag = OS_FALSE;
+
+    return OS_ERR_OK;
+}
 
 os_err_t os_scheduler_systick(void)
 {
     if(os_scheduler__startup_flag==OS_FALSE) return OS_SCHEDULER_ERR_NOT_START;
 
-    register os_bool_t need_schedule_flag = OS_FALSE;
     cpu_interrupt_context_t ctx;
     cpu_interrupt_disable(&ctx);
 
@@ -46,17 +81,32 @@ os_err_t os_scheduler_systick(void)
         os_scheduler__current_thread->remain_ticks--;
         if(os_scheduler__current_thread->remain_ticks==0){
             os_scheduler__current_thread->state = OS_THREAD_STATE_YIELD;
-            need_schedule_flag = OS_TRUE;
+            os_scheduler__need_schedule_flag = OS_TRUE;
         }
     }
 
+    if(os_timer_tick()==OS_TRUE){
+        os_scheduler__need_schedule_flag = OS_TRUE;
+    };
+
     cpu_interrupt_enable(&ctx);
 
-    if(need_schedule_flag){
-        os_scheduler__need_schedule_flag = OS_TRUE;
-    }
-
     return OS_ERR_OK;
+}
+
+static void os_scheduler__timer_timeout(os_timer_t * timer, void* userdata){
+    register os_thread_t* thread = OS_LIST_CONTAINER(timer, os_thread_t, timer_node);
+    thread->error = OS_THREAD_ERROR_TIMEOUT;
+    thread->state = OS_THREAD_STATE_TIMEWAIT_TIMEOUT;
+    os_readylist_push_back(thread);
+}
+
+void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t tick)
+{
+    thread->remain_ticks = 0;
+    thread->state = OS_THREAD_STATE_TIMEWAIT;
+    os_timer_add(&thread->timer_node, os_scheduler__timer_timeout, thread, tick, OS_TIMER_FLAG_ONCE);
+    os_scheduler__need_schedule_flag = OS_TRUE;
 }
 
 /* 第一次启动调度 */
@@ -93,21 +143,17 @@ os_err_t os_scheduler_schedule(void)
         return OS_SCHEDULER_ERR_NOT_START;
     }
 
+    if(os_scheduler__need_schedule_flag==OS_FALSE){
+        return OS_SCHEDULER_ERR_NO_NEED_SCHEDULE;
+    }
+
     if(os_scheduler__interrupt_nest > 0u){
-        os_scheduler__need_schedule_flag = OS_TRUE;
         return OS_SCHEDULER_ERR_IN_IRQ;
     }
 
     if(os_scheduler__lock_nest > 0u){
-        os_scheduler__need_schedule_flag = OS_TRUE;
         return OS_SCHEDULER_ERR_LOCKED;
     }
-
-    if(!os_scheduler__need_schedule_flag){
-        return OS_ERR_OK;
-    }
-
-    os_scheduler__need_schedule_flag = OS_FALSE;
 
     cpu_interrupt_context_t ctx;
     cpu_interrupt_disable(&ctx);
@@ -132,6 +178,7 @@ os_err_t os_scheduler_schedule(void)
     cpu_stack_switch((void** )from_stack_p,(void** )&os_scheduler__highest_thread->sp);
 
     os_scheduler__current_thread = os_scheduler__highest_thread;
+    os_scheduler__need_schedule_flag = OS_FALSE;
 
     cpu_interrupt_enable(&ctx);
 

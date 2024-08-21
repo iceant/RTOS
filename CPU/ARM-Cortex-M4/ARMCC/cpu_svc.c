@@ -33,7 +33,7 @@ void SVC_Handler_C(unsigned  int * svc_args)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-C_ASM void SVC_Handler(void)
+__asm void SVC_Handler(void)
 {
     IMPORT svc_exc_return
     IMPORT SVC_Handler_C

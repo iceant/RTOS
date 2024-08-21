@@ -9,6 +9,7 @@ os_err_t os_kernel_init(void)
         return err;
     }
     err = os_scheduler_init();
+    err = os_timer_init();
 
     os_idle_init();
 

@@ -33,7 +33,7 @@ os_err_t os_thread_init(os_thread_t * thread, const char* name
 
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->pend_node);
-
+    os_timer_node_init(&thread->timer_node);
 
     os_size_t name_size = strlen(name);
     name_size = OS_MIN(name_size, OS_KERNEL_NAME_SIZE-2);
@@ -67,3 +67,17 @@ os_err_t os_thread_detach(os_thread_t * thread){
     return OS_ERR_OK;
 }
 
+void os_thread_delay(os_tick_t ticks)
+{
+    cpu_interrupt_context_t ctx;
+    cpu_interrupt_disable(&ctx);
+
+    os_scheduler_timed_wait(os_thread_self(), ticks);
+    os_scheduler_schedule_in_thread();
+
+    cpu_interrupt_enable(&ctx);
+}
+
+void os_thread_mdelay(os_int_t ms){
+    os_thread_delay(os_tick_from_milliseconds(ms));
+}
