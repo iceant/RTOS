@@ -24,10 +24,10 @@ foreach (item IN LISTS CPU_COMPILER_ASM_SOURCES)
 endforeach ()
 
 
-add_library(${PROJECT_NAME}
-        ${SOURCES}
-        ${CPU_COMPILER_SOURCES}
-        ${CPU_COMPILER_ASM_SOURCES})
+add_library(${PROJECT_NAME} "")
+target_sources(${PROJECT_NAME} PUBLIC ${SOURCES}
+        PUBLIC ${CPU_COMPILER_SOURCES}
+        PUBLIC ${CPU_COMPILER_ASM_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${CPU_MODEL})

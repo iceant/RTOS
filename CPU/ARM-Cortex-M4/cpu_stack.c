@@ -72,18 +72,3 @@ int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
 
     return 0;
 }
-
-int cpu_stack_switch_use_svc(void** from_stack_p, void** to_stack_p)
-{
-    if(cpu_stack__switch_flag == 1){
-        return -1;
-    }
-
-    cpu_stack__switch_flag = 1;
-    cpu_stack__from_stack_p = (volatile void**)from_stack_p;
-    cpu_stack__to_stack_p = (volatile void**)to_stack_p;
-
-    cpu_stack_switch_in_svc();
-
-    return 0;
-}

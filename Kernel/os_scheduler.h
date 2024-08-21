@@ -48,6 +48,7 @@ os_err_t os_scheduler_schedule(void);
 os_err_t os_scheduler_systick(void);
 
 os_err_t os_scheduler_schedule_in_thread(void);
+void os_scheduler_wait_for_schedule_in_thread(void);
 
 void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t tick);
 

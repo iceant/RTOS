@@ -19,12 +19,14 @@ typedef os_uint_t os_priority_t;
 ////
 os_err_t os_priority_init(void);
 
-
 os_priority_t os_priority_highest();
 
 void os_priority_mark(os_priority_t priority);
 
 void os_priority_unmark(os_priority_t priority);
 
+C_STATIC_FORCEINLINE int os_priority_cmp(os_priority_t a, os_priority_t b){
+    return (a==b)?0:((a>b)?-1:1);
+}
 
 #endif /*INCLUDED_OS_PRIORITY_H*/

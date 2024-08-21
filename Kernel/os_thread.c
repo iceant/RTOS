@@ -30,6 +30,7 @@ os_err_t os_thread_init(os_thread_t * thread, const char* name
     thread->init_ticks = init_ticks;
     thread->remain_ticks = init_ticks;
     thread->userdata = userdata;
+    thread->flag = OS_THREAD_FLAG_NONE;
 
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->pend_node);
@@ -73,9 +74,10 @@ void os_thread_delay(os_tick_t ticks)
     cpu_interrupt_disable(&ctx);
 
     os_scheduler_timed_wait(os_thread_self(), ticks);
-    os_scheduler_schedule_in_thread();
-
+    os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
     cpu_interrupt_enable(&ctx);
+    
+    while(os_scheduler__current_thread->flag == OS_THREAD_FLAG_SCHEDULE);
 }
 
 void os_thread_mdelay(os_int_t ms){

@@ -43,6 +43,10 @@
 #include <os_timer.h>
 #endif /*INCLUDED_OS_TIMER_H*/
 
+#ifndef INCLUDED_OS_SEM_H
+#include <os_sem.h>
+#endif /*INCLUDED_OS_SEM_H*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

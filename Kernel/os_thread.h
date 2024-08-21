@@ -49,6 +49,7 @@ typedef struct os_thread_s{
     os_timer_t     timer_node;
     int state;
     os_err_t error;
+    int flag;
     void* userdata;
     void (*exit)(struct os_thread_s*);
     char name[OS_KERNEL_NAME_SIZE];
@@ -67,6 +68,9 @@ typedef struct os_thread_s{
 #define OS_THREAD_STATE_TIMEWAIT_TIMEOUT    (8)
 
 #define OS_THREAD_ERROR_TIMEOUT             (-1)
+
+#define OS_THREAD_FLAG_NONE                 (0)
+#define OS_THREAD_FLAG_SCHEDULE             (1)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
