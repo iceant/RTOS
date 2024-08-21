@@ -11,6 +11,16 @@
 #include <stdbool.h>
 #endif /*INCLUDED_STDBOOL_H*/
 
+#ifndef INCLUDED_CPU_DEFINITIONS_H
+#include <cpu_definitions.h>
+#endif /*INCLUDED_CPU_DEFINITIONS_H*/
+
+#ifndef INCLUDED_C_COMPILER_H
+#include <c_compiler.h>
+#endif /*INCLUDED_C_COMPILER_H*/
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 typedef int32_t     cpu_int_t;

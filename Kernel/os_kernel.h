@@ -27,6 +27,18 @@
 #include <os_scheduler.h>
 #endif /*INCLUDED_OS_SCHEDULER_H*/
 
+#ifndef INCLUDED_OS_CRITICAL_H
+#include <os_critical.h>
+#endif /*INCLUDED_OS_CRITICAL_H*/
+
+#ifndef INCLUDED_OS_INTERRUPT_H
+#include <os_interrupt.h>
+#endif /*INCLUDED_OS_INTERRUPT_H*/
+
+#ifndef INCLUDED_OS_IDLE_H
+#include <os_idle.h>
+#endif /*INCLUDED_OS_IDLE_H*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

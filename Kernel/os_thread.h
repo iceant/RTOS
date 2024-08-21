@@ -53,9 +53,10 @@ typedef struct os_thread_s{
 
 #define OS_THREAD_STATE_SUSPEND             (1)
 #define OS_THREAD_STATE_READY               (2)
-#define OS_THREAD_STATE_YIELD               (3)
-#define OS_THREAD_STATE_PENDING             (4)
-#define OS_THREAD_STATE_PEND_TIMEOUT        (5)
+#define OS_THREAD_STATE_RUNNING             (3)
+#define OS_THREAD_STATE_YIELD               (4)
+#define OS_THREAD_STATE_PENDING             (5)
+#define OS_THREAD_STATE_PEND_TIMEOUT        (6)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

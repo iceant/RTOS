@@ -56,7 +56,7 @@ do{                       \
 }while(0)
 
 #define OS_LIST_CONTAINER(ptr, type, member) \
-    (type *)((char *)ptr - ((size_t) &((TYPE *)0)->MEMBER))
+    (type *)((char *)ptr - ((size_t) &((type *)0)->member))
 
 
 #endif /*INCLUDED_OS_LIST_H*/

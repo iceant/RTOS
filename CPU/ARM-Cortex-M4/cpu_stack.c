@@ -3,14 +3,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define NVIC_INT_CTRL *((cpu_uint_t *)0xE000ED04)
-#define NVIC_PENDSVSET             0x10000000
+#define NVIC_INT_CTRL              (*((cpu_uint_t *)0xE000ED04))
+#define NVIC_PENDSVSET             (1u << 28)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-static bool   cpu_stack__switch_wip_flag = false;
-static void** cpu_stack__from_stack_p=0;
-static void** cpu_stack__to_stack_p=0;
+volatile uint8_t     cpu_stack__switch_flag = 0;
+volatile void**      cpu_stack__from_stack_p=0;
+volatile void**      cpu_stack__to_stack_p=0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@ static void** cpu_stack__to_stack_p=0;
 
 int cpu_stack_init(void* thread_entry, void* thread_parameter
         , void* stack_address
-        , size_t stack_size
+        , cpu_size_t stack_size
         , void* thread_exit_entry
         , void** result_stack_pointer
 )
@@ -34,7 +34,7 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     *--stack_p = (cpu_uint_t)0x03030303u;           /* R3 */
     *--stack_p = (cpu_uint_t)0x02020202u;           /* R2 */
     *--stack_p = (cpu_uint_t)0x01010101u;           /* R1 */
-    *--stack_p = (cpu_uint_t)thread_parameter;      /* R0: argument */
+    *--stack_p = (cpu_uint_t)thread_parameter;      /* R0: parameter */
 
     *--stack_p = (cpu_uint_t)0x11111111u;           /* R11 */
     *--stack_p = (cpu_uint_t)0x10101010u;           /* R10 */
@@ -44,28 +44,31 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     *--stack_p = (cpu_uint_t)0x06060606u;           /* R6 */
     *--stack_p = (cpu_uint_t)0x05050505u;           /* R5 */
     *--stack_p = (cpu_uint_t)0x04040404u;           /* R4 */
+    *--stack_p = (cpu_uint_t)0x03u;                 /* R3 - CONTROL */
+    *--stack_p = (cpu_uint_t)0xFFFFFFFDu;           /* R2 - EXC_RETURN */
 
     *result_stack_pointer = stack_p;
 
     return 0;
 }
 
-int cpu_stack_switch(void* from_stack_p, void* to_stack_p)
+#if defined(__CC_ARM)
+void __svc( 0 ) cpu_stack_switch_in_privilege( void ) ;
+#elif defined(__GNUC__)
+#define cpu_stack_switch_in_privilege() C__ASM volatile ("svc #0":::"memory")
+#endif
+
+int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
 {
-    if(cpu_stack__switch_wip_flag){
+    if(cpu_stack__switch_flag == 1){
         return -1;
     }
 
-    cpu_interrupt_context_t interrupt_ctx = 0;
-    cpu_interrupt_enter(&interrupt_ctx);
-
-    cpu_stack__switch_wip_flag = true;
-    *cpu_stack__from_stack_p = from_stack_p;
-    *cpu_stack__to_stack_p = to_stack_p;
+    cpu_stack__switch_flag = 1;
+    cpu_stack__from_stack_p = (volatile void**)from_stack_p;
+    cpu_stack__to_stack_p = (volatile void**)to_stack_p;
 
     NVIC_INT_CTRL = NVIC_PENDSVSET;
-
-    cpu_interrupt_leave(&interrupt_ctx);
 
     return 0;
 }

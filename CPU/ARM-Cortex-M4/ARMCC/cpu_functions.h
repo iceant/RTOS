@@ -17,67 +17,67 @@
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_control(void)
 {
-    register uint32_t __regControl         C_ASN("control");
+    register uint32_t __regControl         C_ASM("control");
     return(__regControl);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_control(uint32_t control)
 {
-    register uint32_t __regControl         C_ASN("control");
+    register uint32_t __regControl         C_ASM("control");
     __regControl = control;
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_ipsr(void)
 {
-    register uint32_t __regIPSR          C_ASN("ipsr");
+    register uint32_t __regIPSR          C_ASM("ipsr");
     return(__regIPSR);
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_apsr(void)
 {
-    register uint32_t __regAPSR          C_ASN("apsr");
+    register uint32_t __regAPSR          C_ASM("apsr");
     return(__regAPSR);
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_xpsr(void)
 {
-    register uint32_t __regXPSR          C_ASN("xpsr");
+    register uint32_t __regXPSR          C_ASM("xpsr");
     return(__regXPSR);
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_psp(void)
 {
-    register uint32_t __regProcessStackPointer  C_ASN("psp");
+    register uint32_t __regProcessStackPointer  C_ASM("psp");
     return(__regProcessStackPointer);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_psp(uint32_t topOfProcStack)
 {
-    register uint32_t __regProcessStackPointer  C_ASN("psp");
+    register uint32_t __regProcessStackPointer  C_ASM("psp");
     __regProcessStackPointer = topOfProcStack;
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_msp(void)
 {
-    register uint32_t __regMainStackPointer     C_ASN("msp");
+    register uint32_t __regMainStackPointer     C_ASM("msp");
     return(__regMainStackPointer);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_msp(uint32_t topOfMainStack)
 {
-    register uint32_t __regMainStackPointer     C_ASN("msp");
+    register uint32_t __regMainStackPointer     C_ASM("msp");
     __regMainStackPointer = topOfMainStack;
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_primask(void)
 {
-    register uint32_t __regPriMask         C_ASN("primask");
+    register uint32_t __regPriMask         C_ASM("primask");
     return(__regPriMask);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_primask(uint32_t priMask)
 {
-    register uint32_t __regPriMask         C_ASN("primask");
+    register uint32_t __regPriMask         C_ASM("primask");
     __regPriMask = (priMask);
 }
 
@@ -87,37 +87,37 @@ C_STATIC_FORCEINLINE void cpu_set_primask(uint32_t priMask)
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_basepri(void)
 {
-    register uint32_t __regBasePri         C_ASN("basepri");
+    register uint32_t __regBasePri         C_ASM("basepri");
     return(__regBasePri);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_basepri(uint32_t basePri)
 {
-    register uint32_t __regBasePri         C_ASN("basepri");
+    register uint32_t __regBasePri         C_ASM("basepri");
     __regBasePri = (basePri & 0xFFU);
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_faultmask(void)
 {
-    register uint32_t __regFaultMask       C_ASN("faultmask");
+    register uint32_t __regFaultMask       C_ASM("faultmask");
     return(__regFaultMask);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_faultmask(uint32_t faultMask)
 {
-    register uint32_t __regFaultMask       C_ASN("faultmask");
+    register uint32_t __regFaultMask       C_ASM("faultmask");
     __regFaultMask = (faultMask & (uint32_t)1U);
 }
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_fpscr(void)
 {
-    register uint32_t __regfpscr         C_ASN("fpscr");
+    register uint32_t __regfpscr         C_ASM("fpscr");
     return(__regfpscr);
 }
 
 C_STATIC_FORCEINLINE void cpu_set_fpscr(uint32_t fpscr)
 {
-    register uint32_t __regfpscr         C_ASN("fpscr");
+    register uint32_t __regfpscr         C_ASM("fpscr");
     __regfpscr = (fpscr);
 }
 
@@ -149,37 +149,30 @@ C_STATIC_FORCEINLINE void cpu_set_fpscr(uint32_t fpscr)
 
 #define cpu_rev __rev
 
-C_STATIC_FORCEINLINE uint32_t cpu_rev16(uint32_t value)
-{
-    uint32_t result;
-    C_ASM volatile ("rev16 %0, %1" : CPU_CMSIS_GCC_OUT_REG (result) : CPU_CMSIS_GCC_USE_REG (value) );
-    return result;
-}
-
-C_SECTION(.rev16_text) C_STATIC_FORCEINLINE C_ASN uint32_t cpu_rev16(uint32_t value)
+C_SECTION(.rev16_text) C_STATIC_FORCEINLINE C_ASM uint32_t cpu_rev16(uint32_t value)
 {
     rev16 r0, r0
     bx lr
 }
 
-C_SECTION(.revsh_text) C_STATIC_FORCEINLINE C_ASN int16_t cpu_revsh(int16_t value)
+C_SECTION(.revsh_text) C_STATIC_FORCEINLINE C_ASM int32_t cpu_revsh(int32_t value)
 {
     revsh r0, r0
     bx lr
 }
 
-#define cpu_ror                         __ror
-#define cpu_bkpt(value)                 __breakpoint(value)
-#define cpu_rbit                         __rbit
-#define cpu_clz                         (uint8_t)__clz
+#define cpu_ror                             __ror
+#define cpu_bkpt(value)                     __breakpoint(value)
+#define cpu_rbit                            __rbit
+#define cpu_clz                             (uint8_t)__clz
 
-#define cpu_ldrexb(ptr)          _Pragma("push") _Pragma("diag_suppress 3731") ((uint8_t ) __ldrex(ptr))  _Pragma("pop")
-#define cpu_ldrexh(ptr)          _Pragma("push") _Pragma("diag_suppress 3731") ((uint16_t ) __ldrex(ptr))  _Pragma("pop")
-#define cpu_ldrexw(ptr)          _Pragma("push") _Pragma("diag_suppress 3731") ((uint32_t ) __ldrex(ptr))  _Pragma("pop")
+#define cpu_ldrexb(ptr)                     ((uint8_t ) __ldrex(ptr))
+#define cpu_ldrexh(ptr)                     ((uint16_t ) __ldrex(ptr))
+#define cpu_ldrexw(ptr)                     ((uint32_t ) __ldrex(ptr))
 
-#define cpu_strexb(value, ptr)   _Pragma("push") _Pragma("diag_suppress 3731") __strex(value, ptr)        _Pragma("pop")
-#define cpu_strexh(value, ptr)   _Pragma("push") _Pragma("diag_suppress 3731") __strex(value, ptr)        _Pragma("pop")
-#define cpu_strexw(value, ptr)   _Pragma("push") _Pragma("diag_suppress 3731") __strex(value, ptr)        _Pragma("pop")
+#define cpu_strexb(value, ptr)              __strex(value, ptr)
+#define cpu_strexh(value, ptr)              __strex(value, ptr)
+#define cpu_strexw(value, ptr)              __strex(value, ptr)
 #define cpu_clrex                           __clrex
 
 #endif /*INCLUDED_CPU_FUNCTIONS_H*/
