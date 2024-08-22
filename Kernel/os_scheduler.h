@@ -26,7 +26,7 @@ extern volatile os_thread_t * os_scheduler__current_thread;
 extern volatile os_size_t os_scheduler__lock_nest;
 extern volatile os_size_t os_scheduler__interrupt_nest;
 extern volatile os_bool_t os_scheduler__need_schedule_flag;
-
+extern volatile os_tick_t os_scheduler__systick_ticks;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define OS_SCHEDULER_ERR_IN_IRQ                     0x1001

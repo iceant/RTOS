@@ -2,6 +2,7 @@
 #include <os_kernel.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <cpu_spinlock.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -32,12 +33,15 @@
 ////
 static BSP_USART0_RxHandler BSP_USART0__RxHandler = 0;
 static void* BSP_USART0__RxHandlerUserdata = 0;
-
+static bool BSP_USART0_DMATx_Enable = false;
+static cpu_spinlock_t BSP_USART0_Lock;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 
 void BSP_USART0_Init(void)
 {
+    BSP_USART0_Lock = 0;
+
     /* enable GPIO clock */
     rcu_periph_clock_enable(USART_TX_GPIO_CLOCK);
     rcu_periph_clock_enable(USART_RX_GPIO_CLOCK);
@@ -94,6 +98,7 @@ void BSP_USART0_EnableDMATx(void)
 {
     /* enable DMA1 */
     rcu_periph_clock_enable(USART_TX_DMA_CLOCK);
+    BSP_USART0_DMATx_Enable = true;
 }
 
 void BSP_USART0_DMATx(uint8_t* txBuffer, uint32_t size)
@@ -144,7 +149,7 @@ void USARTx_IRQHandler(void)
         }
     }
 
-#if 1
+#if 0
     if(RESET!=usart_interrupt_flag_get(USARTx, USART_INT_FLAG_RBNE_ORERR)
         && (RESET!=usart_flag_get(USARTx, USART_FLAG_ORERR)))
     {
@@ -164,8 +169,10 @@ void USARTx_IRQHandler(void)
 
 void BSP_USART0_SendByte(uint8_t b)
 {
+    cpu_spinlock_lock(&BSP_USART0_Lock);
     usart_data_transmit(USARTx, (uint8_t)b);
     while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
+    cpu_spinlock_unlock(&BSP_USART0_Lock);
 }
 
 void BSP_USART0_Send(uint8_t * bytes, uint32_t size)
@@ -176,33 +183,40 @@ void BSP_USART0_Send(uint8_t * bytes, uint32_t size)
         while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
     }
 }
-//
-//static char printf_buffer[1204];
-//int BSP_USART0_Printf(const char* format, ...)
-//{
-//    va_list args;
-//    va_start(args, format);
-//    int len = vsnprintf(NULL, 0, format, args);
-//    va_end(args);
-//    if(len > OS_ARRAY_SIZE(printf_buffer)){
-//        char* buffer = (char*)OS_ALLOC(len + 1);
-//        va_start(args, format);
-//        len = vsnprintf(buffer, len + 1, format, args);
-//        va_end(args);
-//        buffer[len]='\0';
-//
-//        BSP_USART0_Send((uint8_t*)buffer, len);
-//        OS_FREE(buffer);
-//    }else{
-//        va_start(args, format);
-//        len = vsnprintf(printf_buffer, len + 1, format, args);
-//        va_end(args);
-//        printf_buffer[len]='\0';
-//        BSP_USART0_Send((uint8_t*)printf_buffer, len);
-//    }
-//
-//    return len;
-//}
+
+static char printf_buffer[1204];
+int BSP_USART0_Printf(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int len = vsnprintf(NULL, 0, format, args);
+    va_end(args);
+    if(len > OS_ARRAY_SIZE(printf_buffer)){
+        char* buffer = (char*)OS_ALLOC(len + 1);
+        va_start(args, format);
+        len = vsnprintf(buffer, len + 1, format, args);
+        va_end(args);
+        buffer[len]='\0';
+        if(!BSP_USART0_DMATx_Enable){
+            BSP_USART0_Send((uint8_t*)buffer, len);
+        }else{
+            BSP_USART0_DMATx((uint8_t*)buffer, len);
+        }
+        OS_FREE(buffer);
+    }else{
+        va_start(args, format);
+        len = vsnprintf(printf_buffer, len + 1, format, args);
+        va_end(args);
+        printf_buffer[len]='\0';
+        if(!BSP_USART0_DMATx_Enable){
+            BSP_USART0_Send((uint8_t*)printf_buffer, len);
+        }else{
+            BSP_USART0_DMATx((uint8_t*)printf_buffer, len);
+        }
+    }
+
+    return len;
+}
 
 
 

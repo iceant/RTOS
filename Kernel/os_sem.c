@@ -8,6 +8,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+#define OS_SEM_LOCK(L) cpu_spinlock_lock(L)
+#define OS_SEM_UNLOCK(L) cpu_spinlock_unlock(L)
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
 static void os_sem__append(os_sem_t* sem, os_thread_t* thread){
     os_list_node_t * os_sem__current_node;
     OS_LIST_REMOVE(&thread->pend_node);
@@ -33,7 +39,7 @@ static void os_sem__append(os_sem_t* sem, os_thread_t* thread){
     }
 }
 
-static void os_sem__restore(os_sem_t* sem){
+C_STATIC_FORCEINLINE void os_sem__restore(os_sem_t* sem){
     os_list_node_t * os_sem__current_node;
     if(OS_LIST_IS_EMPTY(&sem->pend_list)){
         return;
@@ -44,7 +50,6 @@ static void os_sem__restore(os_sem_t* sem){
     /*从timer中移除*/
     os_timer_remove(&thread->timer_node);
     os_scheduler_readylist_push_back(thread);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,15 +67,14 @@ os_err_t os_sem_init(os_sem_t* sem, const char* name, os_uint_t value, uint8_t f
     sem->value = value;
     sem->flag = flag;
     sem->owner = 0;
+    cpu_spinlock_init(&sem->lock);
     
     return OS_ERR_OK;
 }
 
 os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks)
 {
-    cpu_interrupt_context_t ctx;
-    
-    while(1){
+//    while(1){
         if(sem->value>0){
             sem->value--;
             return OS_ERR_OK;
@@ -79,37 +83,35 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks)
         if(ticks==0){
             return OS_ERR_ETIMEOUT;
         }else if(ticks==OS_WAITING_INFINITY){
-            cpu_interrupt_disable(&ctx);
+            OS_SEM_LOCK(&sem->lock);
             os_sem__append(sem, (os_thread_t*)os_scheduler__current_thread);
-            printf("[os_sem_take] %s, val:%d\n", os_scheduler__current_thread->name, sem->value);
-            
+//            printf("[os_sem_take] %s, val:%d\n", os_scheduler__current_thread->name, sem->value);
             os_scheduler__current_thread->state = OS_THREAD_STATE_PENDING;
-            os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
-            cpu_interrupt_enable(&ctx);
-//            while(os_scheduler__current_thread->flag==OS_THREAD_FLAG_SCHEDULE);
+            os_scheduler__need_schedule_flag = OS_TRUE;
+            OS_SEM_UNLOCK(&sem->lock);
+            os_scheduler_schedule_in_thread();
         }else{
-            cpu_interrupt_disable(&ctx);
+            OS_SEM_LOCK(&sem->lock);
             os_sem__append(sem, (os_thread_t*)os_scheduler__current_thread);
             os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
-            os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
-            cpu_interrupt_enable(&ctx);
-            while(os_scheduler__current_thread->flag==OS_THREAD_FLAG_SCHEDULE); /* 等待 SysTick 调度到其它任务 */
-            
+            OS_SEM_UNLOCK(&sem->lock);
+            os_scheduler_schedule_in_thread();
             if(os_scheduler__current_thread->state==OS_THREAD_STATE_TIMEWAIT_TIMEOUT){
                 /*调度返回该任务，检查是否TIMEOUT*/
                 return OS_ERR_ETIMEOUT;
             }
         }
-    }
+//    }
 }
 
 os_err_t os_sem_release(os_sem_t* sem)
 {
-    cpu_interrupt_context_t ctx;
-    cpu_interrupt_disable(&ctx);
+    OS_SEM_LOCK(&sem->lock);
     sem->value++;
     os_sem__restore(sem);
-    cpu_interrupt_enable(&ctx);
-    
+    os_scheduler__need_schedule_flag = OS_TRUE;
+    os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
+    OS_SEM_UNLOCK(&sem->lock);
+
     return OS_ERR_OK;
 }

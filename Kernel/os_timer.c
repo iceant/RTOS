@@ -66,7 +66,6 @@ static void os_timer__thread_entry(void* p){
 #endif
 
 static void os_timer__add(os_timer_t * timer){
-    if(timer==0) return;
     register os_list_t * head = 0;
 
     if(timer->expire_tick <= TVR_MAX){
@@ -185,8 +184,6 @@ os_bool_t os_timer_tick(void){
 
 os_err_t os_timer_node_init(os_timer_t * timer)
 {
-    if(!timer) return OS_ERR_EINVAL;
-
     OS_LIST_INIT(&timer->wait_node);
     timer->expire_tick = 0;
     timer->ticks = 0;

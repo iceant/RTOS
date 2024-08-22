@@ -14,7 +14,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-void sdk_hex_dump(void* data, size_t size);
+typedef void (*sdk_hex_printf)(const char* fmt, ...);
+
+void sdk_hex_dump(void* data, size_t size, sdk_hex_printf put);
 
 
 #endif /* INCLUDED_SDK_HEX_H */

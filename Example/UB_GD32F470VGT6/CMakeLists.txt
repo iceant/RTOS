@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../../CMake/toolchain-armcc.cmake)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../../CMake/ARMCC/toolchain-armcc.cmake)
 project(UB_GD32F470VGT6 C)
 enable_language(ASM)
 

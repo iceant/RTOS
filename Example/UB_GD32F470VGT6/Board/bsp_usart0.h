@@ -32,6 +32,6 @@ void BSP_USART0_Send(uint8_t * bytes, uint32_t size);
 
 int BSP_USART0_Printf(const char* format, ...);
 
-//#define printf BSP_USART0_Printf
+#define printf BSP_USART0_Printf
 
 #endif /* INCLUDED_BSP_USART0_H */

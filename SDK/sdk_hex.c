@@ -1,10 +1,9 @@
 #include <sdk_hex.h>
-#include <stdio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-void sdk_hex_dump(void* data, size_t size)
+void sdk_hex_dump(void* data, size_t size, sdk_hex_printf printf)
 {
     char ascii[17];
     size_t i, j;
