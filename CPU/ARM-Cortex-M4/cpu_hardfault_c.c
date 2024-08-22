@@ -2,15 +2,18 @@
 #include <stdio.h>
 #include <cpu_types.h>
 
+#if defined(CPU_HARDFAULT_ENABLE) && (CPU_HARDFAULT_ENABLE==1)
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
 #define REG_SCB_SHCSR  (*(volatile unsigned int*)  (0xE000ED24u))  // System Handler Control and State Register
-#define REG_SCB_CFSR  (*(volatile unsigned int*) (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_CFSR   (*(volatile unsigned int*)  (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_MMFSR  (*(volatile unsigned char*)  (0xE000ED28u))  // MemManage Fault Status Register
 #define REG_SCB_BFSR   (*(volatile unsigned char*) (0xE000ED29u))  // Bus Fault Status Register
 #define REG_SCB_UFSR   (*(volatile unsigned short*)(0xE000ED2Au))  // Usage Fault Status Register
 #define REG_SCB_HFSR   (*(volatile unsigned int*)  (0xE000ED2Cu))  // Hard Fault Status Register
 #define REG_SCB_DFSR   (*(volatile unsigned int*)  (0xE000ED30u))  // Debug Fault Status Register
-#define REG_SCB_MMFSR  (*(volatile unsigned char*)  (0xE000ED28u))  // MemManage Fault Status Register
 #define REG_SCB_MMFAR  (*(volatile unsigned int*)  (0xE000ED34u))  // MemManage Fault Manage Address Register
 #define REG_SCB_BFAR   (*(volatile unsigned int*)  (0xE000ED38u))  // Bus Fault Address Register
 #define REG_SCB_AFSR   (*(volatile unsigned int*)  (0xE000ED3Cu))  // Auxiliary Fault Status Register
@@ -30,7 +33,7 @@
 ////
 
 #if DEBUG
-static volatile unsigned int _Continue; // Set this variable to 1 to run further
+static volatile unsigned int cpu_hardfault__continue; // Set this variable to 1 to run further
 
 static struct {
     struct {
@@ -220,8 +223,8 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     // If NVIC registers indicate readable memory, change the variable value
     // to != 0 to continue execution.
     //
-//    _Continue = 0u;
-//    while (_Continue == 0u);
+//    cpu_hardfault__continue = 0u;
+//    while (cpu_hardfault__continue == 0u);
 
     //
     // Read saved registers from the stack
@@ -238,8 +241,8 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     // Halt execution
     // To step out of the HardFaultHandler, change the variable value to != 0.
     //
-//    _Continue = 0u;
-//    while (_Continue == 0u) {
+//    cpu_hardfault__continue = 0u;
+//    while (cpu_hardfault__continue == 0u) {
 //    }
 #endif
 
@@ -316,8 +319,8 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
 //    }
 
 
-    _Continue = 0u;
-    while (_Continue == 0u) {
+    cpu_hardfault__continue = 0u;
+    while (cpu_hardfault__continue == 0u) {
     }
 }
 
@@ -390,3 +393,5 @@ static void show_cfsr(unsigned long cfsr) {
 
     printf("\n");
 }
+
+#endif /* CPU_HARDFAULT_ENABLE */

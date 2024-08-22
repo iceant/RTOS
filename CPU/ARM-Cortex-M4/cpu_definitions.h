@@ -5,4 +5,8 @@
 #define __FPU_PRESENT 1
 #endif
 
+#ifndef CPU_HARDFAULT_ENABLE
+#define CPU_HARDFAULT_ENABLE 0
+#endif
+
 #endif /*INCLUDED_CPU_DEFINITIONS_H*/

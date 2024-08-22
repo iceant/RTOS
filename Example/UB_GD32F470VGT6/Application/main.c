@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <os_kernel.h>
 #include <sdk_hex.h>
+#include <div0_test.h>
 
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t boot_thread_stack[1024];
@@ -15,6 +16,8 @@ static void boot_thread_entry(void* p){
         printf("nCount: %u, Tick:%u\n", nCount++, os_tick_get());
 //        for(int i=0; i<0x3fffff; i++);
         os_thread_mdelay(1000);
+
+//        div0_test();
     }
 }
 

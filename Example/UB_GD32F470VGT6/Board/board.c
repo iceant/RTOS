@@ -22,8 +22,9 @@ static void Board_5V_Enable(void)
 
 void Board_Init(void){
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x000000);
-
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
+
+    SCB->CFSR |= (1<<25);
 
     //    SystemCoreClock = 240000000U;
     /* Configure the NVIC Preemption Priority Bits */

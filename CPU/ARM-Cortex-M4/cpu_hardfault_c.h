@@ -6,11 +6,12 @@
 #include <cpu_types.h>
 #endif /*INCLUDED_CPU_TYPES_H*/
 
+#if defined(CPU_HARDFAULT_ENABLE) && (CPU_HARDFAULT_ENABLE==1)
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
 typedef void (*cpu_exception_handler_t)(void*);
-
 extern cpu_exception_handler_t cpu_exception_handler;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,5 +33,7 @@ typedef struct ContextStateFrame {
 
 
 void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value);
+
+#endif
 
 #endif /*INCLUDED_CPU_HARDFAULT_C_H*/
