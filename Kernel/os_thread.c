@@ -3,11 +3,17 @@
 #include <os_macros.h>
 #include <os_scheduler.h>
 #include <cpu.h>
-
+#include <os_critical.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_thread_on_exit(void){
+    os_critical_enter();
     os_thread_t* self = os_thread_self();
+    if(self->exit){
+        self->exit(self);
+    }
+    os_critical_leave();
+
     os_scheduler_detach(self);
 }
 
@@ -42,8 +48,9 @@ os_err_t os_thread_init(os_thread_t * thread, const char* name
     thread->name[name_size+1]='\0';
 
     thread->state = OS_THREAD_STATE_SUSPEND;
-
-
+    thread->error = OS_THREAD_ERROR_OK;
+    thread->exit = 0;
+    
     cpu_stack_init(entry, parameter, stack_address, stack_size
                    , os_thread_on_exit
                    , &thread->sp);
@@ -64,22 +71,22 @@ os_thread_t * os_thread_self(void){
     return (os_thread_t * )os_scheduler_current_thread();
 }
 
-os_err_t os_thread_detach(os_thread_t * thread){
-    return OS_ERR_OK;
-}
-
 void os_thread_delay(os_tick_t ticks)
 {
     cpu_interrupt_context_t ctx;
     cpu_interrupt_disable(&ctx);
-
-    os_scheduler_timed_wait(os_thread_self(), ticks);
-    os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
+    os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
     cpu_interrupt_enable(&ctx);
-    
-    while(os_scheduler__current_thread->flag == OS_THREAD_FLAG_SCHEDULE);
+
+    os_scheduler_schedule_in_thread();
 }
 
 void os_thread_mdelay(os_int_t ms){
     os_thread_delay(os_tick_from_milliseconds(ms));
 }
+
+os_err_t os_thread_yield(void)
+{
+    return os_scheduler_yield(os_thread_self());
+}
+

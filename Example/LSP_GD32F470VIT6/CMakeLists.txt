@@ -14,6 +14,8 @@ add_definitions(-DUSE_STDPERIPH_DRIVER)
 #add_definitions(-DHXTAL_VALUE=12000000)
 add_definitions(-D__MICROLIB)
 add_definitions(-DNDEBUG)
+add_definitions(-D__FPU_USED=1)
+add_definitions(-D__FPU_PRESENT=1)
 
 set(CMAKE_OBJCOPY_CPU_NAME Cortex-M4)
 set(CPU_MODEL ARM-Cortex-M4)

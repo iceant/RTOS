@@ -29,5 +29,15 @@ typedef int32_t     cpu_intptr_t;
 typedef uint32_t    cpu_uintptr_t;
 typedef uint32_t    cpu_size_t;
 
+#define cpu_bool_t  bool
+#define CPU_TRUE    true
+#define CPU_FALSE   false
+
+////////////////////////////////////////////////////////////////////////////////
+////
+#define CPU_REG(A) (*(volatile cpu_uintptr_t *)(A))
+
+
+
 
 #endif /*INCLUDED_CPU_TYPES_H*/

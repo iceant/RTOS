@@ -279,6 +279,7 @@ C_STATIC_FORCEINLINE void cpu_clrex(void)
     C_ASM volatile ("clrex" ::: "memory");
 }
 
+/* -------------------------------------------------------------------------------------------------------------- */
 
 
 #endif /*INCLUDED_CPU_FUNCTIONS_H*/

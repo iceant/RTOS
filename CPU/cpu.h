@@ -21,11 +21,25 @@
 #include <cpu_registers.h>
 #endif /*INCLUDED_CPU_REGISTERS_H*/
 
+#ifndef INCLUDED_CPU_SVC_H
+#include <cpu_svc.h>
+#endif /*INCLUDED_CPU_SVC_H*/
+
+#ifndef INCLUDED_CPU_SPINLOCK_H
+#include <cpu_spinlock.h>
+#endif /*INCLUDED_CPU_SPINLOCK_H*/
+
+#ifndef INCLUDED_CPU_FUNCTIONS_C_H
+#include <cpu_functions_c.h>
+#endif /*INCLUDED_CPU_FUNCTIONS_C_H*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
+typedef void (*cpu_exception_handler_t)(void*);
 
+extern cpu_exception_handler_t cpu_exception_handler;
 
 
 #endif /*INCLUDED_CPU_H*/

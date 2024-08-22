@@ -26,7 +26,7 @@ extern volatile os_thread_t * os_scheduler__current_thread;
 extern volatile os_size_t os_scheduler__lock_nest;
 extern volatile os_size_t os_scheduler__interrupt_nest;
 extern volatile os_bool_t os_scheduler__need_schedule_flag;
-
+extern volatile os_tick_t os_scheduler__systick_ticks;
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define OS_SCHEDULER_ERR_IN_IRQ                     0x1001
@@ -48,7 +48,6 @@ os_err_t os_scheduler_schedule(void);
 os_err_t os_scheduler_systick(void);
 
 os_err_t os_scheduler_schedule_in_thread(void);
-void os_scheduler_wait_for_schedule_in_thread(void);
 
 void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t tick);
 
@@ -62,11 +61,25 @@ os_err_t os_scheduler_suspend(os_thread_t * thread);
 
 os_err_t os_scheduler_resume(os_thread_t * thread);
 
-os_err_t os_scheduler_detach(os_thread_t * thread);
+os_err_t os_scheduler_mark_need_schedule(os_thread_t* thread);
+
+os_err_t os_scheduler_detach(os_thread_t* thread);
 
 C_STATIC_FORCEINLINE volatile os_thread_t* os_scheduler_current_thread(void)
 {
     return os_scheduler__current_thread;
+}
+
+C_STATIC_FORCEINLINE void os_scheduler_disable(void){
+    os_scheduler__lock_nest++;
+}
+
+C_STATIC_FORCEINLINE void os_scheduler_enable(void){
+    os_scheduler__lock_nest--;
+}
+
+C_STATIC_FORCEINLINE os_bool_t os_scheduler_disabled(void){
+    return (os_scheduler__lock_nest>0u)?OS_TRUE:OS_FALSE;
 }
 
 #endif /*INCLUDED_OS_SCHEDULER_H*/

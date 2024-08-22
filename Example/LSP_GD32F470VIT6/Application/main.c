@@ -42,13 +42,27 @@ static void USART0_RxHandler(uint16_t data, void* ud){
 
 static void USART0_ThreadEntry(void* p){
     while(1){
-        os_sem_take(&USART0_RxSem, OS_WAITING_INFINITY);
+        while(USART0_RxBuffer_WriteIdx==0){
+            os_sem_take(&USART0_RxSem, OS_WAITING_INFINITY);
+        }
         if(USART0_RxBuffer[USART0_RxBuffer_WriteIdx-2]=='\r' && USART0_RxBuffer[USART0_RxBuffer_WriteIdx-1]=='\n'){
-            sdk_hex_dump(USART0_RxBuffer, USART0_RxBuffer_WriteIdx);
+            sdk_hex_dump(USART0_RxBuffer, USART0_RxBuffer_WriteIdx, printf);
             memset(USART0_RxBuffer, 0, USART0_RxBuffer_WriteIdx);
             USART0_RxBuffer_WriteIdx = 0;
         }
     }
+}
+
+C_ALIGNED(OS_ALIGN_SIZE)
+static uint8_t exit_thread_stack[1024];
+static os_thread_t exit_thread;
+static void exit_thread_entry(void* p){
+    printf("[exit_thread] exit!\n");
+}
+
+static void exit_thread_on_exit(os_thread_t * thread){
+    volatile os_tick_t tick = *(volatile os_tick_t*)thread->userdata;
+    printf("Thread [%s] exit at %u!\n", thread->name, tick);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -77,6 +91,13 @@ int main(void){
             , USART0_ThreadStack, OS_ARRAY_SIZE(USART0_ThreadStack)
             , 20, 10, 0);
     os_thread_startup(&USART0_Thread);
+    
+    os_thread_init(&exit_thread, "exit", exit_thread_entry, 0
+            , exit_thread_stack, OS_ARRAY_SIZE(exit_thread_stack)
+            , 20, 10, 0);
+    exit_thread.exit = exit_thread_on_exit;
+    exit_thread.userdata = (void*)&os_scheduler__systick_ticks;
+    os_thread_startup(&exit_thread);
     
     os_kernel_startup();
     

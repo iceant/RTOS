@@ -14,17 +14,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C_STATIC_FORCEINLINE void os_critical_enter(void){
-    os_scheduler__lock_nest++;
+    os_scheduler_disable();
 }
 
 C_STATIC_FORCEINLINE void os_critical_leave(void){
-    os_scheduler__lock_nest--;
+    os_scheduler_enable();
 }
 
-
-
-
-
-
+C_STATIC_FORCEINLINE os_bool_t os_critical_activated(void){
+    return os_scheduler_disabled();
+}
 
 #endif /*INCLUDED_OS_CRITICAL_H*/
