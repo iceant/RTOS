@@ -13,6 +13,11 @@
 #include <stdio.h>
 #endif /*INCLUDED_STDIO_H*/
 
+#ifndef INCLUDED_SDK_DEFINITION_H
+#include <sdk_definition.h>
+#endif /*INCLUDED_SDK_DEFINITION_H*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -24,9 +29,17 @@ typedef void (*sdk_fmt_t)(int code, va_list_box *box,
                   int put(int c, void *cl), void *cl,
                   unsigned char flags[256], int width, int precision);
 
-////////////////////////////////////////////////////////////////////////////////
-//// 
+typedef int (*sdk_fmt_putc_t)(int c, void* cl);
 
+////////////////////////////////////////////////////////////////////////////////
+////
+
+#ifndef sdk_fmt_putc
+#define sdk_fmt_putc putc
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+////
 
 void sdk_fmt_fmt (int put(int c, void *cl), void *cl,
                      const char *fmt, ...);

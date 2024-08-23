@@ -17,4 +17,8 @@
 #define SDK_NAME_SIZE 32
 #endif
 
+#ifndef sdk_fmt_putc
+#define sdk_fmt_putc putc
+#endif
+
 #endif /*INCLUDED_SDK_DEFINITION_H*/

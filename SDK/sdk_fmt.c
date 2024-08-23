@@ -173,7 +173,7 @@ static sdk_fmt_t cvt[256] = {
 
 static int outc(int c, void *cl) {
     FILE *f = cl;
-    return putc(c, f);
+    return sdk_fmt_putc(c, f);
 }
 
 static int insert(int c, void *cl) {

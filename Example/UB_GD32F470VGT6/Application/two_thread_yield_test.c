@@ -1,6 +1,10 @@
 #include <two_thread_yield_test.h>
 #include <os_kernel.h>
-#include <stdio.h>
+//#include <stdio.h>
+#include <sdk_fmt.h>
+////////////////////////////////////////////////////////////////////////////////
+////
+
 
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t stacks1[1024];
@@ -19,6 +23,7 @@ static void worker(void* p){
     uint32_t nCount = 0;
     uint32_t delayMs = (uint32_t ) p;
     while(1){
+//        sdk_fmt_print("[worker] %s, nCount=%u\n", os_thread_self()->name, nCount++);
         printf("[worker] %s, nCount=%u\n", os_thread_self()->name, nCount++);
         os_thread_mdelay(delayMs);
 //        os_thread_yield();
