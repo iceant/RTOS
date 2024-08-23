@@ -21,6 +21,9 @@ static void Board_5V_Enable(void)
 ////
 
 void Board_Init(void){
+
+    SCB->CCR|= SCB_CCR_STKALIGN_Msk;
+
     nvic_vector_table_set(NVIC_VECTTAB_FLASH, 0x000000);
     systick_clksource_set(SYSTICK_CLKSOURCE_HCLK_DIV8);
 

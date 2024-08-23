@@ -8,10 +8,10 @@
 ////
 
 #define REG_SCB_SHCSR  (*(volatile unsigned int*)  (0xE000ED24u))  // System Handler Control and State Register
-#define REG_SCB_CFSR   (*(volatile unsigned int*)  (0xE000ED28u))  // MemManage Fault Status Register
-#define REG_SCB_MMFSR  (*(volatile unsigned char*)  (0xE000ED28u))  // MemManage Fault Status Register
-#define REG_SCB_BFSR   (*(volatile unsigned char*) (0xE000ED29u))  // Bus Fault Status Register
-#define REG_SCB_UFSR   (*(volatile unsigned short*)(0xE000ED2Au))  // Usage Fault Status Register
+#define REG_SCB_CFSR   (*(volatile uint32_t*)      (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_MMFSR  (*(volatile uint8_t*)       (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_BFSR   (*(volatile uint8_t*)       (0xE000ED29u))  // Bus Fault Status Register
+#define REG_SCB_UFSR   (*(volatile uint16_t*)      (0xE000ED2Au))  // Usage Fault Status Register
 #define REG_SCB_HFSR   (*(volatile unsigned int*)  (0xE000ED2Cu))  // Hard Fault Status Register
 #define REG_SCB_DFSR   (*(volatile unsigned int*)  (0xE000ED30u))  // Debug Fault Status Register
 #define REG_SCB_MMFAR  (*(volatile unsigned int*)  (0xE000ED34u))  // MemManage Fault Manage Address Register
@@ -165,7 +165,7 @@ static struct {
 ////
 
 
-static void show_cfsr(unsigned long cfsr);
+static void show_cfsr(volatile uint32_t cfsr);
 
 static void show_hfsr(volatile uint32_t hfsr);
 
@@ -270,6 +270,7 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
     printf("-- MISC --\n");
     printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
+
 //    printf("Thread:%s\n", os_thread_self()->name);
 
     /* 尝试自动处理 */
@@ -368,7 +369,7 @@ static void show_hfsr(volatile uint32_t hfsr) {
     printf("\n");
 }
 
-static void show_cfsr(unsigned long cfsr) {
+static void show_cfsr(volatile uint32_t cfsr) {
     if((cfsr) & (1<<0)) printf("IACCVIOL ");
     if((cfsr) & (1<<1)) printf("DACCVIOL ");
     if((cfsr) & (1<<3)) printf("MUNSTKERR ");

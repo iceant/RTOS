@@ -14,7 +14,7 @@ add_definitions(-DUSE_STDPERIPH_DRIVER)
 add_definitions(-DHXTAL_VALUE=12000000)
 add_definitions(-D__MICROLIB)
 add_definitions(-DNDEBUG)
-add_definitions(-DCPU_HARDFAULT_ENABLE=1)
+add_definitions(-DCPU_HARDFAULT_ENABLE=2)
 
 set(CMAKE_OBJCOPY_CPU_NAME Cortex-M4)
 set(CPU_MODEL ARM-Cortex-M4)
@@ -36,7 +36,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC SDK)
 ########################################################################################################################
 ## FWLIB
 set(FWLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../Firmware/GD32F4xx_Firmware_Library_V3.2.0/Firmware)
-file(GLOB FWLIB_CMSIS_SOURCES ${FWLIB_DIR}/CMSIS/GD/GD32F4xx/Source/*.c)
+#file(GLOB FWLIB_CMSIS_SOURCES ${FWLIB_DIR}/CMSIS/GD/GD32F4xx/Source/*.c)
 if (CMAKE_C_COMPILER_ID MATCHES ARMCC)
     list(APPEND FWLIB_CMSIS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/startup_gd32f450_470.s)
 endif ()

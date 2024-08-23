@@ -5,6 +5,7 @@
 #include <os_kernel.h>
 #include <sdk_hex.h>
 #include <div0_test.h>
+#include <two_thread_yield_test.h>
 
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t boot_thread_stack[1024];
@@ -74,8 +75,10 @@ int main(void){
 
     os_kernel_init();
 
+
 //    os_idle_set_action(idle_action, 0);
 
+#if 0
     os_thread_init(&boot_thread, "boot"
     , boot_thread_entry, 0
     , boot_thread_stack, OS_ARRAY_SIZE(boot_thread_stack)
@@ -83,7 +86,11 @@ int main(void){
     );
 
     os_thread_startup(&boot_thread);
+#endif
 
+    TowThreadYieldTest_Start();
+
+#if 1
     BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
     os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
     os_thread_init(&USART0_RxThread, "USART0"
@@ -93,7 +100,7 @@ int main(void){
     );
 
     os_thread_startup(&USART0_RxThread);
-
+#endif
 
     printf("os_kernel_startup()...\n");
     os_kernel_startup();

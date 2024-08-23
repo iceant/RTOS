@@ -25,13 +25,13 @@ __asm void PendSV_Handler(void)
         LDR R0, [R2]
         CBZ R0, __PendSV_SwitchTo
 
-
         MRS R0, PSP
 
-
+#if (__FPU_PRESENT==1)
         TST LR, #0x10
         IT EQ
         VSTMDBEQ R0!, {S16-S31}
+#endif
 
         MOV R2, LR
         MRS R3, CONTROL
@@ -49,21 +49,19 @@ __PendSV_SwitchTo
         LDMIA R0!, {R2-R11}
         MOV LR, R2
         MSR CONTROL, R3
-        DMB
         ISB
 
+#if (__FPU_PRESENT==1)
         TST LR, #0x10
         IT EQ
         VLDMIAEQ R0!, {S16-S31}
-
+#endif
 
         MSR PSP, R0
-        DMB
-        ISB
 
 __PendSV_Exit
         MSR PRIMASK, R1
-        ISB
+        ORR LR, LR, #0x04
         BX LR
 
         ALIGN 4

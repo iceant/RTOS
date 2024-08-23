@@ -64,4 +64,8 @@
 #define OS_KERNEL_TIMER_THREAD_TICKS 5
 #endif
 
+#ifndef OS_KERNEL_MSP_SIZE
+#define OS_KERNEL_MSP_SIZE 4096
+#endif
+
 #endif /*INCLUDED_OS_DEFINITIONS_H*/

@@ -72,29 +72,29 @@ __asm void HardFault_Handler(void){
 void FAULT_PrintFaultRegs(void){
     printf("MMFSR        : 0x%08x[%s%s%s%s%s]\r\n",
         (unsigned int)(REG_SCB_CFSR & SCB_CFSR_MEMFAULTSR_Msk),
-        (0 == (SCB_CFSR_MMFSR_IACCVIOL & REG_SCB_MFSR)) ? "":"IACCVIOL|",
-        (0 == (SCB_CFSR_MMFSR_DACCVIOL & REG_SCB_MFSR)) ? "":"DACCVIOL|",
-        (0 == (SCB_CFSR_MMFSR_MUNSTKERR & REG_SCB_MFSR)) ? "":"MUNSTKERR|",
-        (0 == (SCB_CFSR_MMFSR_MSTKERR & REG_SCB_MFSR)) ? "":"MSTKERR|",
-        (0 == (SCB_CFSR_MMFSR_MMARVALID & REG_SCB_MFSR)) ? "":"MMARVALID|");
+        (0 == (SCB_CFSR_MMFSR_IACCVIOL & REG_SCB_CFSR)) ? "":"IACCVIOL|",
+        (0 == (SCB_CFSR_MMFSR_DACCVIOL & REG_SCB_CFSR)) ? "":"DACCVIOL|",
+        (0 == (SCB_CFSR_MMFSR_MUNSTKERR & REG_SCB_CFSR)) ? "":"MUNSTKERR|",
+        (0 == (SCB_CFSR_MMFSR_MSTKERR & REG_SCB_CFSR)) ? "":"MSTKERR|",
+        (0 == (SCB_CFSR_MMFSR_MMARVALID & REG_SCB_CFSR)) ? "":"MMARVALID|");
     printf("BFSR         : 0x%08x[%s%s%s%s%s%s]\r\n",
         (unsigned int)(REG_SCB_CFSR & SCB_CFSR_BUSFAULTSR_Msk),
-        (0 == (SCB_CFSR_BFSR_IBUSERR & REG_SCB_BFSR)) ? "":"IBUSERR|",
-        (0 == (SCB_CFSR_BFSR_PRECISERR & REG_SCB_BFSR)) ? "":"PRECISERR|",
-        (0 == (SCB_CFSR_BFSR_IMPRECISERR & REG_SCB_BFSR))? "":"IMPRECISERR|",
-        (0 == (SCB_CFSR_BFSR_UNSTKERR & REG_SCB_BFSR)) ? "":"UNSTKERR|",
-        (0 == (SCB_CFSR_BFSR_STKERR & REG_SCB_BFSR)) ? "":"STKERR|",
-        (0 == (SCB_CFSR_BFSR_BFARVALID & REG_SCB_BFSR)) ? "":"BFARVALID|");
+        (0 == (SCB_CFSR_BFSR_IBUSERR & REG_SCB_CFSR)) ? "":"IBUSERR|",
+        (0 == (SCB_CFSR_BFSR_PRECISERR & REG_SCB_CFSR)) ? "":"PRECISERR|",
+        (0 == (SCB_CFSR_BFSR_IMPRECISERR & REG_SCB_CFSR))? "":"IMPRECISERR|",
+        (0 == (SCB_CFSR_BFSR_UNSTKERR & REG_SCB_CFSR)) ? "":"UNSTKERR|",
+        (0 == (SCB_CFSR_BFSR_STKERR & REG_SCB_CFSR)) ? "":"STKERR|",
+        (0 == (SCB_CFSR_BFSR_BFARVALID & REG_SCB_CFSR)) ? "":"BFARVALID|");
     printf("UFSR         : 0x%08x[%s%s%s%s%s%s]\r\n",
-        (unsigned short)(REG_SCB_UFSR & SCB_CFSR_USGFAULTSR_Msk),
-        (0 == (SCB_CFSR_UFSR_UNDEFINSTR & REG_SCB_UFSR)) ? "":"UNDEFINSTR|",
-        (0 == (SCB_CFSR_UFSR_INVSTATE & REG_SCB_UFSR)) ? "":"INVSTATE|",
-        (0 == (SCB_CFSR_UFSR_INVPC & REG_SCB_UFSR)) ? "":"INVPC|",
-        (0 == (SCB_CFSR_UFSR_NOCP & REG_SCB_UFSR)) ? "":"NOCP|",
-        (0 == (SCB_CFSR_UFSR_UNALIGNED & REG_SCB_UFSR)) ? "":"UNALIGNED|",
-        (0 == (SCB_CFSR_UFSR_DIVBYZERO & REG_SCB_UFSR)) ? "":"DIVBYZERO|");
+        (unsigned int)(REG_SCB_CFSR & SCB_CFSR_USGFAULTSR_Msk),
+        (0 == (SCB_CFSR_UFSR_UNDEFINSTR & REG_SCB_CFSR)) ? "":"UNDEFINSTR|",
+        (0 == (SCB_CFSR_UFSR_INVSTATE & REG_SCB_CFSR)) ? "":"INVSTATE|",
+        (0 == (SCB_CFSR_UFSR_INVPC & REG_SCB_CFSR)) ? "":"INVPC|",
+        (0 == (SCB_CFSR_UFSR_NOCP & REG_SCB_CFSR)) ? "":"NOCP|",
+        (0 == (SCB_CFSR_UFSR_UNALIGNED & REG_SCB_CFSR)) ? "":"UNALIGNED|",
+        (0 == (SCB_CFSR_UFSR_DIVBYZERO & REG_SCB_CFSR)) ? "":"DIVBYZERO|");
     printf("HFSR         : 0x%08x[%s%s%s]\r\n",
-        REG_SCB_HFSR,
+        (unsigned int)(REG_SCB_HFSR),
         (0 == (SCB_HFSR_DEBUGEVT_Msk & REG_SCB_HFSR)) ? "":"DEBUGEVT|",
         (0 == (SCB_HFSR_FORCED_Msk & REG_SCB_HFSR)) ? "":"FORCED|",
         (0 == (SCB_HFSR_VECTTBL_Msk & REG_SCB_HFSR)) ? "":"VECTTBL|");
@@ -102,6 +102,32 @@ void FAULT_PrintFaultRegs(void){
     printf("MMFAR        : 0x%08x\r\n", REG_SCB_MMFAR);
     printf("BFAR         : 0x%08x\r\n", REG_SCB_BFAR);
     printf("\r\n");
+}
+
+static const char* show_exc_return(unsigned int value) {
+    switch (value) {
+        case 0xFFFFFFE1:
+            return ("ISR/MSP/FPCA=1");
+            break;
+        case 0xFFFFFFF1:
+            return("ISR/MSP/FPCA=0");
+            break;
+        case 0xFFFFFFE9:
+            return("THD/MSP/FPCA=1");
+            break;
+        case 0xFFFFFFF9:
+            return("THD/MSP/FPCA=0");
+            break;
+        case 0xFFFFFFED:
+            return("ISR/PSP/FPCA=1");
+            break;
+        case 0xFFFFFFFD:
+            return("ISR/PSP/FPCA=0");
+            break;
+        default:
+            return("INVALID");
+            break;
+    }
 }
 
 void FAULT_PrintGeneralRegs(uint32_t *stackaddr){
@@ -123,7 +149,7 @@ void FAULT_PrintGeneralRegs(uint32_t *stackaddr){
     printf("pc           : 0x%08x\r\n", stackaddr[20]);
     printf("xpsr         : 0x%08x\r\n", stackaddr[21]);
     printf("current xpsr : 0x%08x\r\n", stackaddr[5]);
-    printf("current lr   : 0x%08x\r\n", stackaddr[4]);
+    printf("current lr   : 0x%08x[%s]\r\n", stackaddr[4], show_exc_return(stackaddr[4]));
     printf("primask      : 0x%08x\r\n", stackaddr[3]);
     printf("basepri      : 0x%08x\r\n", stackaddr[2]);
     printf("faultmask    : 0x%08x\r\n", stackaddr[1]);
@@ -156,6 +182,7 @@ __asm void HardFault_Handler(void)
         blx r1
         b .
         nop
+    ALIGN 4
 }
 #endif
 
