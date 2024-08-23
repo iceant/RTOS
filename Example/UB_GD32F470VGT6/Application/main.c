@@ -58,7 +58,7 @@ static void USART0_RxThread_Entry(void* p){
 
         if(USART0_RxBuffer[USART0_RxIdx-2]=='\r' && USART0_RxBuffer[USART0_RxIdx-1]=='\n')
         {
-            sdk_hex_dump(USART0_RxBuffer, USART0_RxIdx, BSP_USART0_Printf);
+            sdk_hex_dump("USART0_RxBuffer", USART0_RxBuffer, USART0_RxIdx, BSP_USART0_Printf);
             memset(USART0_RxBuffer, 0, OS_ARRAY_SIZE(USART0_RxBuffer));
             USART0_RxIdx = 0;
         }

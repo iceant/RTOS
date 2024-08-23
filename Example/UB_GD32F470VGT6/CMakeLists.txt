@@ -14,7 +14,7 @@ add_definitions(-DUSE_STDPERIPH_DRIVER)
 add_definitions(-DHXTAL_VALUE=12000000)
 add_definitions(-D__MICROLIB)
 add_definitions(-DNDEBUG)
-add_definitions(-DCPU_HARDFAULT_ENABLE=2)
+add_definitions(-DCPU_HARDFAULT_ENABLE=1)
 
 set(CMAKE_OBJCOPY_CPU_NAME Cortex-M4)
 set(CPU_MODEL ARM-Cortex-M4)
@@ -27,10 +27,8 @@ add_link_options(--cpu Cortex-M4.fp.sp --library_type=microlib --strict --summar
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--scatter ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/link.sct")
 
 ########################################################################################################################
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Kernel ${CMAKE_CURRENT_BINARY_DIR}/Kernel)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../SDK ${CMAKE_CURRENT_BINARY_DIR}/SDK)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Kernel)
 target_link_libraries(${PROJECT_NAME} PUBLIC SDK)
 
 ########################################################################################################################
