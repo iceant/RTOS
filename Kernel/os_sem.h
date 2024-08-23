@@ -33,7 +33,6 @@ typedef struct os_sem_s{
     volatile os_uint_t value;
     os_list_t pend_list;
     uint8_t   flag;
-    os_thread_t * owner;
     cpu_spinlock_t lock;
     char name[OS_KERNEL_NAME_SIZE];
 }os_sem_t;

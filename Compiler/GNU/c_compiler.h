@@ -20,6 +20,6 @@
 
 #define C_DESTRUCTOR()                 __attribute__((destructor))
 #define C_DESTRUCTOR_PRIORITY(p)       __attribute__((destructor(p)))
-
+#define C_NAKED                        __attribute__((naked))
 
 #endif /*INCLUDED_C_COMPILER_H*/

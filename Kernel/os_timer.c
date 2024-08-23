@@ -97,7 +97,6 @@ os_err_t os_timer_init(void)
     }
     
     #if 0
-    
     OS_LIST_INIT(&os_timer__timeout_list);
     os_sem_init(&os_timer__sem, "timer_sem", 0, OS_SEM_FLAG_FIFO);
     os_timer__timeout_node = 0;

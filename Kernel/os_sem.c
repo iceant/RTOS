@@ -4,7 +4,7 @@
 #include <os_scheduler.h>
 #include <cpu.h>
 #include <stdio.h>
-
+#include <os_critical.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -66,7 +66,6 @@ os_err_t os_sem_init(os_sem_t* sem, const char* name, os_uint_t value, uint8_t f
     
     sem->value = value;
     sem->flag = flag;
-    sem->owner = 0;
     cpu_spinlock_init(&sem->lock);
     
     return OS_ERR_OK;
@@ -74,7 +73,8 @@ os_err_t os_sem_init(os_sem_t* sem, const char* name, os_uint_t value, uint8_t f
 
 os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks)
 {
-//    while(1){
+__os_sem__check__:
+
         if(sem->value>0){
             sem->value--;
             return OS_ERR_OK;
@@ -83,25 +83,27 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks)
         if(ticks==0){
             return OS_ERR_ETIMEOUT;
         }else if(ticks==OS_WAITING_INFINITY){
-            OS_SEM_LOCK(&sem->lock);
+            os_critical_enter();
             os_sem__append(sem, (os_thread_t*)os_scheduler__current_thread);
-//            printf("[os_sem_take] %s, val:%d\n", os_scheduler__current_thread->name, sem->value);
             os_scheduler__current_thread->state = OS_THREAD_STATE_PENDING;
             os_scheduler__need_schedule_flag = OS_TRUE;
-            OS_SEM_UNLOCK(&sem->lock);
+            os_critical_leave();
             os_scheduler_schedule_in_thread();
+            goto __os_sem__check__;
         }else{
-            OS_SEM_LOCK(&sem->lock);
+            os_critical_enter();
             os_sem__append(sem, (os_thread_t*)os_scheduler__current_thread);
             os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
-            OS_SEM_UNLOCK(&sem->lock);
+            os_critical_leave();
+            
             os_scheduler_schedule_in_thread();
             if(os_scheduler__current_thread->state==OS_THREAD_STATE_TIMEWAIT_TIMEOUT){
                 /*调度返回该任务，检查是否TIMEOUT*/
                 return OS_ERR_ETIMEOUT;
             }
+            goto __os_sem__check__;
         }
-//    }
+
 }
 
 os_err_t os_sem_release(os_sem_t* sem)

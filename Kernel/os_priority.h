@@ -15,6 +15,9 @@
 ////
 typedef os_uint_t os_priority_t;
 
+#define OS_PRIORITY_CMP_EQ   (0)
+#define OS_PRIORITY_CMP_HIGH (-1)
+#define OS_PRIORITY_CMP_LOW  (1)
 ////////////////////////////////////////////////////////////////////////////////
 ////
 os_err_t os_priority_init(void);

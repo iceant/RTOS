@@ -5,6 +5,10 @@
 #define __FPU_PRESENT 1
 #endif
 
+#ifndef __FPU_USED
+#define __FPU_USED 1
+#endif
+
 #ifndef CPU_HARDFAULT_ENABLE
 #define CPU_HARDFAULT_ENABLE 0
 #endif

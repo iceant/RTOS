@@ -29,6 +29,9 @@
 #include <cpu_spinlock.h>
 #endif /*INCLUDED_CPU_SPINLOCK_H*/
 
+#ifndef INCLUDED_CPU_FUNCTIONS_C_H
+#include <cpu_functions_c.h>
+#endif /*INCLUDED_CPU_FUNCTIONS_C_H*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1089,13 +1089,10 @@ static void system_clock_240m_25m_hxtal(void)
     /* APB1 = AHB/4 */
     RCU_CFG0 |= RCU_APB1_CKAHB_DIV4;
 
-    /* Configure the main PLL, PSC = 25, PLL_N = 480, PLL_P = 2, PLL_Q = 10 */ 
-//    RCU_PLL = (25U | (480U << 6U) | (((2U >> 1U) - 1U) << 16U) |
-//                   (RCU_PLLSRC_HXTAL) | (10U << 24U));
-
-    RCU_PLL = (12U | (480U << 6U) | (((2U >> 1U) - 1U) << 16U) |
+    /* Configure the main PLL, PSC = 25, PLL_N = 480, PLL_P = 2, PLL_Q = 10 */
+    RCU_PLL = (25U | (480U << 6U) | (((2U >> 1U) - 1U) << 16U) |
                (RCU_PLLSRC_HXTAL) | (10U << 24U));
-
+   
     /* enable PLL */
     RCU_CTL |= RCU_CTL_PLLEN;
 

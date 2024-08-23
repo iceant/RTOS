@@ -11,32 +11,18 @@
 #include <os_scheduler.h>
 #endif /*INCLUDED_OS_SCHEDULER_H*/
 
-#ifndef INCLUDED_CPU_H
-#include <cpu.h>
-#endif /*INCLUDED_CPU_H*/
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 C_STATIC_FORCEINLINE void os_critical_enter(void){
-    cpu_interrupt_context_t ctx;
-    cpu_interrupt_disable(&ctx);
-    os_scheduler__lock_nest++;
-    cpu_interrupt_enable(&ctx);
+    os_scheduler_disable();
 }
 
 C_STATIC_FORCEINLINE void os_critical_leave(void){
-    cpu_interrupt_context_t ctx;
-    cpu_interrupt_disable(&ctx);
-    os_scheduler__lock_nest--;
-    cpu_interrupt_enable(&ctx);
+    os_scheduler_enable();
 }
 
-
-
-
-
-
+C_STATIC_FORCEINLINE os_bool_t os_critical_activated(void){
+    return os_scheduler_disabled();
+}
 
 #endif /*INCLUDED_OS_CRITICAL_H*/
