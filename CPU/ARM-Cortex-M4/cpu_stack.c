@@ -44,7 +44,11 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     *--stack_p = (cpu_uint_t)0x06060606u;           /* R6 */
     *--stack_p = (cpu_uint_t)0x05050505u;           /* R5 */
     *--stack_p = (cpu_uint_t)0x04040404u;           /* R4 */
+#if (CPU_STACK_INIT_WITH_PRIVILEGE==1)
     *--stack_p = (cpu_uint_t)0x02u;                 /* R3 - CONTROL */
+#else
+    *--stack_p = (cpu_uint_t)0x03u;                 /* R3 - CONTROL */
+#endif
     *--stack_p = (cpu_uint_t)0xFFFFFFFDu;           /* R2 - EXC_RETURN */
 
     *result_stack_pointer = stack_p;

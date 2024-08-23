@@ -173,6 +173,9 @@ static void show_dfsr(volatile uint32_t dfsr);
 
 static void show_exc_return(unsigned int value);
 
+static const char* show_ipsr(unsigned int value);
+
+
 void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
 {
 //    unsigned long stacked_r0;
@@ -260,6 +263,7 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     printf("LR  = 0x%08lx\n", frame->lr);
     printf("PC  = 0x%08lx\n", frame->pc);
     printf("PSR = 0x%08lx\n", frame->xpsr);
+    printf("  IPSR = 0x%x %s\n", frame->xpsr & 0xFF, show_ipsr(frame->xpsr & 0xFF));
 
     printf("-- FSR/FAR --\n");
     printf("CFSR = 0x%08lx ", cfsr); show_cfsr(cfsr);
@@ -393,6 +397,37 @@ static void show_cfsr(volatile uint32_t cfsr) {
     if((cfsr) & (1<<25)) printf("DIVBYZERO ");
 
     printf("\n");
+}
+
+static const char* show_ipsr(unsigned int value){
+    switch (value) {
+        case 2:{
+            return "NMI";
+        }
+        case 3:{
+            return "Hardware";
+        }
+        case 4:{
+            return "MemManage";
+        }
+        case 5:{
+            return "Bus";
+        }
+        case 6:{
+            return "Use";
+        }
+        case 11:{
+            return "SVC";
+        }
+        case 14:{
+            return "PendSV";
+        }
+        case 15:{
+            return "SysTick";
+        }
+        default:
+            return "N/A";
+    }
 }
 
 #endif /* CPU_HARDFAULT_ENABLE */
