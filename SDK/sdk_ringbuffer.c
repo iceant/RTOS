@@ -455,6 +455,34 @@ uint32_t sdk_ringbuffer_read_uint32_be(sdk_ringbuffer_t* buffer)
     return (((d1 & 0xFF)<<24) | ((d2 & 0xFF) << 16) | ((d3 & 0xFF) << 8) | (d4 & 0xFF));
 }
 
+uint32_t sdk_ringbuffer_read_uint32_le(sdk_ringbuffer_t* buffer)
+{
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+
+    rb_ret_t err = sdk_ringbuffer_get(buffer, &d1);
+    if(err!=kRB_RET_OK){
+        return -1U;
+    }
+    err = sdk_ringbuffer_get(buffer, &d2);
+    if(err!=kRB_RET_OK){
+        return -1U;
+    }
+    err = sdk_ringbuffer_get(buffer, &d3);
+    if(err!=kRB_RET_OK){
+        return -1U;
+    }
+    err = sdk_ringbuffer_get(buffer, &d4);
+    if(err!=kRB_RET_OK){
+        return -1U;
+    }
+
+
+    return (((d4 & 0xFF)<<24) | ((d3 & 0xFF) << 16) | ((d2 & 0xFF) << 8) | (d1 & 0xFF));
+}
+
 uint16_t sdk_ringbuffer_read_uint16_le(sdk_ringbuffer_t* buffer)
 {
     uint8_t d1;

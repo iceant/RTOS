@@ -89,6 +89,7 @@ void sdk_ringbuffer_set_write_offset(sdk_ringbuffer_t* buffer, int write_offset)
 
 
 uint32_t sdk_ringbuffer_read_uint32_be(sdk_ringbuffer_t* buffer);
+uint32_t sdk_ringbuffer_read_uint32_le(sdk_ringbuffer_t* buffer);
 uint16_t sdk_ringbuffer_read_uint16_le(sdk_ringbuffer_t* buffer);
 uint16_t sdk_ringbuffer_read_uint16_be(sdk_ringbuffer_t* buffer);
 
