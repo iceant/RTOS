@@ -15,6 +15,7 @@ add_definitions(-DHXTAL_VALUE=12000000)
 add_definitions(-D__MICROLIB)
 add_definitions(-DNDEBUG)
 add_definitions(-DCPU_HARDFAULT_ENABLE=1)
+add_definitions(-D__CC_ARM=1)
 
 set(CMAKE_OBJCOPY_CPU_NAME Cortex-M4)
 set(CPU_MODEL ARM-Cortex-M4)

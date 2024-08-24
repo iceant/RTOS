@@ -30,7 +30,7 @@ static cpu_spinlock_t         os_scheduler__lock;
 #define OS_SCHEDULER_LOCK()             do{cpu_interrupt_disable(&os_scheduler__ctx__);}while(0)
 #define OS_SCHEDULER_UNLOCK()           do{cpu_interrupt_enable(&os_scheduler__ctx__);}while(0)
 #elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_PRIO)
-#define OS_SCHEDULER_LOCK_BASE_PRIO          16
+#define OS_SCHEDULER_LOCK_BASE_PRIO     0x10
 #define OS_SCHEDULER_LOCK_VARIABLE()    cpu_uint_t os_scheduler__lock_var__=0;
 #define OS_SCHEDULER_LOCK()             do{ \
                                             os_scheduler__lock_var__=cpu_get_basepri(); \
@@ -120,8 +120,8 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
     os_scheduler__current_thread = os_scheduler__highest_thread;
 
     if(method==OS_SCHEDULER_METHOD_PRIVILEGE){
-        OS_SCHEDULER_UNLOCK();
         cpu_stack_switch((void** )os_scheduler__from_stack_p,(void** )&os_scheduler__highest_thread->sp);
+        OS_SCHEDULER_UNLOCK();
     }else if(method==OS_SCHEDULER_METHOD_NO_PRIVILEGE){
         OS_SCHEDULER_UNLOCK();
         cpu_svc_context_switch((void** )os_scheduler__from_stack_p,(void** )&os_scheduler__highest_thread->sp);
@@ -242,7 +242,9 @@ os_err_t os_scheduler_startup(void){
     os_scheduler__startup_flag = OS_TRUE;
     OS_SCHEDULER_UNLOCK();
 
-    cpu_stack_switch(0,(void** )&os_scheduler__current_thread->sp);
+//    cpu_stack_switch(0,(void** )&os_scheduler__current_thread->sp);
+
+    cpu_svc_context_switch(0,(void** )&os_scheduler__current_thread->sp);
 
     return OS_ERR_OK;
 }
@@ -275,6 +277,7 @@ os_err_t os_scheduler_yield(os_thread_t * thread)
     OS_SCHEDULER_LOCK();
     
     thread->state = OS_THREAD_STATE_YIELD;
+    thread->flag = OS_THREAD_FLAG_SCHEDULE;
     OS_SCHEDULER_MARK_NEED_SCHEDULE();
     OS_SCHEDULER_UNLOCK();
 

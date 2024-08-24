@@ -6,6 +6,7 @@
 #include <sdk_hex.h>
 #include <div0_test.h>
 #include <two_thread_yield_test.h>
+#include "nvic_show_priority.h"
 
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t boot_thread_stack[1024];
@@ -75,6 +76,8 @@ int main(void){
 
     os_kernel_init();
 
+
+    nvic_show_priority();
 
 //    os_idle_set_action(idle_action, 0);
 

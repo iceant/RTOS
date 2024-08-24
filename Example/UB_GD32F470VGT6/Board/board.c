@@ -1,6 +1,8 @@
 #include <board.h>
 #include <os_kernel.h>
-
+#define GD32F470
+#define __CC_ARM
+#include <gd32f4xx.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -33,9 +35,37 @@ void Board_Init(void){
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/OS_KERNEL_TICKS_PER_SECOND); /* 1ms = tick */
+    NVIC_SetPriority(SysTick_IRQn, 0x01);
+    NVIC_SetPriority(SVCall_IRQn, 0xFF);
+    NVIC_SetPriority(PendSV_IRQn, 0xFF);
 
-    nvic_irq_enable(PendSV_IRQn, 0, 0xFF);
-//    NVIC_SetPriority(PendSV_IRQn, 0xFF);
+    /*
+     * 以下配置会造成 异常
+     *
+     *
+    NVIC_SetPriority(SysTick_IRQn, 0x01);
+    NVIC_SetPriority(SVCall_IRQn, 0xFF);
+    NVIC_SetPriority(PendSV_IRQn, 0xFF);
+
+     [HardFault]
+        -- Stack Frame --
+        R0  = 0x20005000
+        R1  = 0x00000000
+        R2  = 0xfc334b15
+        R3  = 0x22845f19
+        R12 = 0x12121212
+        LR  = 0xfc334b15
+        PC  = 0xfc334b14
+        PSR = 0x0100000e
+          IPSR = 0xe PendSV
+        -- FSR/FAR --
+        CFSR = 0x00000001 IACCVIOL
+        HFSR = 0x40000000 FORCED
+        DFSR = 0x00000000
+        AFSR = 0x00000000
+        -- MISC --
+        LR/EXC_RETURN = 0xfffffff1 ISR/MSP/FPCA=0
+     */
 //
 //    Board_5V_Init();
 //    Board_5V_Enable();

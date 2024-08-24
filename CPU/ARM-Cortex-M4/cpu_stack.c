@@ -56,12 +56,6 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     return 0;
 }
 
-#if defined(__CC_ARM)
-void __svc( 0 ) cpu_stack_switch_in_svc( void ) ;
-#elif defined(__GNUC__)
-#define cpu_stack_switch_in_svc() C__ASM volatile ("svc #0":::"memory")
-#endif
-
 int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
 {
     if(cpu_stack__switch_flag == 1){
