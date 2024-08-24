@@ -31,7 +31,7 @@ void  os_memory_free(void* memory);
 #define OS_ALLOC(x)         os_memory_alloc((x))
 #define OS_CALLOC(n, x)     os_memory_calloc((n), (x))
 #define OS_REALLOC(p, x)    os_memory_realloc((p), (x))
-#define OS_RESIZE(p, x)     ((p)=OS_REALLOC((p, x))
+#define OS_RESIZE(p, x)     ((p)=OS_REALLOC(p, x))
 #define OS_FREE(p)          (os_memory_free((p)), (p)=0)
 
 #define OS_NEW(p)           ((p)=OS_ALLOC(sizeof(*(p))))

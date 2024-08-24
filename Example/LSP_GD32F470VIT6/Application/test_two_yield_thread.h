@@ -1,0 +1,6 @@
+#ifndef INCLUDED_TEST_TWO_YIELD_THREAD_H
+#define INCLUDED_TEST_TWO_YIELD_THREAD_H
+
+void TestTwoYieldThread(void);
+
+#endif /* INCLUDED_TEST_TWO_YIELD_THREAD_H */

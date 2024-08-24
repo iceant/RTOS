@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <os_kernel.h>
 #include <sdk_hex.h>
-
+#include <test_two_yield_thread.h>
+#include <nvic_show_priority.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -46,7 +47,7 @@ static void USART0_ThreadEntry(void* p){
             os_sem_take(&USART0_RxSem, OS_WAITING_INFINITY);
         }
         if(USART0_RxBuffer[USART0_RxBuffer_WriteIdx-2]=='\r' && USART0_RxBuffer[USART0_RxBuffer_WriteIdx-1]=='\n'){
-            sdk_hex_dump(USART0_RxBuffer, USART0_RxBuffer_WriteIdx, printf);
+            sdk_hex_dump("USART0_RxBuffer", USART0_RxBuffer, USART0_RxBuffer_WriteIdx, printf);
             memset(USART0_RxBuffer, 0, USART0_RxBuffer_WriteIdx);
             USART0_RxBuffer_WriteIdx = 0;
         }
@@ -72,12 +73,17 @@ int main(void){
     Board_Init();
     printf("Board Init Done!\n");
     
+    os_kernel_init();
+    
+    nvic_show_priority();
+    
+    #if 0
     BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
     
     idle_count = 0;
     USART0_RxBuffer_WriteIdx = 0;
     
-    os_kernel_init();
+
     
 //    os_idle_set_action(idle_action, 0);
     
@@ -98,6 +104,9 @@ int main(void){
     exit_thread.exit = exit_thread_on_exit;
     exit_thread.userdata = (void*)&os_scheduler__systick_ticks;
     os_thread_startup(&exit_thread);
+    #endif
+    
+    TestTwoYieldThread();
     
     os_kernel_startup();
     

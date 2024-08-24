@@ -8,14 +8,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-volatile uint8_t     cpu_stack__switch_flag = 0;
-volatile void**      cpu_stack__from_stack_p=0;
-volatile void**      cpu_stack__to_stack_p=0;
+volatile uint8_t            cpu_stack__switch_flag = 0;
+volatile void**             cpu_stack__from_stack_p=0;
+volatile void**             cpu_stack__to_stack_p=0;
+cpu_stack_switch_callback_t   cpu_stack__switch_callback=0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
+void cpu_stack_switch_callback(void){
+    if(cpu_stack__switch_callback){
+        cpu_stack__switch_callback();
+    }
+}
 
 int cpu_stack_init(void* thread_entry, void* thread_parameter
         , void* stack_address
@@ -44,7 +49,11 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     *--stack_p = (cpu_uint_t)0x06060606u;           /* R6 */
     *--stack_p = (cpu_uint_t)0x05050505u;           /* R5 */
     *--stack_p = (cpu_uint_t)0x04040404u;           /* R4 */
+#if (CPU_STACK_INIT_WITH_PRIVILEGE==1)
+    *--stack_p = (cpu_uint_t)0x02u;                 /* R3 - CONTROL */
+#else
     *--stack_p = (cpu_uint_t)0x03u;                 /* R3 - CONTROL */
+#endif
     *--stack_p = (cpu_uint_t)0xFFFFFFFDu;           /* R2 - EXC_RETURN */
 
     *result_stack_pointer = stack_p;
@@ -52,13 +61,7 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     return 0;
 }
 
-#if defined(__CC_ARM)
-void __svc( 0 ) cpu_stack_switch_in_svc( void ) ;
-#elif defined(__GNUC__)
-#define cpu_stack_switch_in_svc() C__ASM volatile ("svc #0":::"memory")
-#endif
-
-int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
+int cpu_stack_switch(void** from_stack_p, void** to_stack_p,  cpu_stack_switch_callback_t callback)
 {
     if(cpu_stack__switch_flag == 1){
         return -1;
@@ -67,8 +70,11 @@ int cpu_stack_switch(void** from_stack_p, void** to_stack_p)
     cpu_stack__switch_flag = 1;
     cpu_stack__from_stack_p = (volatile void**)from_stack_p;
     cpu_stack__to_stack_p = (volatile void**)to_stack_p;
-
+    cpu_stack__switch_callback = callback;
+    
     NVIC_INT_CTRL = NVIC_PENDSVSET;
-
+    cpu_dsb();
+    cpu_isb();
+    
     return 0;
 }

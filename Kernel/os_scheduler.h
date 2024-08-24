@@ -33,7 +33,7 @@ extern volatile os_tick_t os_scheduler__systick_ticks;
 #define OS_SCHEDULER_ERR_LOCKED                     0x1002
 #define OS_SCHEDULER_ERR_NOT_START                  0x1003
 #define OS_SCHEDULER_ERR_CURR_THREAD_RUNNING        0x1004
-#define OS_SCHEDULER_ERR_NO_NEED_SCHEDULE           0x1005
+#define OS_SCHEDULER_ERR_SAME_THREAD                0x1005
 
 
 

@@ -8,10 +8,10 @@
 ////
 
 #define REG_SCB_SHCSR  (*(volatile unsigned int*)  (0xE000ED24u))  // System Handler Control and State Register
-#define REG_SCB_CFSR   (*(volatile unsigned int*)  (0xE000ED28u))  // MemManage Fault Status Register
-#define REG_SCB_MMFSR  (*(volatile unsigned char*)  (0xE000ED28u))  // MemManage Fault Status Register
-#define REG_SCB_BFSR   (*(volatile unsigned char*) (0xE000ED29u))  // Bus Fault Status Register
-#define REG_SCB_UFSR   (*(volatile unsigned short*)(0xE000ED2Au))  // Usage Fault Status Register
+#define REG_SCB_CFSR   (*(volatile uint32_t*)      (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_MMFSR  (*(volatile uint8_t*)       (0xE000ED28u))  // MemManage Fault Status Register
+#define REG_SCB_BFSR   (*(volatile uint8_t*)       (0xE000ED29u))  // Bus Fault Status Register
+#define REG_SCB_UFSR   (*(volatile uint16_t*)      (0xE000ED2Au))  // Usage Fault Status Register
 #define REG_SCB_HFSR   (*(volatile unsigned int*)  (0xE000ED2Cu))  // Hard Fault Status Register
 #define REG_SCB_DFSR   (*(volatile unsigned int*)  (0xE000ED30u))  // Debug Fault Status Register
 #define REG_SCB_MMFAR  (*(volatile unsigned int*)  (0xE000ED34u))  // MemManage Fault Manage Address Register
@@ -165,13 +165,16 @@ static struct {
 ////
 
 
-static void show_cfsr(unsigned long cfsr);
+static void show_cfsr(volatile uint32_t cfsr);
 
 static void show_hfsr(volatile uint32_t hfsr);
 
 static void show_dfsr(volatile uint32_t dfsr);
 
 static void show_exc_return(unsigned int value);
+
+static const char* show_ipsr(unsigned int value);
+
 
 void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
 {
@@ -260,6 +263,7 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     printf("LR  = 0x%08lx\n", frame->lr);
     printf("PC  = 0x%08lx\n", frame->pc);
     printf("PSR = 0x%08lx\n", frame->xpsr);
+    printf("  IPSR = 0x%x %s\n", frame->xpsr & 0xFF, show_ipsr(frame->xpsr & 0xFF));
 
     printf("-- FSR/FAR --\n");
     printf("CFSR = 0x%08lx ", cfsr); show_cfsr(cfsr);
@@ -270,6 +274,7 @@ void HardFault_Handler_C(sContextStateFrame * frame, unsigned int lr_value)
     if(cfsr & 0x8000) printf("BFAR  = 0x%08lx\n", bus_fault_address);
     printf("-- MISC --\n");
     printf("LR/EXC_RETURN = 0x%08x ", lr_value); show_exc_return(lr_value);
+
 //    printf("Thread:%s\n", os_thread_self()->name);
 
     /* 尝试自动处理 */
@@ -368,7 +373,7 @@ static void show_hfsr(volatile uint32_t hfsr) {
     printf("\n");
 }
 
-static void show_cfsr(unsigned long cfsr) {
+static void show_cfsr(volatile uint32_t cfsr) {
     if((cfsr) & (1<<0)) printf("IACCVIOL ");
     if((cfsr) & (1<<1)) printf("DACCVIOL ");
     if((cfsr) & (1<<3)) printf("MUNSTKERR ");
@@ -392,6 +397,37 @@ static void show_cfsr(unsigned long cfsr) {
     if((cfsr) & (1<<25)) printf("DIVBYZERO ");
 
     printf("\n");
+}
+
+static const char* show_ipsr(unsigned int value){
+    switch (value) {
+        case 2:{
+            return "NMI";
+        }
+        case 3:{
+            return "Hardware";
+        }
+        case 4:{
+            return "MemManage";
+        }
+        case 5:{
+            return "Bus";
+        }
+        case 6:{
+            return "Use";
+        }
+        case 11:{
+            return "SVC";
+        }
+        case 14:{
+            return "PendSV";
+        }
+        case 15:{
+            return "SysTick";
+        }
+        default:
+            return "N/A";
+    }
 }
 
 #endif /* CPU_HARDFAULT_ENABLE */

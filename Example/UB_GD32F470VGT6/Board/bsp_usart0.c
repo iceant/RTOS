@@ -90,7 +90,7 @@ void BSP_USART0_SetRxHandler(BSP_USART0_RxHandler rxHandler, void* userdata)
 
 void BSP_USART0_EnableRxIRQ(void)
 {
-    nvic_irq_enable(USARTx_IRQn, 0, 1);
+    nvic_irq_enable(USARTx_IRQn, 0, 2);
     usart_interrupt_enable(USARTx, USART_INT_RBNE);
 }
 
@@ -169,10 +169,10 @@ void USARTx_IRQHandler(void)
 
 void BSP_USART0_SendByte(uint8_t b)
 {
-    cpu_spinlock_lock(&BSP_USART0_Lock);
+    os_critical_enter();
     usart_data_transmit(USARTx, (uint8_t)b);
     while(RESET == usart_flag_get(USARTx, USART_FLAG_TBE));
-    cpu_spinlock_unlock(&BSP_USART0_Lock);
+    os_critical_leave();
 }
 
 void BSP_USART0_Send(uint8_t * bytes, uint32_t size)

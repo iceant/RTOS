@@ -28,10 +28,8 @@ add_link_options(--cpu Cortex-M4.fp.sp --library_type=microlib --strict --summar
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--scatter ${CMAKE_CURRENT_SOURCE_DIR}/ARMCC/link.sct")
 
 ########################################################################################################################
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Kernel ${CMAKE_CURRENT_BINARY_DIR}/Kernel)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../SDK ${CMAKE_CURRENT_BINARY_DIR}/SDK)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Kernel)
 target_link_libraries(${PROJECT_NAME} PUBLIC SDK)
 
 ########################################################################################################################

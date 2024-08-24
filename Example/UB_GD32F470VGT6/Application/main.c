@@ -5,6 +5,8 @@
 #include <os_kernel.h>
 #include <sdk_hex.h>
 #include <div0_test.h>
+#include <two_thread_yield_test.h>
+#include "nvic_show_priority.h"
 
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t boot_thread_stack[1024];
@@ -57,7 +59,7 @@ static void USART0_RxThread_Entry(void* p){
 
         if(USART0_RxBuffer[USART0_RxIdx-2]=='\r' && USART0_RxBuffer[USART0_RxIdx-1]=='\n')
         {
-            sdk_hex_dump(USART0_RxBuffer, USART0_RxIdx, BSP_USART0_Printf);
+            sdk_hex_dump("USART0_RxBuffer", USART0_RxBuffer, USART0_RxIdx, BSP_USART0_Printf);
             memset(USART0_RxBuffer, 0, OS_ARRAY_SIZE(USART0_RxBuffer));
             USART0_RxIdx = 0;
         }
@@ -74,8 +76,12 @@ int main(void){
 
     os_kernel_init();
 
+
+    nvic_show_priority();
+
 //    os_idle_set_action(idle_action, 0);
 
+#if 0
     os_thread_init(&boot_thread, "boot"
     , boot_thread_entry, 0
     , boot_thread_stack, OS_ARRAY_SIZE(boot_thread_stack)
@@ -83,7 +89,11 @@ int main(void){
     );
 
     os_thread_startup(&boot_thread);
+#endif
 
+    TowThreadYieldTest_Start();
+
+#if 1
     BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
     os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
     os_thread_init(&USART0_RxThread, "USART0"
@@ -93,7 +103,7 @@ int main(void){
     );
 
     os_thread_startup(&USART0_RxThread);
-
+#endif
 
     printf("os_kernel_startup()...\n");
     os_kernel_startup();

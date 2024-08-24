@@ -9,6 +9,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+
+typedef void (*cpu_stack_switch_callback_t)(void);
+
 int cpu_stack_init(void* thread_entry, void* thread_parameter
     , void* stack_address
     , cpu_size_t stack_size
@@ -16,6 +19,8 @@ int cpu_stack_init(void* thread_entry, void* thread_parameter
     , void** result_stack_pointer
 );
 
-int cpu_stack_switch(void** from_stack_p, void** to_stack_p);
+int cpu_stack_switch(void** from_stack_p, void** to_stack_p, cpu_stack_switch_callback_t callback);
+
+extern void cpu_stack_switch_callback(void);
 
 #endif /*INCLUDED_CPU_STACK_H*/
