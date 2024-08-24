@@ -55,13 +55,13 @@ static cpu_spinlock_t         os_scheduler__lock;
 
 C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
 
-    OS_SCHEDULER_LOCK_VARIABLE();
-    OS_SCHEDULER_LOCK();
 
     if(os_scheduler__startup_flag==OS_FALSE){
-        OS_SCHEDULER_UNLOCK();
         return OS_SCHEDULER_ERR_NOT_START;
     }
+
+    OS_SCHEDULER_LOCK_VARIABLE();
+    OS_SCHEDULER_LOCK();
 
     if(os_scheduler__interrupt_nest > 0u){
         /* 中断嵌套中，不允许调度 */
