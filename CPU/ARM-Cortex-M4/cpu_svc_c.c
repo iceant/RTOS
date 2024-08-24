@@ -33,9 +33,6 @@ static void cpu_svc_1(void** from_stack_p, void** to_stack_p, void* callback){
     cpu_isb();
 }
 
-static void cpu_svc_2(void* msp){
-    cpu_set_msp((uint32_t)msp);
-}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -57,10 +54,6 @@ void SVC_Handler_C(unsigned int *svc_args, uint32_t* exc_return){
     switch(svc_number){
         case 1:{
             cpu_svc_1((void**)svc_args[0], (void**)svc_args[1], (void*)svc_args[2]);
-            break;
-        }
-        case 2:{
-            cpu_svc_2((void*)svc_args[0]);
             break;
         }
         default:{

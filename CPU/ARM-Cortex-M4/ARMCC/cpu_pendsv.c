@@ -2,9 +2,9 @@
 #include <cpu_types.h>
 #include <cpu_stack.h>
 
-extern volatile uint8_t                 cpu_stack__switch_flag;
-extern volatile void**                  cpu_stack__from_stack_p;
-extern volatile void**                  cpu_stack__to_stack_p;
+extern volatile uint8_t     cpu_stack__switch_flag;
+extern volatile void**      cpu_stack__from_stack_p;
+extern volatile void**      cpu_stack__to_stack_p;
 
 __asm void PendSV_Handler(void)
 {
@@ -67,6 +67,7 @@ __PendSV_SwitchTo
 
 __PendSV_Exit
         MSR PRIMASK, R1
+        ISB
         BX LR
 
         ALIGN 4
