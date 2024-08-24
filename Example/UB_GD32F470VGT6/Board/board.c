@@ -31,10 +31,11 @@ void Board_Init(void){
 
     //    SystemCoreClock = 240000000U;
     /* Configure the NVIC Preemption Priority Bits */
-//    nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     SysTick_Config(SystemCoreClock/OS_KERNEL_TICKS_PER_SECOND); /* 1ms = tick */
 
-    NVIC_SetPriority(PendSV_IRQn, 0xFF);
+    nvic_irq_enable(PendSV_IRQn, 0, 0xFF);
+//    NVIC_SetPriority(PendSV_IRQn, 0xFF);
 //
 //    Board_5V_Init();
 //    Board_5V_Enable();

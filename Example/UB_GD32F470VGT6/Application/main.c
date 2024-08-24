@@ -90,7 +90,7 @@ int main(void){
 
     TowThreadYieldTest_Start();
 
-#if 0
+#if 1
     BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
     os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
     os_thread_init(&USART0_RxThread, "USART0"

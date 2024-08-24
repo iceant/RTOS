@@ -20,15 +20,27 @@ static void**                 os_scheduler__from_stack_p;
 ////
 //#define OS_SCHEDULER_USE_SPINLOCK
 
-#if defined(OS_SCHEDULER_USE_SPINLOCK)
+#if (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_USE_SPINLOCK)
 static cpu_spinlock_t         os_scheduler__lock;
 #define OS_SCHEDULER_LOCK_VARIABLE()
 #define OS_SCHEDULER_LOCK()             do{cpu_spinlock_lock(&os_scheduler__lock);}while(0)
 #define OS_SCHEDULER_UNLOCK()           do{cpu_spinlock_unlock(&os_scheduler__lock);}while(0)
-#else
+#elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_IRQ)
 #define OS_SCHEDULER_LOCK_VARIABLE()    cpu_interrupt_context_t os_scheduler__ctx__
 #define OS_SCHEDULER_LOCK()             do{cpu_interrupt_disable(&os_scheduler__ctx__);}while(0)
 #define OS_SCHEDULER_UNLOCK()           do{cpu_interrupt_enable(&os_scheduler__ctx__);}while(0)
+#elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_PRIO)
+#define OS_SCHEDULER_LOCK_BASE_PRIO          16
+#define OS_SCHEDULER_LOCK_VARIABLE()    cpu_uint_t os_scheduler__lock_var__=0;
+#define OS_SCHEDULER_LOCK()             do{ \
+                                            os_scheduler__lock_var__=cpu_get_basepri(); \
+                                            cpu_set_basepri(OS_SCHEDULER_LOCK_BASE_PRIO); \
+                                            cpu_dsb();cpu_isb();                    \
+                                        }while(0)
+#define OS_SCHEDULER_UNLOCK()           do{ \
+                                            cpu_set_basepri(os_scheduler__lock_var__); \
+                                            cpu_dsb();cpu_isb();                    \
+                                        }while(0)
 #endif
 
 #define OS_SCHEDULER_MARK_NEED_SCHEDULE()       (os_scheduler__need_schedule_flag = OS_TRUE)
@@ -247,14 +259,14 @@ os_err_t os_scheduler_schedule(void)
 
 os_err_t os_scheduler_resume(os_thread_t * thread)
 {
+    OS_SCHEDULER_LOCK_VARIABLE();
+    OS_SCHEDULER_LOCK();
     os_scheduler_readylist_push_back(thread);
+    OS_SCHEDULER_MARK_NEED_SCHEDULE();
+    OS_SCHEDULER_UNLOCK();
+
     return os_scheduler__schedule(OS_SCHEDULER_METHOD_NO_PRIVILEGE);
-    
-//    if(cpu_in_privilege()){
-//        return os_scheduler__schedule(OS_SCHEDULER_METHOD_PRIVILEGE);
-//    }else{
-//        return os_scheduler__schedule(OS_SCHEDULER_METHOD_NO_PRIVILEGE);
-//    }
+
 }
 
 os_err_t os_scheduler_yield(os_thread_t * thread)
