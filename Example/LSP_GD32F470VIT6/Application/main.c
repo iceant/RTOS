@@ -38,6 +38,9 @@ static void USART0_RxHandler(uint16_t data, void* ud){
     if(USART0_RxBuffer_WriteIdx == OS_ARRAY_SIZE(USART0_RxBuffer)){
         USART0_RxBuffer_WriteIdx = 0;
     }
+//    if(USART0_RxBuffer[USART0_RxBuffer_WriteIdx-2]=='\r' && USART0_RxBuffer[USART0_RxBuffer_WriteIdx-1]=='\n') {
+//        os_sem_release(&USART0_RxSem);
+//    }
     os_sem_release(&USART0_RxSem);
 }
 
@@ -47,7 +50,7 @@ static void USART0_ThreadEntry(void* p){
             os_sem_take(&USART0_RxSem, OS_WAITING_INFINITY);
         }
         if(USART0_RxBuffer[USART0_RxBuffer_WriteIdx-2]=='\r' && USART0_RxBuffer[USART0_RxBuffer_WriteIdx-1]=='\n'){
-            sdk_hex_dump("USART0_RxBuffer", USART0_RxBuffer, USART0_RxBuffer_WriteIdx, printf);
+            sdk_hex_dump("USART0_RxBuffer", USART0_RxBuffer, USART0_RxBuffer_WriteIdx,(sdk_hex_printf)printf);
             memset(USART0_RxBuffer, 0, USART0_RxBuffer_WriteIdx);
             USART0_RxBuffer_WriteIdx = 0;
         }
@@ -77,26 +80,29 @@ int main(void){
     
     nvic_show_priority();
     
-    #if 0
+    
     BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
     
     idle_count = 0;
     USART0_RxBuffer_WriteIdx = 0;
     
-
-    
 //    os_idle_set_action(idle_action, 0);
+    
+    /* 优先级太低可能会导致无法响应 */
+    os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
+    os_thread_init(&USART0_Thread, "USART0", USART0_ThreadEntry, 0
+            , USART0_ThreadStack, OS_ARRAY_SIZE(USART0_ThreadStack)
+            , 18, 10, 0);
+    os_thread_startup(&USART0_Thread);
+    
+    
+    #if 0
     
     os_thread_init(&boot_thread, "boot", boot_thread_entry, 0
                    , boot_thread_stack, OS_ARRAY_SIZE(boot_thread_stack)
                    , 20, 10, 0);
     os_thread_startup(&boot_thread);
     
-    os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
-    os_thread_init(&USART0_Thread, "USART0", USART0_ThreadEntry, 0
-            , USART0_ThreadStack, OS_ARRAY_SIZE(USART0_ThreadStack)
-            , 20, 10, 0);
-    os_thread_startup(&USART0_Thread);
     
     os_thread_init(&exit_thread, "exit", exit_thread_entry, 0
             , exit_thread_stack, OS_ARRAY_SIZE(exit_thread_stack)

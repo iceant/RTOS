@@ -36,6 +36,31 @@ extern volatile os_tick_t os_scheduler__systick_ticks;
 #define OS_SCHEDULER_ERR_SAME_THREAD                0x1005
 
 
+////////////////////////////////////////////////////////////////////////////////
+////
+
+#if (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_USE_SPINLOCK)
+static cpu_spinlock_t         os_scheduler__lock;
+#define OS_SCHEDULER_LOCK_VARIABLE()
+#define OS_SCHEDULER_LOCK()             do{cpu_spinlock_lock(&os_scheduler__lock);}while(0)
+#define OS_SCHEDULER_UNLOCK()           do{cpu_spinlock_unlock(&os_scheduler__lock);}while(0)
+#elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_IRQ)
+#define OS_SCHEDULER_LOCK_VARIABLE()    cpu_interrupt_context_t os_scheduler__ctx__
+#define OS_SCHEDULER_LOCK()             do{cpu_interrupt_disable(&os_scheduler__ctx__);}while(0)
+#define OS_SCHEDULER_UNLOCK()           do{cpu_interrupt_enable(&os_scheduler__ctx__);}while(0)
+#elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_PRIO)
+#define OS_SCHEDULER_LOCK_BASE_PRIO     0x10
+#define OS_SCHEDULER_LOCK_VARIABLE()    cpu_uint_t os_scheduler__lock_var__=0;
+#define OS_SCHEDULER_LOCK()             do{ \
+                                            os_scheduler__lock_var__=cpu_get_basepri(); \
+                                            cpu_set_basepri(OS_SCHEDULER_LOCK_BASE_PRIO); \
+                                            cpu_dsb();cpu_isb();                    \
+                                        }while(0)
+#define OS_SCHEDULER_UNLOCK()           do{ \
+                                            cpu_set_basepri(os_scheduler__lock_var__); \
+                                            cpu_dsb();cpu_isb();                    \
+                                        }while(0)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

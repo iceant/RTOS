@@ -18,8 +18,8 @@
 #define USART_RX_PIN            GPIO_PIN_10
 #define USART_RX_AF             GPIO_AF_7
 
-#define USARTx_IRQn                 USART0_IRQn
-#define USARTx_IRQHandler           USART0_IRQHandler
+#define USARTx_IRQn             USART0_IRQn
+#define USARTx_IRQHandler       USART0_IRQHandler
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -78,11 +78,11 @@ void USARTx_IRQHandler(void)
        (RESET != usart_flag_get(USARTx, USART_FLAG_RBNE)))
     {
         /* receive data */
-        usart_flag_clear(USARTx, USART_FLAG_RBNE);
         uint16_t ch = usart_data_receive(USARTx);
         if(BSP_USART0__RxHandler){
             BSP_USART0__RxHandler(ch, BSP_USART0__RxHandlerUserdata);
         }
+        usart_flag_clear(USARTx, USART_FLAG_RBNE);
     }
 
     os_interrupt_leave();

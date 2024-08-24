@@ -4,13 +4,36 @@
 #include <os_scheduler.h>
 #include <cpu.h>
 #include <stdio.h>
-
+#include <os_critical.h>
+#include <cpu_spinlock.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
+#define OS_SEM_LOCK_POLICY_DISABLE_IRQ          1
+#define OS_SEM_LOCK_POLICY_DISABLE_SCHEDULE     2
+#define OS_SEM_LOCK_POLICY_USE_CRITICAL         3
+#define OS_SEM_LOCK_POLICY_USE_SPINLOCK         4
+
+#ifndef OS_SEM_LOCK_POLICY
+#define OS_SEM_LOCK_POLICY OS_SEM_LOCK_POLICY_USE_CRITICAL
+#endif
+
+#if (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_DISABLE_IRQ)
 #define OS_SEM_LOCK_VAR()   cpu_interrupt_context_t os_sem__lock_var__;
 #define OS_SEM_LOCK()       cpu_interrupt_disable(&os_sem__lock_var__);
 #define OS_SEM_UNLOCK()     cpu_interrupt_enable(&os_sem__lock_var__);
-
+#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_DISABLE_SCHEDULE)
+#define OS_SEM_LOCK_VAR()   OS_SCHEDULER_LOCK_VARIABLE()
+#define OS_SEM_LOCK()       OS_SCHEDULER_LOCK()
+#define OS_SEM_UNLOCK()     OS_SCHEDULER_UNLOCK()
+#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_CRITICAL)
+#define OS_SEM_LOCK_VAR()
+#define OS_SEM_LOCK()       os_critical_enter()
+#define OS_SEM_UNLOCK()     os_critical_leave()
+#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_SPINLOCK)
+#define OS_SEM_LOCK_VAR()   cpu_spinlock_t os_sem__spinlock__=0
+#define OS_SEM_LOCK()       cpu_spinlock_lock(&os_sem__spinlock__)
+#define OS_SEM_UNLOCK()     cpu_spinlock_unlock(&os_sem__spinlock__)
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -66,7 +89,7 @@ os_err_t os_sem_init(os_sem_t* sem, const char* name, os_uint_t value, uint8_t f
     
     sem->value = value;
     sem->flag = flag;
-    cpu_spinlock_init(&sem->lock);
+//    cpu_spinlock_init(&sem->lock);
     
     return OS_ERR_OK;
 }
@@ -114,8 +137,5 @@ os_err_t os_sem_release(os_sem_t* sem)
     sem->value++;
     os_sem__restore(sem);
     os_scheduler__need_schedule_flag = OS_TRUE;
-    os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
     OS_SEM_UNLOCK();
-
-    return OS_ERR_OK;
 }

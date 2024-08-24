@@ -20,28 +20,7 @@ static os_bool_t              os_scheduler__wip_flag;
 ////
 //#define OS_SCHEDULER_USE_SPINLOCK
 
-#if (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_USE_SPINLOCK)
-static cpu_spinlock_t         os_scheduler__lock;
-#define OS_SCHEDULER_LOCK_VARIABLE()
-#define OS_SCHEDULER_LOCK()             do{cpu_spinlock_lock(&os_scheduler__lock);}while(0)
-#define OS_SCHEDULER_UNLOCK()           do{cpu_spinlock_unlock(&os_scheduler__lock);}while(0)
-#elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_IRQ)
-#define OS_SCHEDULER_LOCK_VARIABLE()    cpu_interrupt_context_t os_scheduler__ctx__
-#define OS_SCHEDULER_LOCK()             do{cpu_interrupt_disable(&os_scheduler__ctx__);}while(0)
-#define OS_SCHEDULER_UNLOCK()           do{cpu_interrupt_enable(&os_scheduler__ctx__);}while(0)
-#elif (OS_SCHEDULER_LOCK_POLICY==OS_SCHEDULER_LOCK_POLICY_DISABLE_PRIO)
-#define OS_SCHEDULER_LOCK_BASE_PRIO     0x10
-#define OS_SCHEDULER_LOCK_VARIABLE()    cpu_uint_t os_scheduler__lock_var__=0;
-#define OS_SCHEDULER_LOCK()             do{ \
-                                            os_scheduler__lock_var__=cpu_get_basepri(); \
-                                            cpu_set_basepri(OS_SCHEDULER_LOCK_BASE_PRIO); \
-                                            cpu_dsb();cpu_isb();                    \
-                                        }while(0)
-#define OS_SCHEDULER_UNLOCK()           do{ \
-                                            cpu_set_basepri(os_scheduler__lock_var__); \
-                                            cpu_dsb();cpu_isb();                    \
-                                        }while(0)
-#endif
+
 
 #define OS_SCHEDULER_MARK_NEED_SCHEDULE()       (os_scheduler__need_schedule_flag = OS_TRUE)
 #define OS_SCHEDULER_IS_NEED_SCHEDULE()         (os_scheduler__need_schedule_flag == OS_TRUE)
@@ -88,14 +67,7 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
         return OS_SCHEDULER_ERR_CURR_THREAD_RUNNING;
     }
     
-    if(os_scheduler__current_thread->flag == OS_THREAD_FLAG_SCHEDULE /*被要求让出*/)
-    {
-        /* 当前线程请求调度 */
-        OS_SCHEDULER_MARK_NEED_SCHEDULE();
-        os_scheduler__current_thread->flag = OS_THREAD_FLAG_NONE;
-    }
-
-    if(os_scheduler__need_schedule_flag == OS_FALSE){
+    if(os_scheduler__need_schedule_flag == OS_FALSE && os_scheduler__current_thread->flag != OS_THREAD_FLAG_SCHEDULE){
         OS_SCHEDULER_UNLOCK();
         return OS_SCHEDULER_ERR_SAME_THREAD;
     }
@@ -108,12 +80,18 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
         os_readylist_push_back((os_thread_t*)os_scheduler__highest_thread);
     }
     
-    if(os_scheduler__highest_thread == os_scheduler__current_thread
-            && os_scheduler__current_thread->state==OS_THREAD_STATE_RUNNING){
-        OS_SCHEDULER_UNLOCK();
-        return OS_SCHEDULER_ERR_SAME_THREAD;
+    if(os_scheduler__current_thread->state==OS_THREAD_STATE_RUNNING){
+        if(os_scheduler__highest_thread == os_scheduler__current_thread){
+            OS_SCHEDULER_UNLOCK();
+            return OS_SCHEDULER_ERR_SAME_THREAD;
+        }
+        
+        if(os_priority_cmp(os_scheduler__highest_thread->current_priority
+                           , os_scheduler__current_thread->current_priority)==OS_PRIORITY_CMP_LOW){
+            os_scheduler__current_thread->state = OS_THREAD_STATE_YIELD; /*抢占优先级*/
+        }
     }
-
+    
     if(os_scheduler__current_thread->state==OS_THREAD_STATE_YIELD /*时间片用完或主动让出的线程，加入就绪表，等待下次调度*/){
         os_scheduler_readylist_push_back((os_thread_t*)os_scheduler__current_thread);
     }
