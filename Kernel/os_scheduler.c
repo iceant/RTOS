@@ -18,19 +18,16 @@ static void**                 os_scheduler__from_stack_p;
 static os_bool_t              os_scheduler__wip_flag;
 ////////////////////////////////////////////////////////////////////////////////
 ////
-//#define OS_SCHEDULER_USE_SPINLOCK
-
-
 
 #define OS_SCHEDULER_MARK_NEED_SCHEDULE()       (os_scheduler__need_schedule_flag = OS_TRUE)
 #define OS_SCHEDULER_IS_NEED_SCHEDULE()         (os_scheduler__need_schedule_flag == OS_TRUE)
 #define OS_SCHEDULER_UNMARK_NEED_SCHEDULE()     (os_scheduler__need_schedule_flag = OS_FALSE)
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
 #define OS_SCHEDULER_METHOD_PRIVILEGE       0
 #define OS_SCHEDULER_METHOD_NO_PRIVILEGE    1
+
+////////////////////////////////////////////////////////////////////////////////
+////
 
 static void os_scheduler__scheduler_callback(void){
     os_scheduler__current_thread = os_scheduler__highest_thread;
@@ -43,13 +40,13 @@ static void os_scheduler__scheduler_callback(void){
 }
 
 C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
-
-
+    
     if(os_scheduler__startup_flag==OS_FALSE){
         return OS_SCHEDULER_ERR_NOT_START;
     }
     
     if(os_scheduler__wip_flag==OS_TRUE){
+        /*调度在工作中，不要重复调度*/
         return OS_SCHEDULER_ERR_WIP;
     }
     os_scheduler__wip_flag = OS_TRUE;
@@ -57,7 +54,8 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
     OS_SCHEDULER_LOCK_VARIABLE();
     OS_SCHEDULER_LOCK();
     
-    if(os_scheduler__interrupt_nest > 0u){
+    if(os_scheduler__interrupt_nest > 0u || cpu_get_ipsr()!=0){
+        /*在中断中，不要调度*/
         os_scheduler__wip_flag = OS_FALSE;
         OS_SCHEDULER_UNLOCK();
         /* 中断嵌套中，不允许调度 */
@@ -79,17 +77,11 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
         return OS_SCHEDULER_ERR_CURR_THREAD_RUNNING;
     }
     
-    if(os_scheduler__need_schedule_flag == OS_FALSE
-        && os_scheduler__current_thread->flag != OS_THREAD_FLAG_SCHEDULE){
-        /* 没有调度请求, 这种情况应该不存在 */
-        os_scheduler__wip_flag = OS_FALSE;
-        OS_SCHEDULER_UNLOCK();
-        return OS_SCHEDULER_ERR_NO_REQ;
-    }
-   
+    /* 按优先级获取下一个要运行的任务 */
     os_scheduler__highest_priority = os_priority_highest();
     os_scheduler__highest_thread = os_readylist_pop(os_scheduler__highest_priority);
     if(os_scheduler__highest_priority == OS_KERNEL_IDLE_THREAD_PRIORITY){
+        /* idle 任务永远就绪 */
         os_readylist_push_back((os_thread_t*)os_scheduler__highest_thread);
     }
     
@@ -100,25 +92,30 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
             OS_SCHEDULER_UNLOCK();
             return OS_SCHEDULER_ERR_SAME_THREAD;
         }else if(os_priority_cmp(os_scheduler__highest_thread->current_priority
-                           , os_scheduler__current_thread->current_priority)==OS_PRIORITY_CMP_LOW){
-            os_scheduler__current_thread->state = OS_THREAD_STATE_YIELD; /*抢占优先级*/
+                           , os_scheduler__current_thread->current_priority)==OS_PRIORITY_CMP_HIGH){
+            /*优先级更高，抢占当前任务的时间片*/
+            os_scheduler__current_thread->state = OS_THREAD_STATE_YIELD;
+        }else{
+            /* 当前线程还有时间片可以运行，将调度的线程放回就绪表，等待下次调度 */
+            os_readylist_push_front((os_thread_t*)os_scheduler__highest_thread);
+            os_scheduler__wip_flag = OS_FALSE;
+            OS_SCHEDULER_UNLOCK();
+            return OS_SCHEDULER_ERR_CURR_THREAD_RUNNING;
         }
     }
     
-    if(os_scheduler__current_thread->state==OS_THREAD_STATE_YIELD /*时间片用完或主动让出的线程，加入就绪表，等待下次调度*/){
+    if(os_scheduler__current_thread->state==OS_THREAD_STATE_YIELD){
+        /*时间片用完或主动让出的线程或优先级被抢夺，加入就绪表，等待下次调度*/
         os_scheduler_readylist_push_back((os_thread_t*)os_scheduler__current_thread);
     }
     
-    os_scheduler__from_stack_p = (void**)&os_scheduler__current_thread->sp;
-    
+    /* 请求执行切换 */
     if(method==OS_SCHEDULER_METHOD_PRIVILEGE){
         OS_SCHEDULER_UNLOCK();
-        cpu_stack_switch((void** )os_scheduler__from_stack_p,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
-//        os_scheduler__wip_flag = OS_FALSE;
+        cpu_stack_switch((void** )&os_scheduler__current_thread->sp,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
     }else if(method==OS_SCHEDULER_METHOD_NO_PRIVILEGE){
         OS_SCHEDULER_UNLOCK();
-//        os_scheduler__wip_flag = OS_FALSE;
-        cpu_svc_context_switch((void** )os_scheduler__from_stack_p,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
+        cpu_svc_context_switch((void** )&os_scheduler__current_thread->sp,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
     }
 
     return OS_ERR_OK;
@@ -226,21 +223,13 @@ os_err_t os_scheduler_startup(void){
     }
 
     OS_SCHEDULER_LOCK_VARIABLE();
-
     OS_SCHEDULER_LOCK();
 
     os_scheduler__highest_priority = os_priority_highest();
     os_scheduler__highest_thread = os_readylist_pop(os_scheduler__highest_priority);
-//    os_scheduler__highest_thread->state = OS_THREAD_STATE_RUNNING;
-//    os_scheduler__highest_thread->remain_ticks = os_scheduler__highest_thread->init_ticks;
-//    os_scheduler__highest_thread->flag = OS_THREAD_FLAG_NONE;
-//    os_scheduler__current_thread = os_scheduler__highest_thread;
-
     os_scheduler__startup_flag = OS_TRUE;
+
     OS_SCHEDULER_UNLOCK();
-
-//    cpu_stack_switch(0,(void** )&os_scheduler__current_thread->sp);
-
     cpu_svc_context_switch(0,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
 
     return OS_ERR_OK;
@@ -322,7 +311,6 @@ os_err_t os_scheduler_detach(os_thread_t* thread)
     
     thread->flag = OS_THREAD_FLAG_SCHEDULE;
     thread->state = OS_THREAD_STATE_DETACHED;
-    os_scheduler__need_schedule_flag = OS_TRUE;
     OS_SCHEDULER_MARK_NEED_SCHEDULE();
     
     OS_SCHEDULER_UNLOCK();

@@ -8,14 +8,7 @@
 #include <cpu_spinlock.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
-#define OS_SEM_LOCK_POLICY_DISABLE_IRQ          1
-#define OS_SEM_LOCK_POLICY_DISABLE_SCHEDULE     2
-#define OS_SEM_LOCK_POLICY_USE_CRITICAL         3
-#define OS_SEM_LOCK_POLICY_USE_SPINLOCK         4
 
-#ifndef OS_SEM_LOCK_POLICY
-#define OS_SEM_LOCK_POLICY OS_SEM_LOCK_POLICY_DISABLE_IRQ
-#endif
 
 #if (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_DISABLE_IRQ)
 #define OS_SEM_LOCK_VAR()   cpu_interrupt_context_t os_sem__lock_var__;

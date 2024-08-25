@@ -24,6 +24,13 @@
 #include <cpu_spinlock.h>
 #endif /*INCLUDED_CPU_SPINLOCK_H*/
 
+////////////////////////////////////////////////////////////////////////////////
+////
+
+#define OS_SEM_LOCK_POLICY_DISABLE_IRQ          1
+#define OS_SEM_LOCK_POLICY_DISABLE_SCHEDULE     2
+#define OS_SEM_LOCK_POLICY_USE_CRITICAL         3
+#define OS_SEM_LOCK_POLICY_USE_SPINLOCK         4
 
 
 ////////////////////////////////////////////////////////////////////////////////
