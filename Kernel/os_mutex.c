@@ -43,6 +43,7 @@ C_STATIC_FORCEINLINE void os_mutex__restore(os_mutex_t* sem){
     /*从timer中移除*/
     os_timer_remove(&thread->timer_node);
     os_scheduler_readylist_push_back(thread);
+    os_scheduler__need_schedule_flag = OS_TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,19 +71,20 @@ os_err_t os_mutex_init(os_mutex_t* mutex, const char* name, int flag)
 
 os_err_t os_mutext_lock(os_mutex_t* mutex, os_tick_t ticks)
 {
-__os_mutex__check__:
-    os_critical_enter();
+    OS_MUTEX_LOCK_VAR();
     os_thread_t * current_thread = os_thread_self();
+__os_mutex__check__:
+    OS_MUTEX_LOCK();
     if(mutex->owner == 0){
         cpu_spinlock_lock((cpu_spinlock_t*)&mutex->value);
         mutex->owner = current_thread;
         mutex->original_priority = mutex->owner->current_priority;
         mutex->hold++;
-        os_critical_leave();
+        OS_MUTEX_UNLOCK();
         return OS_ERR_OK;
     }else if(current_thread==mutex->owner){
         mutex->hold++;
-        os_critical_leave();
+        OS_MUTEX_UNLOCK();
         return OS_ERR_OK;
     }
     
@@ -94,21 +96,21 @@ __os_mutex__check__:
     
     if(ticks==0){
         /* 当前线程不等待，直接返回 TIMEOUT */
-        os_critical_leave();
+        OS_MUTEX_UNLOCK();
         return OS_ERR_ETIMEOUT;
     }else if(ticks == OS_WAITING_INFINITY){
-        os_mutex__append(mutex, (os_thread_t*)os_scheduler__current_thread);
-        os_scheduler__current_thread->state = OS_THREAD_STATE_PENDING;
+        os_mutex__append(mutex, (os_thread_t*)current_thread);
+        current_thread->state = OS_THREAD_STATE_PENDING;
         os_scheduler__need_schedule_flag = OS_TRUE;
-        os_critical_leave();
+        OS_MUTEX_UNLOCK();
         os_scheduler_schedule_in_thread();
         goto __os_mutex__check__;
     }else {
-        os_mutex__append(mutex, (os_thread_t*)os_scheduler__current_thread);
-        os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
-        os_critical_leave();
+        os_mutex__append(mutex, (os_thread_t*)current_thread);
+        os_scheduler_timed_wait((os_thread_t*)current_thread, ticks);
+        OS_MUTEX_UNLOCK();
         os_scheduler_schedule_in_thread();
-        if(os_scheduler__current_thread->state==OS_THREAD_STATE_TIMEWAIT_TIMEOUT){
+        if(current_thread->state==OS_THREAD_STATE_TIMEWAIT_TIMEOUT){
             /*调度返回该任务，检查是否TIMEOUT*/
             return OS_ERR_ETIMEOUT;
         }
@@ -118,7 +120,9 @@ __os_mutex__check__:
 
 os_err_t os_mutext_unlock(os_mutex_t* mutex)
 {
-    os_critical_enter();
+    OS_MUTEX_LOCK_VAR();
+    OS_MUTEX_LOCK();
+    
     if(mutex->owner == os_thread_self()){
         mutex->hold--;
         if(mutex->hold==0){
@@ -127,17 +131,13 @@ os_err_t os_mutext_unlock(os_mutex_t* mutex)
             mutex->original_priority = OS_KERNEL_PRIORITY_MAX;
             os_mutex__restore(mutex);
             cpu_spinlock_unlock((cpu_spinlock_t*)&mutex->value);
-            
-            os_scheduler__need_schedule_flag = OS_TRUE;
-            os_scheduler__current_thread->flag = OS_THREAD_FLAG_SCHEDULE;
-            os_critical_leave();
-            
+            OS_MUTEX_UNLOCK();
             return os_scheduler_schedule_in_thread();
         }else{
-            os_critical_leave();
+            OS_MUTEX_UNLOCK();
             return OS_ERR_OK;
         }
     }
-    os_critical_leave();
+    OS_MUTEX_UNLOCK();
     return OS_MUTEX_ERR_OWNER;
 }

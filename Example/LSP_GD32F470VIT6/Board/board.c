@@ -17,6 +17,7 @@ void Board_Init(void)
     BSP_USART0_EnableRxIRQ();
     
     SysTick_Config(SystemCoreClock/OS_KERNEL_TICKS_PER_SECOND); /* 1ms = tick */
-    NVIC_SetPriority(SysTick_IRQn, 0xF1);
+//    NVIC_SetPriority(SysTick_IRQn, 0xF1);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
+    NVIC_SetPriority(SVCall_IRQn, 0x00);
 }

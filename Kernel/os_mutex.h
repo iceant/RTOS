@@ -24,6 +24,12 @@
 #include <os_list.h>
 #endif /*INCLUDED_OS_LIST_H*/
 
+#ifndef INCLUDED_OS_SCHEDULER_H
+#include <os_scheduler.h>
+#endif /*INCLUDED_OS_SCHEDULER_H*/
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -44,6 +50,36 @@ typedef struct os_mutex_s{
 #define OS_MUTEX_FLAG_PRIO 2
 
 #define OS_MUTEX_ERR_OWNER (0x3001)
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+#define OS_MUTEX_LOCK_POLICY_DISABLE_IRQ          1
+#define OS_MUTEX_LOCK_POLICY_DISABLE_SCHEDULE     2
+#define OS_MUTEX_LOCK_POLICY_USE_CRITICAL         3
+#define OS_MUTEX_LOCK_POLICY_USE_SPINLOCK         4
+
+#ifndef OS_MUTEX_LOCK_POLICY
+#define OS_MUTEX_LOCK_POLICY OS_MUTEX_LOCK_POLICY_USE_SPINLOCK
+#endif
+
+#if (OS_MUTEX_LOCK_POLICY==OS_MUTEX_LOCK_POLICY_DISABLE_IRQ)
+#define OS_MUTEX_LOCK_VAR()   cpu_interrupt_context_t os_sem__lock_var__;
+#define OS_MUTEX_LOCK()       cpu_interrupt_disable(&os_sem__lock_var__);
+#define OS_MUTEX_UNLOCK()     cpu_interrupt_enable(&os_sem__lock_var__);
+#elif (OS_MUTEX_LOCK_POLICY==OS_MUTEX_LOCK_POLICY_DISABLE_SCHEDULE)
+#define OS_MUTEX_LOCK_VAR()   OS_SCHEDULER_LOCK_VARIABLE()
+#define OS_MUTEX_LOCK()       OS_SCHEDULER_LOCK()
+#define OS_MUTEX_UNLOCK()     OS_SCHEDULER_UNLOCK()
+#elif (OS_MUTEX_LOCK_POLICY==OS_MUTEX_LOCK_POLICY_USE_CRITICAL)
+#define OS_MUTEX_LOCK_VAR()
+#define OS_MUTEX_LOCK()       os_critical_enter()
+#define OS_MUTEX_UNLOCK()     os_critical_leave()
+#elif (OS_MUTEX_LOCK_POLICY==OS_MUTEX_LOCK_POLICY_USE_SPINLOCK)
+#define OS_MUTEX_LOCK_VAR()   cpu_spinlock_t os_sem__spinlock__=0
+#define OS_MUTEX_LOCK()       cpu_spinlock_lock(&os_sem__spinlock__)
+#define OS_MUTEX_UNLOCK()     cpu_spinlock_unlock(&os_sem__spinlock__)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

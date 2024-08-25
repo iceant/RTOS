@@ -58,7 +58,7 @@ void BSP_USART0_Init(void)
 
 void BSP_USART0_EnableRxIRQ(void)
 {
-    nvic_irq_enable(USARTx_IRQn, 0, 1);
+    nvic_irq_enable(USARTx_IRQn, 0, 2);
     usart_interrupt_enable(USARTx, USART_INT_RBNE);
 }
 

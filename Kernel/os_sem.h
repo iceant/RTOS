@@ -34,6 +34,7 @@ typedef struct os_sem_s{
     os_list_t pend_list;
     uint8_t   flag;
     cpu_spinlock_t lock;
+    os_thread_t * owner;
     char name[OS_KERNEL_NAME_SIZE];
 }os_sem_t;
 

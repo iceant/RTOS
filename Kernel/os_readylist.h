@@ -49,6 +49,12 @@ C_STATIC_FORCEINLINE void os_readylist_push_back(os_thread_t* thread){
     if(OS_LIST_IS_EMPTY(list)){
         os_priority_mark(priority);
     }
+    os_list_node_t * node;
+    for(node = list->next; node!=list; node= OS_LIST_NEXT(node)){
+        if(node==&thread->ready_node){
+            return;
+        }
+    }
     OS_LIST_INSERT_BEFORE(list, &thread->ready_node);
 }
 
@@ -57,6 +63,12 @@ C_STATIC_FORCEINLINE void os_readylist_push_front(os_thread_t* thread){
     os_list_t * list = &os_readylist__table[priority];
     if(OS_LIST_IS_EMPTY(list)){
         os_priority_mark(priority);
+    }
+    os_list_node_t * node;
+    for(node = list->next; node!=list; node= OS_LIST_NEXT(node)){
+        if(node==&thread->ready_node){
+            return;
+        }
     }
     OS_LIST_INSERT_AFTER(list, &thread->ready_node);
 }

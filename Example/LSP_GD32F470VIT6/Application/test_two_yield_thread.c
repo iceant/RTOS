@@ -8,11 +8,12 @@ static uint8_t stacks2[1024];
 static os_thread_t thread1;
 static os_thread_t thread2;
 static void thread_entry(void* p){
+    uint8_t  nStopFlag = 0;
     while(1)
     {
         printf("%s\n", os_thread_self()->name);
         if(thread1.state==thread2.state){
-            cpu_bkpt(1);
+            while(nStopFlag==0);
         }
         os_thread_yield();
     }
