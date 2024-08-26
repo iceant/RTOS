@@ -5,6 +5,7 @@
 #include <sdk_hex.h>
 #include <test_two_yield_thread.h>
 #include <nvic_show_priority.h>
+#include <thread_sleep.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -76,43 +77,13 @@ int main(void){
     Board_Init();
     printf("Board Init Done!\n");
     
-    os_kernel_init();
-    
     nvic_show_priority();
     
+    os_kernel_init();
     
-    BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
+    thread_sleep_test();
     
-    idle_count = 0;
-    USART0_RxBuffer_WriteIdx = 0;
-    
-//    os_idle_set_action(idle_action, 0);
-    
-    /* 优先级太低可能会导致无法响应 */
-    os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
-    os_thread_init(&USART0_Thread, "USART0", USART0_ThreadEntry, 0
-            , USART0_ThreadStack, OS_ARRAY_SIZE(USART0_ThreadStack)
-            , 18, 10, 0);
-    os_thread_startup(&USART0_Thread);
-    
-    
-    #if 0
-    
-    os_thread_init(&boot_thread, "boot", boot_thread_entry, 0
-                   , boot_thread_stack, OS_ARRAY_SIZE(boot_thread_stack)
-                   , 20, 10, 0);
-    os_thread_startup(&boot_thread);
-    
-    
-    os_thread_init(&exit_thread, "exit", exit_thread_entry, 0
-            , exit_thread_stack, OS_ARRAY_SIZE(exit_thread_stack)
-            , 20, 10, 0);
-    exit_thread.exit = exit_thread_on_exit;
-    exit_thread.userdata = (void*)&os_scheduler__systick_ticks;
-    os_thread_startup(&exit_thread);
-    #endif
-    
-    TestTwoYieldThread();
+//    TestTwoYieldThread();
     
     os_kernel_startup();
     

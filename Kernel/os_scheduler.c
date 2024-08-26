@@ -54,7 +54,7 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
     OS_SCHEDULER_LOCK_VARIABLE();
     OS_SCHEDULER_LOCK();
     
-    if(os_scheduler__interrupt_nest > 0u || cpu_get_ipsr()!=0){
+    if(os_scheduler__interrupt_nest > 0u ){
         /*在中断中，不要调度*/
         os_scheduler__wip_flag = OS_FALSE;
         OS_SCHEDULER_UNLOCK();
@@ -109,13 +109,17 @@ C_STATIC_FORCEINLINE os_err_t os_scheduler__schedule(int method){
         os_scheduler_readylist_push_back((os_thread_t*)os_scheduler__current_thread);
     }
     
+    os_scheduler__from_stack_p = (void**)&os_scheduler__current_thread->sp;
+    
     /* 请求执行切换 */
     if(method==OS_SCHEDULER_METHOD_PRIVILEGE){
         OS_SCHEDULER_UNLOCK();
-        cpu_stack_switch((void** )&os_scheduler__current_thread->sp,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
+        cpu_stack_switch((void** )os_scheduler__from_stack_p
+                         ,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
     }else if(method==OS_SCHEDULER_METHOD_NO_PRIVILEGE){
         OS_SCHEDULER_UNLOCK();
-        cpu_svc_context_switch((void** )&os_scheduler__current_thread->sp,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
+        cpu_svc_context_switch((void** )os_scheduler__from_stack_p
+                               ,(void** )&os_scheduler__highest_thread->sp, os_scheduler__scheduler_callback);
     }
 
     return OS_ERR_OK;
@@ -183,14 +187,15 @@ os_err_t os_scheduler_systick(void)
 static void os_scheduler__timer_timeout(os_timer_t * timer, void* userdata){
     register os_thread_t* thread = OS_LIST_CONTAINER(timer, os_thread_t, timer_node);
     thread->error = OS_THREAD_ERROR_TIMEOUT;
-    thread->state = OS_THREAD_STATE_TIMEWAIT_TIMEOUT;
-    os_readylist_push_back(thread);
+    os_scheduler_readylist_push_back(thread);
+    os_scheduler__need_schedule_flag = OS_TRUE;
 }
 
 void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t tick)
 {
     thread->remain_ticks = 0;
     thread->state = OS_THREAD_STATE_TIMEWAIT;
+    thread->flag = OS_THREAD_FLAG_SCHEDULE;
     os_timer_add(&thread->timer_node, os_scheduler__timer_timeout, thread, tick, OS_TIMER_FLAG_ONCE);
     os_scheduler__need_schedule_flag = OS_TRUE;
 }

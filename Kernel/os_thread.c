@@ -73,10 +73,10 @@ os_thread_t * os_thread_self(void){
 
 void os_thread_delay(os_tick_t ticks)
 {
-    cpu_interrupt_context_t ctx;
-    cpu_interrupt_disable(&ctx);
+    OS_SCHEDULER_LOCK_VARIABLE();
+    OS_SCHEDULER_LOCK();
     os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
-    cpu_interrupt_enable(&ctx);
+    OS_SCHEDULER_UNLOCK();
 
     os_scheduler_schedule_in_thread();
 }
