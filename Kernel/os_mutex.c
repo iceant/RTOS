@@ -101,7 +101,6 @@ __os_mutex__check__:
     }else if(ticks == OS_WAITING_INFINITY){
         os_mutex__append(mutex, (os_thread_t*)current_thread);
         current_thread->state = OS_THREAD_STATE_PENDING;
-        os_scheduler__need_schedule_flag = OS_TRUE;
         OS_MUTEX_UNLOCK();
         os_scheduler_schedule_in_thread();
         goto __os_mutex__check__;
@@ -124,9 +123,11 @@ os_err_t os_mutext_unlock(os_mutex_t* mutex)
     OS_MUTEX_LOCK();
     
     if(mutex->owner == os_thread_self()){
-        mutex->hold--;
+        if(mutex->hold>0) mutex->hold--;
+        
         if(mutex->hold==0){
             mutex->owner->current_priority = mutex->original_priority;
+            mutex->owner->state = OS_THREAD_STATE_YIELD;
             mutex->owner = 0;
             mutex->original_priority = OS_KERNEL_PRIORITY_MAX;
             os_mutex__restore(mutex);

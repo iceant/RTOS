@@ -26,5 +26,5 @@ void nvic_show_priority(void )
         }
     }
 
-    for(int i=0; i<0x3fffff; i++);
+    for(int i=0; i<0x3ffffff; i++);
 }

@@ -27,10 +27,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define OS_SEM_LOCK_POLICY_DISABLE_IRQ          1
-#define OS_SEM_LOCK_POLICY_DISABLE_SCHEDULE     2
-#define OS_SEM_LOCK_POLICY_USE_CRITICAL         3
-#define OS_SEM_LOCK_POLICY_USE_SPINLOCK         4
+#define OS_MUTEX_LOCK_POLICY_DISABLE_IRQ          1
+#define OS_MUTEX_LOCK_POLICY_DISABLE_SCHEDULE     2
+#define OS_MUTEX_LOCK_POLICY_USE_CRITICAL         3
+#define OS_MUTEX_LOCK_POLICY_USE_SPINLOCK         4
+
+#ifndef OS_MUTEX_LOCK_POLICY
+#define OS_MUTEX_LOCK_POLICY OS_MUTEX_LOCK_POLICY_USE_CRITICAL
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,7 @@
 #include <test_two_yield_thread.h>
 #include <nvic_show_priority.h>
 #include <thread_sleep.h>
+#include <test_mutex.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -81,7 +82,9 @@ int main(void){
     
     os_kernel_init();
     
-    thread_sleep_test();
+//    thread_sleep_test();
+    
+    TestMutex();
     
 //    TestTwoYieldThread();
     
