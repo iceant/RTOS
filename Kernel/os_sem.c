@@ -139,4 +139,6 @@ os_err_t os_sem_release(os_sem_t* sem)
     os_sem__restore(sem);
     sem->owner = 0;
     OS_SEM_UNLOCK();
+
+    return OS_ERR_OK;
 }
