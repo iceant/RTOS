@@ -38,10 +38,10 @@ static void os_sem__append(os_sem_t* sem, os_thread_t* thread){
         for(os_sem__current_node = OS_LIST_NEXT(&sem->pend_list); os_sem__current_node!=&sem->pend_list; ){
             os_thread_t * p = OS_LIST_CONTAINER(os_sem__current_node, os_thread_t, pend_node);
             int cmp = os_priority_cmp(p->current_priority, thread->current_priority);
-            if(cmp==0){
+            if(cmp==OS_PRIORITY_CMP_EQ){
                 OS_LIST_INSERT_AFTER(&p->pend_node, &thread->pend_node);
                 return;
-            }else if(cmp==1){
+            }else if(cmp==OS_PRIORITY_CMP_LOW){
                 /* thread 优先级更高*/
                 OS_LIST_INSERT_BEFORE(&p->pend_node, &thread->pend_node);
                 return;
@@ -55,7 +55,7 @@ static void os_sem__append(os_sem_t* sem, os_thread_t* thread){
     }
 }
 
-C_STATIC_FORCEINLINE void os_sem__restore(os_sem_t* sem){
+static void os_sem__restore(os_sem_t* sem){
     os_list_node_t * os_sem__current_node = 0;
     if(OS_LIST_IS_EMPTY(&sem->pend_list)){
         return;
@@ -64,7 +64,7 @@ C_STATIC_FORCEINLINE void os_sem__restore(os_sem_t* sem){
     os_thread_t* thread = OS_LIST_CONTAINER(os_sem__current_node, os_thread_t, pend_node);
     OS_LIST_REMOVE(os_sem__current_node);
     /*从timer中移除*/
-    os_timer_remove(&thread->timer_node);
+    os_timer_remove((volatile os_timer_t *)&thread->timer_node);
     os_scheduler_readylist_push_back(thread);
     os_scheduler__need_schedule_flag = OS_TRUE;
 }

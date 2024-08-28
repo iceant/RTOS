@@ -35,21 +35,21 @@
 typedef void (*os_thread_entry_t)(void*);
 
 typedef struct os_thread_s{
-    void* sp;
+    volatile void* sp;
     void* thread_entry;
     void* parameter;
     void* stack_address;
     os_size_t stack_size;
     os_priority_t init_priority;
-    os_priority_t current_priority;
+    volatile os_priority_t current_priority;
     os_tick_t init_ticks;
-    os_tick_t remain_ticks;
-    os_list_node_t ready_node;
-    os_list_node_t pend_node;
-    os_timer_t     timer_node;
-    int state;
-    os_err_t error;
-    int flag;
+    volatile os_tick_t remain_ticks;
+    volatile os_list_node_t ready_node;
+    volatile os_list_node_t pend_node;
+    volatile os_timer_t     timer_node;
+    volatile int state;
+    volatile os_err_t error;
+    volatile int flag;
     void* userdata;
     void (*exit)(struct os_thread_s*);
     char name[OS_KERNEL_NAME_SIZE];
@@ -73,6 +73,7 @@ typedef struct os_thread_s{
 
 #define OS_THREAD_FLAG_NONE                 (0)
 #define OS_THREAD_FLAG_SCHEDULE             (1)
+#define OS_THREAD_FLAG_READY                (2)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

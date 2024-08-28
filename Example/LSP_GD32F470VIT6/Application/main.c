@@ -78,11 +78,13 @@ static void exit_thread_on_exit(os_thread_t * thread){
 int main(void){
     
     Board_Init();
+    
+    os_kernel_init();
+    
     printf("Board Init Done!\n");
     
     nvic_show_priority();
-    
-    os_kernel_init();
+
     
     thread_sleep_test();
     

@@ -41,6 +41,7 @@ extern volatile os_tick_t os_scheduler__systick_ticks;
 #define OS_SCHEDULER_ERR_SAME_THREAD                0x1004
 #define OS_SCHEDULER_ERR_NO_REQ                     0x1005
 #define OS_SCHEDULER_ERR_WIP                        0x1006
+#define OS_SCHEDULER_ERR_NULL_NEXT_THREAD           0x1007
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +87,7 @@ os_err_t os_scheduler_readylist_push_back(os_thread_t * thread);
 
 os_err_t os_scheduler_readylist_push_front(os_thread_t * thread);
 
-os_err_t os_scheduler_yield(os_thread_t * thread);
+os_err_t os_scheduler_yield(volatile os_thread_t * thread);
 
 os_err_t os_scheduler_suspend(os_thread_t * thread);
 
@@ -96,7 +97,7 @@ os_err_t os_scheduler_mark_need_schedule(os_thread_t* thread);
 
 os_err_t os_scheduler_detach(os_thread_t* thread);
 
-void os_scheduler_push_back_to_delay_list(os_thread_t * thread);
+void os_scheduler_push_back_to_delay_list(volatile os_thread_t * thread);
 
 os_bool_t os_scheduler_has_delay_task(void);
 

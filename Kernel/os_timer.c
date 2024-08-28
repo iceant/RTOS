@@ -82,7 +82,7 @@ os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * use
     return OS_ERR_OK;
 }
 
-os_err_t os_timer_remove(os_timer_t * timer)
+os_err_t os_timer_remove(volatile os_timer_t * timer)
 {
     OS_LIST_REMOVE(&timer->wait_node);
     return OS_ERR_OK;

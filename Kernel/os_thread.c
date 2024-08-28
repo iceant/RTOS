@@ -81,6 +81,9 @@ void os_thread_delay(os_tick_t ticks)
     os_err_t error = OS_ERR_OK;
     do{
         os_scheduler_schedule_in_thread(&error);
+        if(error!=OS_ERR_OK){
+            printf("[os_thread] %s, err:%x\n", __FUNCTION__ , error);
+        }
     }while(error!=OS_ERR_OK);
 }
 
@@ -90,6 +93,6 @@ void os_thread_mdelay(os_int_t ms){
 
 os_err_t os_thread_yield(void)
 {
-    return os_scheduler_yield(os_thread_self());
+    return os_scheduler_yield(os_scheduler__current_thread);
 }
 

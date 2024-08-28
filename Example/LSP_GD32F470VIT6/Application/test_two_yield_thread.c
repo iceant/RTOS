@@ -2,9 +2,12 @@
 #include <os_kernel.h>
 #include <stdio.h>
 #include <cpu.h>
+#include <sdk_fmt.h>
 
-static uint8_t stacks1[1024];
-static uint8_t stacks2[1024];
+C_ALIGNED(OS_ALIGN_SIZE)
+static uint8_t stacks1[2048];
+C_ALIGNED(OS_ALIGN_SIZE)
+static uint8_t stacks2[2048];
 static os_thread_t yield_thread1;
 static os_thread_t yield_thread2;
 static void thread_entry(void* p){

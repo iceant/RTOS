@@ -30,12 +30,12 @@ typedef struct os_timer_s os_timer_t;
 typedef void (*os_timer_timeout_t)(os_timer_t* timer, void* userdata);
 
 struct os_timer_s{
-    os_list_node_t wait_node;
+    volatile os_list_node_t wait_node;
     os_timer_timeout_t timeout;
     void* userdata;
     os_tick_t ticks;
-    os_tick_t expire_tick;
-    int flags;
+    volatile os_tick_t expire_tick;
+    volatile int flags;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ os_err_t os_timer_init(void);
 
 os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * userdata, os_tick_t ticks, int flags);
 
-os_err_t os_timer_remove(os_timer_t * timer);
+os_err_t os_timer_remove(volatile os_timer_t * timer);
 
 os_bool_t os_timer_tick(void);
 
