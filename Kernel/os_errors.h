@@ -20,6 +20,7 @@ typedef os_int_t os_err_t;
 #define OS_ERR_EMPTY    (-5)
 #define OS_ERR_FULL     (-6)
 #define OS_ERR_ETIMEOUT (-7)
+#define OS_ERR_EXIST    (-8)
 
 
 #endif /*INCLUDED_OS_ERRORS_H*/

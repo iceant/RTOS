@@ -228,22 +228,27 @@ void os_scheduler_timed_wait(os_thread_t * thread, os_tick_t tick)
 
 os_err_t os_scheduler_readylist_push_back(os_thread_t * thread)
 {
-    os_readylist_push_back(thread);
-    thread->state = OS_THREAD_STATE_READY;
-    thread->remain_ticks = thread->init_ticks;
-    thread->error = OS_THREAD_ERROR_OK;
-    thread->flag = OS_THREAD_FLAG_NONE;
-    return OS_ERR_OK;
+    os_err_t err = os_readylist_push_back(thread);
+    if(err==OS_ERR_OK){
+        thread->state = OS_THREAD_STATE_READY;
+        thread->remain_ticks = thread->init_ticks;
+        thread->error = OS_THREAD_ERROR_OK;
+        thread->flag = OS_THREAD_FLAG_NONE;
+    }
+    return err;
 }
 
 os_err_t os_scheduler_readylist_push_front(os_thread_t * thread)
 {
-    os_readylist_push_front(thread);
-    thread->state = OS_THREAD_STATE_READY;
-    thread->remain_ticks = thread->init_ticks;
-    thread->error = 0;
-    thread->flag = OS_THREAD_FLAG_NONE;
-    return OS_ERR_OK;
+    os_err_t err = os_readylist_push_front(thread);
+    if(err==OS_ERR_OK){
+        thread->state = OS_THREAD_STATE_READY;
+        thread->remain_ticks = thread->init_ticks;
+        thread->error = 0;
+        thread->flag = OS_THREAD_FLAG_NONE;
+        return OS_ERR_OK;
+    }
+    return err;
 }
 
 
