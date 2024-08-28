@@ -68,7 +68,6 @@ typedef struct os_thread_s{
 #define OS_THREAD_STATE_TIMEWAIT_TIMEOUT    (8)
 #define OS_THREAD_STATE_DETACHED            (9)
 
-
 #define OS_THREAD_ERROR_OK                  (0)
 #define OS_THREAD_ERROR_TIMEOUT             (-1)
 

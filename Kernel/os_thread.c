@@ -77,8 +77,9 @@ void os_thread_delay(os_tick_t ticks)
     OS_SCHEDULER_LOCK();
     os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
     OS_SCHEDULER_UNLOCK();
-
-    os_scheduler_schedule_in_thread();
+    
+    os_err_t error = OS_ERR_OK;
+    os_scheduler_schedule_in_thread(&error);
 }
 
 void os_thread_mdelay(os_int_t ms){

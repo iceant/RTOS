@@ -27,13 +27,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#define OS_MUTEX_LOCK_POLICY_DISABLE_IRQ          1
-#define OS_MUTEX_LOCK_POLICY_DISABLE_SCHEDULE     2
-#define OS_MUTEX_LOCK_POLICY_USE_CRITICAL         3
-#define OS_MUTEX_LOCK_POLICY_USE_SPINLOCK         4
+#define OS_SEM_LOCK_POLICY_DISABLE_IRQ          1
+#define OS_SEM_LOCK_POLICY_DISABLE_SCHEDULE     2
+#define OS_SEM_LOCK_POLICY_USE_CRITICAL         3
+#define OS_SEM_LOCK_POLICY_USE_SPINLOCK         4
 
-#ifndef OS_MUTEX_LOCK_POLICY
-#define OS_MUTEX_LOCK_POLICY OS_MUTEX_LOCK_POLICY_USE_CRITICAL
+#ifndef OS_SEM_LOCK_POLICY
+#define OS_SEM_LOCK_POLICY OS_SEM_LOCK_POLICY_USE_SPINLOCK
 #endif
 
 
@@ -44,8 +44,9 @@ typedef struct os_sem_s{
     volatile os_uint_t value;
     os_list_t pend_list;
     uint8_t   flag;
+    #if (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_SPINLOCK)
     cpu_spinlock_t lock;
-    os_thread_t * owner;
+    #endif
     char name[OS_KERNEL_NAME_SIZE];
 }os_sem_t;
 

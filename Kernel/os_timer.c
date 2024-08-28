@@ -30,40 +30,9 @@ static volatile os_tick_t os_timer__current_tick;
 static os_list_t os_timer__tvroot;
 static os_list_t os_timer__tv[4]={0};
 
-#if 0
-static os_list_t os_timer__timeout_list;
-C_ALIGNED(OS_ALIGN_SIZE)
-static uint8_t os_timer__thread_stack[OS_KERNEL_TIMER_THREAD_STACK_SIZE];
-static os_thread_t os_timer__thread;
-static os_sem_t os_timer__sem;
-static os_list_node_t * os_timer__timeout_node;
-static os_timer_t * os_timer__timeout_timer;
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
-#if 0
-static void os_timer__add(os_timer_t * timer);
-
-static void os_timer__thread_entry(void* p){
-    while(1){
-        os_sem_take(&os_timer__sem, OS_WAITING_INFINITY);
-        for(os_timer__timeout_node = os_timer__timeout_list.next; os_timer__timeout_node!=&os_timer__timeout_list;){
-            OS_LIST_REMOVE(os_timer__timeout_node);
-            os_timer__timeout_timer = OS_LIST_CONTAINER(os_timer__timeout_node, os_timer_t, wait_node);
-            
-            os_timer__timeout_timer->timeout(os_timer__timeout_timer, os_timer__timeout_timer->userdata);
-            
-            if(os_timer__timeout_timer->flags & OS_TIMER_FLAG_REPEAT){
-                os_timer__timeout_timer->expire_tick = os_timer__current_tick + timer->ticks;
-                os_timer__add(timer);
-            }
-
-            os_timer__timeout_node = OS_LIST_NEXT(os_timer__timeout_node);
-        }
-    }
-}
-#endif
 
 static void os_timer__add(os_timer_t * timer){
     register os_list_t * head = 0;
@@ -95,19 +64,6 @@ os_err_t os_timer_init(void)
     for(i=0; i< OS_ARRAY_SIZE(os_timer__tv); i++){
         OS_LIST_INIT(&os_timer__tv[i]);
     }
-    
-    #if 0
-    OS_LIST_INIT(&os_timer__timeout_list);
-    os_sem_init(&os_timer__sem, "timer_sem", 0, OS_SEM_FLAG_FIFO);
-    os_timer__timeout_node = 0;
-    os_timer__timeout_timer = 0;
-    
-    os_thread_init(&os_timer__thread, "timer", os_timer__thread_entry, 0
-        , os_timer__thread_stack, OS_ARRAY_SIZE(os_timer__thread_stack)
-        , OS_KERNEL_TIMER_THREAD_PRIORITY, OS_KERNEL_TIMER_THREAD_TICKS, 0);
-    
-    os_thread_startup(&os_timer__thread);
-    #endif
     
     return OS_ERR_OK;
 }
@@ -162,16 +118,16 @@ os_bool_t os_timer_tick(void){
         timer = OS_CONTAINER_OF(node, os_timer_t, wait_node);
         node = OS_LIST_NEXT(node);
         if(timer->expire_tick <= os_timer__current_tick){
+            OS_LIST_REMOVE(&timer->wait_node);
             need_schedule = OS_TRUE;
-
+            
             if(timer->timeout){
                 timer->timeout(timer, timer->userdata);
             }
+            
             if(timer->flags & OS_TIMER_FLAG_REPEAT){
                 timer->expire_tick = os_timer__current_tick + timer->ticks;
                 os_timer__add(timer);
-            }else{
-                OS_LIST_REMOVE(&timer->wait_node);
             }
         }
     }

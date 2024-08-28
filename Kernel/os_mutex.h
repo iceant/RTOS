@@ -28,20 +28,14 @@
 #include <os_scheduler.h>
 #endif /*INCLUDED_OS_SCHEDULER_H*/
 
+#ifndef INCLUDED_CPU_SPINLOCK_H
+#include <cpu_spinlock.h>
+#endif /*INCLUDED_CPU_SPINLOCK_H*/
 
+#ifndef INCLUDED_OS_CRITICAL_H
+#include <os_critical.h>
+#endif /*INCLUDED_OS_CRITICAL_H*/
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
-typedef struct os_mutex_s{
-    os_int_t        value;
-    os_priority_t   original_priority;
-    os_int_t        hold;
-    os_thread_t *   owner;
-    os_list_t       pend_list;
-    int             flag;
-    char            name[OS_KERNEL_NAME_SIZE];
-}os_mutex_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -76,10 +70,27 @@ typedef struct os_mutex_s{
 #define OS_MUTEX_LOCK()       os_critical_enter()
 #define OS_MUTEX_UNLOCK()     os_critical_leave()
 #elif (OS_MUTEX_LOCK_POLICY==OS_MUTEX_LOCK_POLICY_USE_SPINLOCK)
-#define OS_MUTEX_LOCK_VAR()   cpu_spinlock_t os_sem__spinlock__=0
-#define OS_MUTEX_LOCK()       cpu_spinlock_lock(&os_sem__spinlock__)
-#define OS_MUTEX_UNLOCK()     cpu_spinlock_unlock(&os_sem__spinlock__)
+#define OS_MUTEX_LOCK_VAR()
+#define OS_MUTEX_LOCK()       cpu_spinlock_lock(&mutex->lock)
+#define OS_MUTEX_UNLOCK()     cpu_spinlock_unlock(&mutex->lock)
 #endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+////
+
+typedef struct os_mutex_s{
+    os_int_t        value;
+    os_priority_t   original_priority;
+    os_int_t        hold;
+    os_thread_t *   owner;
+    os_list_t       pend_list;
+    int             flag;
+#if(OS_MUTEX_LOCK_POLICY==OS_MUTEX_LOCK_POLICY_USE_SPINLOCK)
+    cpu_spinlock_t  lock;
+#endif
+    char            name[OS_KERNEL_NAME_SIZE];
+}os_mutex_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

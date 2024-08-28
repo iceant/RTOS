@@ -55,6 +55,7 @@ C_STATIC_FORCEINLINE void os_readylist_push_back(os_thread_t* thread){
             return;
         }
     }
+    OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_INSERT_BEFORE(list, &thread->ready_node);
 }
 
@@ -70,6 +71,7 @@ C_STATIC_FORCEINLINE void os_readylist_push_front(os_thread_t* thread){
             return;
         }
     }
+    OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_INSERT_AFTER(list, &thread->ready_node);
 }
 
