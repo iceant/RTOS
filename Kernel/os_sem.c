@@ -18,11 +18,11 @@
 #define OS_SEM_LOCK_VAR()   OS_SCHEDULER_LOCK_VARIABLE()
 #define OS_SEM_LOCK()       OS_SCHEDULER_LOCK()
 #define OS_SEM_UNLOCK()     OS_SCHEDULER_UNLOCK()
-#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_CRITICAL)
+#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_CRITICAL) /* 可用 */
 #define OS_SEM_LOCK_VAR()
 #define OS_SEM_LOCK()       os_critical_enter()
 #define OS_SEM_UNLOCK()     os_critical_leave()
-#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_SPINLOCK)
+#elif (OS_SEM_LOCK_POLICY==OS_SEM_LOCK_POLICY_USE_SPINLOCK) /* 会锁死 */
 #define OS_SEM_LOCK_VAR()
 #define OS_SEM_LOCK()       cpu_spinlock_lock(&sem->lock)
 #define OS_SEM_UNLOCK()     cpu_spinlock_unlock(&sem->lock)
@@ -31,7 +31,7 @@
 ////
 
 static void os_sem__append(os_sem_t* sem, os_thread_t* thread){
-    register os_list_node_t * os_sem__current_node;
+    os_list_node_t * os_sem__current_node;
     OS_LIST_REMOVE(&thread->pend_node);
     OS_LIST_REMOVE(&thread->ready_node);
     if(sem->flag==OS_SEM_FLAG_PRIO){
@@ -56,12 +56,13 @@ static void os_sem__append(os_sem_t* sem, os_thread_t* thread){
 }
 
 C_STATIC_FORCEINLINE void os_sem__restore(os_sem_t* sem){
-    register os_list_node_t * os_sem__current_node = 0;
+    os_list_node_t * os_sem__current_node = 0;
     if(OS_LIST_IS_EMPTY(&sem->pend_list)){
         return;
     }
     os_sem__current_node = OS_LIST_NEXT(&sem->pend_list);
-    register os_thread_t* thread = OS_LIST_CONTAINER(os_sem__current_node, os_thread_t, pend_node);
+    os_thread_t* thread = OS_LIST_CONTAINER(os_sem__current_node, os_thread_t, pend_node);
+    OS_LIST_REMOVE(os_sem__current_node);
     /*从timer中移除*/
     os_timer_remove(&thread->timer_node);
     os_scheduler_readylist_push_back(thread);
@@ -108,16 +109,19 @@ __os_sem__check__:
             OS_SEM_UNLOCK();
             return OS_ERR_ETIMEOUT;
         }else if(ticks==OS_WAITING_INFINITY){
-            register os_thread_t* owner_thread = os_thread_self();
+            os_thread_t* owner_thread = os_thread_self();
             os_sem__append(sem, (os_thread_t*)owner_thread);
             owner_thread->state = OS_THREAD_STATE_PENDING;
             OS_SEM_UNLOCK();
             do{
                 os_scheduler_schedule_in_thread(&error);
+                if(error!=OS_ERR_OK){
+                    printf("[os_sem] %s err:%x, owner:%s\n", __FUNCTION__, error, owner_thread->name);
+                }
             }while(error!=OS_ERR_OK);
             goto __os_sem__check__;
         }else{
-            register os_thread_t* owner_thread = os_thread_self();
+            os_thread_t* owner_thread = os_thread_self();
             os_sem__append(sem, (os_thread_t*)owner_thread);
             os_scheduler_timed_wait((os_thread_t*)owner_thread, ticks);
             OS_SEM_UNLOCK();

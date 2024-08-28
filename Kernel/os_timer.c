@@ -35,7 +35,7 @@ static os_list_t os_timer__tv[4]={0};
 
 
 static void os_timer__add(os_timer_t * timer){
-    register os_list_t * head = 0;
+    os_list_t * head = 0;
 
     if(timer->expire_tick <= TVR_MAX){
         head = &os_timer__tvroot;
@@ -91,10 +91,10 @@ os_err_t os_timer_remove(os_timer_t * timer)
 
 os_bool_t os_timer_tick(void){
 
-    register os_list_t * head=0;
-    register os_list_node_t * node=0;
-    register os_timer_t * timer=0;
-    register os_bool_t need_schedule = OS_FALSE;
+    os_list_t * head=0;
+    os_list_node_t * node=0;
+    os_timer_t * timer=0;
+    os_bool_t need_schedule = OS_FALSE;
 
     os_timer__current_tick++;
 

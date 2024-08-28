@@ -47,6 +47,9 @@ static void USART0_RxHandler(uint16_t data, void* ud){
 }
 
 static void USART0_ThreadEntry(void* p){
+    os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
+    BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
+    USART0_RxBuffer_WriteIdx = 0;
     while(1){
         while(USART0_RxBuffer_WriteIdx==0){
             os_sem_take(&USART0_RxSem, OS_WAITING_INFINITY);
@@ -67,8 +70,7 @@ static void exit_thread_entry(void* p){
 }
 
 static void exit_thread_on_exit(os_thread_t * thread){
-    volatile os_tick_t tick = *(volatile os_tick_t*)thread->userdata;
-    printf("Thread [%s] exit at %u!\n", thread->name, tick);
+    printf("Thread [%s] exit at %u!\n", thread->name, os_tick_get());
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////
@@ -82,11 +84,18 @@ int main(void){
     
     os_kernel_init();
     
-//    thread_sleep_test();
+    thread_sleep_test();
     
-    TestMutex();
+//    TestMutex();
+//
+    TestTwoYieldThread();
     
-//    TestTwoYieldThread();
+    os_thread_init(&exit_thread, "exit_thd", exit_thread_entry, 0, exit_thread_stack, OS_ARRAY_SIZE(exit_thread_stack), 20, 10, 0);
+    exit_thread.exit = exit_thread_on_exit;
+    os_thread_startup(&exit_thread);
+    
+    os_thread_init(&USART0_Thread, "USART0_RxThd", USART0_ThreadEntry, 0, USART0_ThreadStack, OS_ARRAY_SIZE(USART0_ThreadStack), 20, 10, 0);
+    os_thread_startup(&USART0_Thread);
     
     os_kernel_startup();
     

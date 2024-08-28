@@ -19,12 +19,6 @@ C_STATIC_FORCEINLINE void os_critical_enter(void){
 
 C_STATIC_FORCEINLINE void os_critical_leave(void){
     os_scheduler_enable();
-    os_err_t error=OS_ERR_OK;
-    if(cpu_in_privilege()){
-        os_scheduler_schedule(&error);
-    }else{
-        os_scheduler_schedule_in_thread(&error);
-    }
 }
 
 C_STATIC_FORCEINLINE os_bool_t os_critical_activated(void){

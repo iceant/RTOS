@@ -33,7 +33,7 @@ static void os_mutex__append(os_mutex_t * sem, os_thread_t* thread){
 }
 
 C_STATIC_FORCEINLINE void os_mutex__restore(os_mutex_t* sem){
-    register os_list_node_t * current_node = 0;
+    os_list_node_t * current_node = 0;
     if(OS_LIST_IS_EMPTY(&sem->pend_list)){
         return;
     }
@@ -141,6 +141,7 @@ os_err_t os_mutext_unlock(os_mutex_t* mutex)
         if(mutex->hold==0){
             mutex->owner->current_priority = mutex->original_priority;
             mutex->owner->state = OS_THREAD_STATE_YIELD;
+            mutex->owner->flag = OS_THREAD_FLAG_SCHEDULE;
             os_scheduler_push_back_to_delay_list(mutex->owner);
             mutex->owner = 0;
             mutex->value = 0;

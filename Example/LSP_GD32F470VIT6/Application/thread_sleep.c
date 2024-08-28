@@ -3,10 +3,10 @@
 #include <stdio.h>
 
 static uint8_t stacks1[1024];
-static os_thread_t thread1;
+static os_thread_t sleep_thread1;
 
 static uint8_t stacks2[1024];
-static os_thread_t thread2;
+static os_thread_t sleep_thread2;
 
 static void thread_entry(void* p){
     uint32_t nCount = 0;
@@ -19,9 +19,9 @@ static void thread_entry(void* p){
 
 void thread_sleep_test(void)
 {
-    os_thread_init(&thread1, "sleep1", thread_entry, 500, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10, 0);
-    os_thread_startup(&thread1);
+    os_thread_init(&sleep_thread1, "sleep1", thread_entry, 500, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10, 0);
+    os_thread_startup(&sleep_thread1);
     
-    os_thread_init(&thread2, "sleep2", thread_entry, 1000, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10, 0);
-    os_thread_startup(&thread2);
+    os_thread_init(&sleep_thread2, "sleep2", thread_entry, 1000, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10, 0);
+    os_thread_startup(&sleep_thread2);
 }
