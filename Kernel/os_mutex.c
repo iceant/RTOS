@@ -108,18 +108,14 @@ __os_mutex__check__:
     }else if(ticks == OS_WAITING_INFINITY){
         os_mutex__append(mutex, (os_thread_t*)current_thread);
         current_thread->state = OS_THREAD_STATE_PENDING;
+        os_scheduler_schedule_in_thread(&error);
         OS_MUTEX_UNLOCK();
-        do{
-            os_scheduler_schedule_in_thread(&error);
-        }while(error!=OS_ERR_OK);
         goto __os_mutex__check__;
     }else {
         os_mutex__append(mutex, (os_thread_t*)current_thread);
         os_scheduler_timed_wait((os_thread_t*)current_thread, ticks);
+        os_scheduler_schedule_in_thread(&error);
         OS_MUTEX_UNLOCK();
-        do{
-            os_scheduler_schedule_in_thread(&error);
-        }while(error!=OS_ERR_OK);
         if(current_thread->state==OS_THREAD_STATE_TIMEWAIT_TIMEOUT){
             /*调度返回该任务，检查是否TIMEOUT*/
             return OS_ERR_ETIMEOUT;

@@ -90,7 +90,7 @@ int main(void){
     
 //    TestMutex();
 //
-    TestTwoYieldThread();
+//    TestTwoYieldThread();
     
     os_thread_init(&exit_thread, "exit_thd", exit_thread_entry, 0, exit_thread_stack, OS_ARRAY_SIZE(exit_thread_stack), 20, 10, 0);
     exit_thread.exit = exit_thread_on_exit;

@@ -19,7 +19,6 @@ __asm void PendSV_Handler(void)
         LDR R0, =cpu_stack__switch_flag
         LDR R2, [R0]
         CBZ R2, __PendSV_Exit
-
         MOV R2, #0x00
         STR R2, [R0]
 

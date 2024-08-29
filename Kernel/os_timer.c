@@ -1,6 +1,7 @@
 #include <os_timer.h>
 #include <os_macros.h>
-
+#include <cpu.h>
+#include <os_critical.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -34,7 +35,7 @@ static os_list_t os_timer__tv[4]={0};
 ////
 
 
-static void os_timer__add(os_timer_t * timer){
+C_STATIC_FORCEINLINE void os_timer__add(os_timer_t * timer){
     os_list_t * head = 0;
 
     if(timer->expire_tick <= TVR_MAX){
@@ -70,7 +71,6 @@ os_err_t os_timer_init(void)
 
 os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * userdata, os_tick_t ticks, int flags)
 {
-
     timer->timeout = timeout;
     timer->userdata = userdata;
     timer->ticks = ticks;
@@ -78,7 +78,7 @@ os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * use
     timer->flags = flags;
 
     os_timer__add(timer);
-
+    
     return OS_ERR_OK;
 }
 
@@ -94,7 +94,7 @@ os_bool_t os_timer_tick(void){
     os_list_t * head=0;
     os_list_node_t * node=0;
     os_timer_t * timer=0;
-    os_bool_t need_schedule = OS_FALSE;
+    volatile os_bool_t need_schedule = OS_FALSE;
 
     os_timer__current_tick++;
 
@@ -131,7 +131,7 @@ os_bool_t os_timer_tick(void){
             }
         }
     }
-
+    
     return need_schedule;
 
 }

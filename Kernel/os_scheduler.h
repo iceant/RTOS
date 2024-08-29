@@ -42,6 +42,7 @@ extern volatile os_tick_t os_scheduler__systick_ticks;
 #define OS_SCHEDULER_ERR_NO_REQ                     0x1005
 #define OS_SCHEDULER_ERR_WIP                        0x1006
 #define OS_SCHEDULER_ERR_NULL_NEXT_THREAD           0x1007
+#define OS_SCHEDULER_ERR_BUSY                       0x1008
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +116,7 @@ C_STATIC_FORCEINLINE void os_scheduler_enable(void){
 }
 
 C_STATIC_FORCEINLINE os_bool_t os_scheduler_disabled(void){
-    return (os_scheduler__lock_nest>0u)?OS_TRUE:OS_FALSE;
+    return (os_scheduler__lock_nest>0u);
 }
 
 #endif /*INCLUDED_OS_SCHEDULER_H*/

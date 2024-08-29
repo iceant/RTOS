@@ -18,9 +18,9 @@ extern cpu_stack_switch_callback_t  cpu_stack__switch_callback;
 ////
 
 
-static void cpu_svc_1(void** from_stack_p, void** to_stack_p, void* callback){
+static int cpu_svc_1(void** from_stack_p, void** to_stack_p, void* callback){
     if(cpu_stack__switch_flag == 1){
-        return;
+        return -1;
     }
 
     cpu_stack__switch_flag = 1;
@@ -31,6 +31,8 @@ static void cpu_svc_1(void** from_stack_p, void** to_stack_p, void* callback){
     NVIC_INT_CTRL = NVIC_PENDSVSET;
     cpu_dsb();
     cpu_isb();
+    
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +55,8 @@ void SVC_Handler_C(unsigned int *svc_args, uint32_t* exc_return){
 
     switch(svc_number){
         case 1:{
-            cpu_svc_1((void**)svc_args[0], (void**)svc_args[1], (void*)svc_args[2]);
+            int err = cpu_svc_1((void**)svc_args[0], (void**)svc_args[1], (void*)svc_args[2]);
+            svc_args[0] = err;
             break;
         }
         default:{

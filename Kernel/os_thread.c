@@ -4,6 +4,8 @@
 #include <os_scheduler.h>
 #include <cpu.h>
 #include <os_critical.h>
+#include <stdio.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////
 static void os_thread_on_exit(void){
@@ -73,18 +75,25 @@ os_thread_t * os_thread_self(void){
 
 void os_thread_delay(os_tick_t ticks)
 {
+    os_err_t error = OS_ERR_OK;
     OS_SCHEDULER_LOCK_VARIABLE();
+    
     OS_SCHEDULER_LOCK();
     os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
     OS_SCHEDULER_UNLOCK();
     
-    os_err_t error = OS_ERR_OK;
-    do{
+    os_scheduler_schedule_in_thread(&error);
+    
+    while(error!=OS_ERR_OK){
+        printf("[os_thread] %s, err:%x\n", __FUNCTION__ , error);
+        
+        OS_SCHEDULER_LOCK();
+        os_scheduler_timed_wait((os_thread_t*)os_scheduler__current_thread, ticks);
+        OS_SCHEDULER_UNLOCK();
+        
         os_scheduler_schedule_in_thread(&error);
-        if(error!=OS_ERR_OK){
-            printf("[os_thread] %s, err:%x\n", __FUNCTION__ , error);
-        }
-    }while(error!=OS_ERR_OK);
+
+    }
 }
 
 void os_thread_mdelay(os_int_t ms){
