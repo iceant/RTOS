@@ -19,9 +19,9 @@ static void thread_entry(void* p){
 
 void thread_sleep_test(void)
 {
-    os_thread_init(&sleep_thread1, "sleep1", thread_entry, 2, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10, 0);
+    os_thread_init(&sleep_thread1, "sleep1", thread_entry, 100, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10, 0);
     os_thread_startup(&sleep_thread1);
     
-    os_thread_init(&sleep_thread2, "sleep2", thread_entry, 4, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10, 0);
+    os_thread_init(&sleep_thread2, "sleep2", thread_entry, 200, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10, 0);
     os_thread_startup(&sleep_thread2);
 }

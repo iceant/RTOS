@@ -24,12 +24,12 @@ os_err_t os_readylist_push_back(os_thread_t* thread)
     if(OS_LIST_IS_EMPTY(list)){
         os_priority_mark(priority);
     }
-    os_list_node_t * node = 0;
-    for(node = list->next; node!=list; node= OS_LIST_NEXT(node)){
-        if(node==&thread->ready_node){
-            return OS_ERR_EXIST;
-        }
-    }
+//    os_list_node_t * node = 0;
+//    for(node = list->next; node!=list; node= OS_LIST_NEXT(node)){
+//        if(node==&thread->ready_node){
+//            return OS_ERR_EXIST;
+//        }
+//    }
     OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_INSERT_BEFORE(list, &thread->ready_node);
     return OS_ERR_OK;
@@ -41,12 +41,12 @@ os_err_t os_readylist_push_front(os_thread_t* thread){
     if(OS_LIST_IS_EMPTY(list)){
         os_priority_mark(priority);
     }
-    os_list_node_t * node;
-    for(node = list->next; node!=list; node= OS_LIST_NEXT(node)){
-        if(node==&thread->ready_node){
-            return OS_ERR_EXIST;
-        }
-    }
+//    os_list_node_t * node;
+//    for(node = list->next; node!=list; node= OS_LIST_NEXT(node)){
+//        if(node==&thread->ready_node){
+//            return OS_ERR_EXIST;
+//        }
+//    }
     OS_LIST_REMOVE(&thread->ready_node);
     OS_LIST_INSERT_AFTER(list, &thread->ready_node);
     return OS_ERR_OK;
