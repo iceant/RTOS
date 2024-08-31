@@ -28,10 +28,29 @@ os_err_t os_kernel_startup(void){
 }
 
 os_err_t os_kernel_schedule(void){
-    return os_scheduler_schedule();
+    if(cpu_in_privilege()){
+        os_err_t err =  os_scheduler_schedule();
+        if(err==OS_SCHEDULER_ERR_IRQ_NEST){
+            os_scheduler__need_schedule = OS_TRUE;
+        }
+        return err;
+    }else{
+        return cpu_kernel_schedule();
+    }
 }
 
 os_err_t os_kernel_systick(void){
     return os_scheduler_systick();
 }
 
+os_err_t os_kernel_resume(os_thread_t * thread){
+    if(cpu_in_privilege()){
+        os_err_t err =  os_scheduler_resume(thread);
+        if(err==OS_SCHEDULER_ERR_IRQ_NEST){
+            os_scheduler__need_schedule = OS_TRUE;
+        }
+        return err;
+    }else{
+        return cpu_kernel_thread_resume(thread);
+    }
+}

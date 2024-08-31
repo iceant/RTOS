@@ -97,7 +97,8 @@ os_err_t os_thread_startup(os_thread_t* thread)
 
 os_err_t os_thread_suspend(os_thread_t* thread){
     thread->state = OS_THREAD_STATE_SUSPEND;
-    return os_scheduler_suspend(thread);
+    thread->remain_ticks = 0;
+    return cpu_kernel_schedule();
 }
 
 os_err_t os_thread_resume(os_thread_t* thread){

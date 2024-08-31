@@ -58,11 +58,28 @@ C_STATIC_FORCEINLINE os_thread_t * os_sem__pop_one(os_sem_t* sem){
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
 
-#define OS_SEM_LOCK(sem) do{os_critical_enter(); os_cpulock_lock(&sem->lock); }while(0)
-#define OS_SEM_UNLOCK(sem) do{os_cpulock_unlock(&sem->lock); os_critical_leave();}while(0)
+#if 0
+/* TODO: try lock 失去了保护，如何在不关中断的情况下正确的保护资源? */
+#define OS_SEM_LOCK(sem) do{ \
+    os_critical_enter();     \
+    os_cpulock_lock(&sem->lock); \
+}while(0)
 
-//#define OS_SEM_LOCK(sem) OS_KERNEL_LOCK_VAR();OS_KERNEL_LOCK()
-//#define OS_SEM_UNLOCK(sem) OS_KERNEL_UNLOCK()
+#define OS_SEM_TRY_LOCK(sem) do{ \
+    os_critical_enter();     \
+    os_cpulock_try_lock(&sem->lock); \
+}while(0)
+
+#define OS_SEM_UNLOCK(sem) do{ \
+    if(sem->lock==1){          \
+        os_cpulock_unlock(&sem->lock); \
+    }                          \
+    os_critical_leave();       \
+}while(0)
+#endif
+
+#define OS_SEM_LOCK(sem) OS_KERNEL_LOCK_VAR();OS_KERNEL_LOCK()
+#define OS_SEM_UNLOCK(sem) OS_KERNEL_UNLOCK()
 
 /* -------------------------------------------------------------------------------------------------------------- */
 
@@ -122,22 +139,22 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
     os_err_t err;
     os_thread_t* thread;
     
-    OS_SEM_LOCK(sem);
+    
     if(sem->value>0u){
         sem->value--;
-        OS_SEM_UNLOCK(sem);
         return OS_ERR_OK;
     }
     
     if(ticks==0){
-        OS_SEM_UNLOCK(sem);
         return OS_ERR_TIMEOUT;
     }else if(ticks==OS_WAITING_INFINITY){
+        OS_SEM_LOCK(sem);
         os_sem__push_back(sem,  os_thread_self());
         OS_SEM_UNLOCK(sem);
         cpu_kernel_schedule();
     }else{
         thread = os_thread_self();
+        OS_SEM_LOCK(sem);
         os_sem__push_back(sem,  thread);
         OS_SEM_UNLOCK(sem);
         cpu_kernel_thread_delay(thread, ticks);
@@ -148,22 +165,14 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
     return OS_ERR_EAGAIN;
 }
 
+extern os_err_t os_kernel_resume(os_thread_t * thread);
 os_err_t os_sem_release(os_sem_t* sem){
     os_thread_t * thread;
+//    OS_SEM_TRY_LOCK(sem);
     OS_SEM_LOCK(sem);
     thread = os_sem__pop_one(sem);
     OS_SEM_UNLOCK(sem);
-    
-    if(cpu_in_privilege()){
-        os_err_t err =  os_scheduler_resume(thread);
-        if(err==OS_SCHEDULER_ERR_IRQ_NEST){
-            os_scheduler__need_schedule = OS_TRUE;
-        }
-        return err;
-    }else{
-        cpu_kernel_thread_resume(thread);
-    }
-    return OS_ERR_OK;
+    return os_kernel_resume(thread);
 }
 
 /* -------------------------------------------------------------------------------------------------------------- */

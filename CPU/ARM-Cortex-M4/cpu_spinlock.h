@@ -40,7 +40,15 @@ C_STATIC_FORCEINLINE void cpu_spinlock_unlock(cpu_spinlock_t* lock){
         status = cpu_strexw(0, lock);
     }while(status != 0);
     cpu_dmb();
+}
 
+/* 0:SUCCESS, -1: ERROR, 1:FAILED */
+C_STATIC_FORCEINLINE int cpu_spinlock_try_lock(cpu_spinlock_t* lock){
+    int status;
+    if(cpu_ldrexw(lock)!=0) return -1;
+    status = cpu_strexw(1, lock);
+    cpu_dmb();
+    return status;
 }
 
 #endif /* INCLUDED_CPU_SPINLOCK_H */

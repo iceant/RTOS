@@ -46,6 +46,6 @@ os_err_t os_kernel_schedule(void);
 
 os_err_t os_kernel_systick(void);
 
-
+os_err_t os_kernel_resume(os_thread_t * thread);
 
 #endif /* INCLUDED_OS_KERNEL_H */

@@ -20,4 +20,7 @@ void os_cpulock_lock(os_cpulock_t* lock);
 
 void os_cpulock_unlock(os_cpulock_t* lock);
 
+os_err_t os_cpulock_try_lock(os_cpulock_t* lock);
+
+
 #endif /* INCLUDED_OS_CPULOCK_H */
