@@ -2,16 +2,19 @@
 #include <cpu_types.h>
 #include <cpu_stack.h>
 
-extern volatile uint8_t     cpu_stack__switch_flag;
-extern volatile void**      cpu_stack__from_stack_p;
-extern volatile void**      cpu_stack__to_stack_p;
+extern volatile uint8_t                cpu_stack__switch_flag;
+extern volatile void**                 cpu_stack__switch_from_stack_p;
+extern volatile void**                 cpu_stack__switch_to_stack_p;
 
 __asm void PendSV_Handler(void)
 {
     IMPORT cpu_stack__switch_flag
-    IMPORT cpu_stack__from_stack_p
-    IMPORT cpu_stack__to_stack_p
+    IMPORT cpu_stack__switch_from_stack_p
+    IMPORT cpu_stack__switch_to_stack_p
     IMPORT cpu_stack_switch_callback
+    
+        THUMB
+        PRESERVE8
 
         MRS R1, PRIMASK
         CPSID I
@@ -22,7 +25,7 @@ __asm void PendSV_Handler(void)
         MOV R2, #0x00
         STR R2, [R0]
 
-        LDR R2, =cpu_stack__from_stack_p
+        LDR R2, =cpu_stack__switch_from_stack_p
         LDR R0, [R2]
         CBZ R0, __PendSV_SwitchTo
 
@@ -38,12 +41,12 @@ __asm void PendSV_Handler(void)
         MRS R3, CONTROL
         STMDB R0!, {R2-R11}
 
-        LDR R2, =cpu_stack__from_stack_p
+        LDR R2, =cpu_stack__switch_from_stack_p
         LDR R3, [R2]
         STR R0, [R3]
 
 __PendSV_SwitchTo
-        LDR R0, =cpu_stack__to_stack_p
+        LDR R0, =cpu_stack__switch_to_stack_p
         LDR R0, [R0]
         LDR R0, [R0]
 

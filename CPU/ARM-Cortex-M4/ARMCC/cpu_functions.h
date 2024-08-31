@@ -11,9 +11,26 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+extern int __disable_fiq(void);
+extern void __enable_fiq(void);
+extern int __disable_irq(void);
+extern void __enable_irq(void);
+extern unsigned char __clz(unsigned int val);
+extern void __wfi(void);
+extern unsigned int __ldrex(volatile void *ptr);
+extern int __strex(unsigned int val, volatile void *ptr);
+extern void __clrex(void);
+extern unsigned int __rbit(unsigned int val);
+extern void __wfe(void);
+extern void __sev(void);
+extern void __schedule_barrier(void);
 
-#define cpu_enable_irq __enable_irq
-#define cpu_disable_irq __disable_irq
+/* -------------------------------------------------------------------------------------------------------------- */
+/* FUNCTIONS */
+
+#define cpu_disable_irq() __disable_irq()
+#define cpu_enable_irq() __enable_irq()
+
 
 C_STATIC_FORCEINLINE uint32_t cpu_get_control(void)
 {
@@ -141,11 +158,7 @@ C_STATIC_FORCEINLINE void cpu_set_fpscr(uint32_t fpscr)
                    __schedule_barrier();\
                 } while (0U)
 
-#define cpu_dmb() do {\
-                   __schedule_barrier();\
-                   __dmb(0xF);\
-                   __schedule_barrier();\
-                } while (0U)
+#define cpu_dmb() C_ASM{DMB 0xF}
 
 #define cpu_rev __rev
 
@@ -174,5 +187,20 @@ C_SECTION(.revsh_text) C_STATIC_FORCEINLINE C_ASM int32_t cpu_revsh(int32_t valu
 #define cpu_strexh(value, ptr)              __strex(value, ptr)
 #define cpu_strexw(value, ptr)              __strex(value, ptr)
 #define cpu_clrex                           __clrex
+
+/* -------------------------------------------------------------------------------------------------------------- */
+
+#define cpu_svc(n) __asm{SVC n}
+
+C_STATIC_FORCEINLINE cpu_uint_t cpu_local_irq_save(void){
+    cpu_uint_t value = cpu_get_primask();
+    cpu_disable_irq();
+    return value;
+}
+
+C_STATIC_FORCEINLINE void cpu_local_irq_restore(cpu_uint_t value){
+    cpu_set_primask(value);
+    cpu_enable_irq();
+}
 
 #endif /*INCLUDED_CPU_FUNCTIONS_H*/

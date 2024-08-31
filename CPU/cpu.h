@@ -1,45 +1,43 @@
 #ifndef INCLUDED_CPU_H
 #define INCLUDED_CPU_H
 
-////////////////////////////////////////////////////////////////////////////////
-////
+/* -------------------------------------------------------------------------------------------------------------- */
 
 
 #ifndef INCLUDED_CPU_TYPES_H
 #include <cpu_types.h>
 #endif /*INCLUDED_CPU_TYPES_H*/
 
-#ifndef INCLUDED_CPU_STACK_H
-#include <cpu_stack.h>
-#endif /*INCLUDED_CPU_STACK_H*/
-
-#ifndef INCLUDED_CPU_INTERRUPTS_H
-#include <cpu_interrupts.h>
-#endif /*INCLUDED_CPU_INTERRUPTS_H*/
+#ifndef INCLUDED_CPU_DEFINITIONS_H
+#include <cpu_definitions.h>
+#endif /*INCLUDED_CPU_DEFINITIONS_H*/
 
 #ifndef INCLUDED_CPU_REGISTERS_H
 #include <cpu_registers.h>
 #endif /*INCLUDED_CPU_REGISTERS_H*/
 
-#ifndef INCLUDED_CPU_SVC_H
-#include <cpu_svc.h>
-#endif /*INCLUDED_CPU_SVC_H*/
+#ifndef INCLUDED_CPU_FUNCTIONS_H
+#include <cpu_functions.h>
+#endif /*INCLUDED_CPU_FUNCTIONS_H*/
 
-#ifndef INCLUDED_CPU_SPINLOCK_H
-#include <cpu_spinlock.h>
-#endif /*INCLUDED_CPU_SPINLOCK_H*/
+#ifndef INCLUDED_CPU_STACK_H
+#include <cpu_stack.h>
+#endif /*INCLUDED_CPU_STACK_H*/
 
-#ifndef INCLUDED_CPU_FUNCTIONS_C_H
-#include <cpu_functions_c.h>
-#endif /*INCLUDED_CPU_FUNCTIONS_C_H*/
+#ifndef INCLUDED_CPU_KERNEL_H
+#include <cpu_kernel.h>
+#endif /*INCLUDED_CPU_KERNEL_H*/
 
+#if (CPU_FEATURE_SPINLOCK_SUPPORT==1)
+    #ifndef INCLUDED_CPU_SPINLOCK_H
+    #include <cpu_spinlock.h>
+    #endif /*INCLUDED_CPU_SPINLOCK_H*/
+#endif
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
-typedef void (*cpu_exception_handler_t)(void*);
-
-extern cpu_exception_handler_t cpu_exception_handler;
-
+#if (CPU_FEATURE_ATOMIC_SUPPORT==1)
+    #ifndef INCLUDED_CPU_ATOMIC_H
+    #include <cpu_atomic.h>
+    #endif /*INCLUDED_CPU_ATOMIC_H*/
+#endif
 
 #endif /*INCLUDED_CPU_H*/

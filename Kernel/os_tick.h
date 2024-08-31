@@ -1,36 +1,24 @@
 #ifndef INCLUDED_OS_TICK_H
 #define INCLUDED_OS_TICK_H
 
-////////////////////////////////////////////////////////////////////////////////
-////
 #ifndef INCLUDED_OS_TYPES_H
 #include <os_types.h>
 #endif /*INCLUDED_OS_TYPES_H*/
 
+/* -------------------------------------------------------------------------------------------------------------- */
 
-////////////////////////////////////////////////////////////////////////////////
-////
 typedef os_uint_t os_tick_t;
 
-////////////////////////////////////////////////////////////////////////////////
-////
-extern volatile os_tick_t os_scheduler__systick_ticks;
+/* -------------------------------------------------------------------------------------------------------------- */
 
+extern os_tick_t os_tick__value;
 
-////////////////////////////////////////////////////////////////////////////////
-////
-#define OS_WAITING_INFINITY (-1u)
+/* -------------------------------------------------------------------------------------------------------------- */
 
+os_tick_t os_tick_from_millisecond(uint32_t ms);
 
-////////////////////////////////////////////////////////////////////////////////
-////
+os_tick_t os_tick_get(void);
 
-os_tick_t os_tick_from_milliseconds(int32_t ms);
+os_tick_t os_tick_increase(void);
 
-C_STATIC_FORCEINLINE os_tick_t os_tick_get(void){
-    return os_scheduler__systick_ticks;
-}
-
-
-
-#endif /*INCLUDED_OS_TICK_H*/
+#endif /* INCLUDED_OS_TICK_H */

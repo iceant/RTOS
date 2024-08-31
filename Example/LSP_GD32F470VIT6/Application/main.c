@@ -4,12 +4,13 @@
 #include <os_kernel.h>
 #include <sdk_hex.h>
 #include <test_two_yield_thread.h>
-#include <nvic_show_priority.h>
-#include <thread_sleep.h>
-#include <test_mutex.h>
+//#include <nvic_show_priority.h>
+//#include <thread_sleep.h>
+//#include <test_mutex.h>
+#include <single_thread.h>
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
+#if 0
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t boot_thread_stack[1024];
 static os_thread_t boot_thread;
@@ -72,6 +73,7 @@ static void exit_thread_entry(void* p){
 static void exit_thread_on_exit(os_thread_t * thread){
     printf("Thread [%s] exit at %u!\n", thread->name, os_tick_get());
 }
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -79,10 +81,12 @@ int main(void){
     
     Board_Init();
     
+    
     os_kernel_init();
     
     printf("Board Init Done!\n");
     
+    #if 0
     nvic_show_priority();
 
     
@@ -98,9 +102,17 @@ int main(void){
     
     os_thread_init(&USART0_Thread, "USART0_RxThd", USART0_ThreadEntry, 0, USART0_ThreadStack, OS_ARRAY_SIZE(USART0_ThreadStack), 20, 10, 0);
     os_thread_startup(&USART0_Thread);
+    #endif
+    
+    single_thread_startup();
+
+
+    TestTwoYieldThread();
     
     os_kernel_startup();
-    
-    while(1);
+    int nCount = 0;
+    while(1){
+//        printf("nCOunt:%d\n", nCount++);
+    }
     return 0;
 }

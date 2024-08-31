@@ -1,11 +1,10 @@
 #ifndef INCLUDED_OS_TIMER_H
 #define INCLUDED_OS_TIMER_H
 
-////////////////////////////////////////////////////////////////////////////////
-////
-#ifndef INCLUDED_OS_TYPES_H
-#include <os_types.h>
-#endif /*INCLUDED_OS_TYPES_H*/
+/* -------------------------------------------------------------------------------------------------------------- */
+#ifndef INCLUDED_OS_ERRORS_H
+#include <os_errors.h>
+#endif /*INCLUDED_OS_ERRORS_H*/
 
 #ifndef INCLUDED_OS_LIST_H
 #include <os_list.h>
@@ -15,51 +14,29 @@
 #include <os_tick.h>
 #endif /*INCLUDED_OS_TICK_H*/
 
-#ifndef INCLUDED_OS_ERRORS_H
-#include <os_errors.h>
-#endif /*INCLUDED_OS_ERRORS_H*/
+/* -------------------------------------------------------------------------------------------------------------- */
 
+#define OS_TIMER_FLAG_ONCE      0
+#define OS_TIMER_FLAG_REPEAT    1
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
-
-
+/* -------------------------------------------------------------------------------------------------------------- */
 typedef struct os_timer_s os_timer_t;
 
-typedef void (*os_timer_timeout_t)(os_timer_t* timer, void* userdata);
+typedef void (*os_timer_timeout_t)(os_timer_t* timer, os_tick_t tick_now);
 
 struct os_timer_s{
-    volatile os_list_node_t wait_node;
-    os_timer_timeout_t timeout;
+    os_list_node_t      timer_node;
+    os_tick_t           ticks;                  /* period ticks */
+    os_tick_t           expires_tick;           /* timeout on tick */
+    os_timer_timeout_t  timeout_function;       /* function called when timeout */
     void* userdata;
-    os_tick_t ticks;
-    volatile os_tick_t expire_tick;
-    volatile int flags;
+    int flag;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-////
-
-#define OS_TIMER_FLAG_ONCE      (1<<0)
-#define OS_TIMER_FLAG_REPEAT    (1<<1)
-
-////////////////////////////////////////////////////////////////////////////////
-////
-
-os_err_t os_timer_init(void);
-
-os_err_t os_timer_add(os_timer_t * timer, os_timer_timeout_t timeout, void * userdata, os_tick_t ticks, int flags);
-
-os_err_t os_timer_remove(volatile os_timer_t * timer);
-
-os_bool_t os_timer_tick(void);
-
-os_err_t os_timer_node_init(os_timer_t * timer);
+/* -------------------------------------------------------------------------------------------------------------- */
 
 
+os_err_t os_timer_init(os_timer_t* timer, os_tick_t ticks, os_timer_timeout_t timeout_function, void* ud, int flag);
 
 
-
-
-#endif /*INCLUDED_OS_TIMER_H*/
+#endif /* INCLUDED_OS_TIMER_H */

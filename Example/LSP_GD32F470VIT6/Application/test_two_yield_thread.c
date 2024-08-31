@@ -23,9 +23,9 @@ static void thread_entry(void* p){
 }
 
 void TestTwoYieldThread(void){
-    os_thread_init(&yield_thread1, "yield_thread1", thread_entry, 0, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10, 0);
+    OS_THREAD_INIT(&yield_thread1, "yield_thread1", thread_entry, 0, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10);
     os_thread_startup(&yield_thread1);
     
-    os_thread_init(&yield_thread2, "yield_thread2", thread_entry, 0, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10, 0);
+    OS_THREAD_INIT(&yield_thread2, "yield_thread2", thread_entry, 0, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10);
     os_thread_startup(&yield_thread2);
 }

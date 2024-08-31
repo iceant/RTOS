@@ -26,17 +26,17 @@
 #include <ctype.h>
 #endif /*INCLUDED_CTYPE_H*/
 
-#ifndef INCLUDED_OS_DEFINITIONS_H
-#include <os_definitions.h>
-#endif /*INCLUDED_OS_DEFINITIONS_H*/
-
 #ifndef INCLUDED_C_COMPILER_H
 #include <c_compiler.h>
 #endif /*INCLUDED_C_COMPILER_H*/
 
+#ifndef INCLUDED_OS_DEFINITIONS_H
+#include <os_definitions.h>
+#endif /*INCLUDED_OS_DEFINITIONS_H*/
 
-////////////////////////////////////////////////////////////////////////////////
-////
+/* -------------------------------------------------------------------------------------------------------------- */
+
+
 #if (OS_SIZEOF_VOID_P==1)
     typedef int8_t     os_int_t;
     typedef uint8_t    os_uint_t;
