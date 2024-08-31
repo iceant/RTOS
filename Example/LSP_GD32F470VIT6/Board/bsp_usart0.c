@@ -1,6 +1,5 @@
 #include <bsp_usart0.h>
 #include <os_kernel.h>
-
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -87,3 +86,4 @@ void USARTx_IRQHandler(void)
 
     os_interrupt_leave();
 }
+

@@ -115,5 +115,8 @@
 #define OS_TRUE     true
 #define OS_FALSE    false
 
+/* -------------------------------------------------------------------------------------------------------------- */
+/*  */
+#define OS_WAITING_INFINITY (-1u)
 
 #endif /*INCLUDED_OS_TYPES_H*/

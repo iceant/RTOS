@@ -34,12 +34,13 @@ C_STATIC_FORCEINLINE void cpu_spinlock_lock(cpu_spinlock_t* lock){
 }
 
 C_STATIC_FORCEINLINE void cpu_spinlock_unlock(cpu_spinlock_t* lock){
-    int status;
+    int status = 0;
     do{
         while(cpu_ldrexw(lock)!=1);
         status = cpu_strexw(0, lock);
     }while(status != 0);
     cpu_dmb();
+
 }
 
 #endif /* INCLUDED_CPU_SPINLOCK_H */

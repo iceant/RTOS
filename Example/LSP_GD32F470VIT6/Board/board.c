@@ -14,12 +14,12 @@ void Board_Init(void)
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
     
     BSP_USART0_Init();
-//    BSP_USART0_EnableRxIRQ();
+    BSP_USART0_EnableRxIRQ();
     
 //    NVIC_SetPriority(SysTick_IRQn, 0xF1);
 
     SysTick_Config(SystemCoreClock/OS_TICK_PER_SECOND); /* 1ms = tick, 0xFF */
-//    NVIC_SetPriority(SysTick_IRQn, 0xFE);
+    NVIC_SetPriority(SysTick_IRQn, 0xFE);
     NVIC_SetPriority(SVCall_IRQn, 0x00);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
 }

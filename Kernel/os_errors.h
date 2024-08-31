@@ -23,6 +23,7 @@ typedef os_int_t os_err_t;
 #define OS_ERR_EMPTY    (-4)
 #define OS_ERR_EINVAL   (-5)
 #define OS_ERR_TIMEOUT  (-6)
+#define OS_ERR_EAGAIN   (-7)
 
 
 #endif /* INCLUDED_OS_ERRORS_H */

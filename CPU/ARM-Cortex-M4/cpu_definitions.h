@@ -45,4 +45,8 @@
 #define CPU_FEATURE_ATOMIC_SUPPORT      1
 #endif
 
+#ifndef CPU_HARDFAULT_ENABLE
+    #define CPU_HARDFAULT_ENABLE 2
+#endif
+
 #endif /* INCLUDED_CPU_DEFINITIONS_H */

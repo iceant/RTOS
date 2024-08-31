@@ -53,6 +53,10 @@ typedef void (*os_thread_exit_t)(os_thread_t* thread);
 #define OS_THREAD_FLAG_SCHEDULE_YES         (1 << OS_THREAD_FLAG_SCHEDULE_BIT)
 #define OS_THREAD_FLAG_SCHEDULE_NO          (0 << OS_THREAD_FLAG_SCHEDULE_BIT)
 
+#define OS_THREAD_ERR_OK                    (0)
+#define OS_THREAD_ERR_INVALID_STATE         (1<<1)
+#define OS_THREAD_ERR_TIMEOUT_POS           (2)
+#define OS_THREAD_ERR_TIMEOUT               (1<<OS_THREAD_ERR_TIMEOUT_POS)
 /* -------------------------------------------------------------------------------------------------------------- */
 
 struct os_thread_s{
@@ -80,8 +84,6 @@ struct os_thread_s{
 
 #define OS_THREAD_LIMIT(STACK_BASE, STACK_SIZE) (((STACK_BASE) + (STACK_SIZE)) - OS_THREAD_STACK_MINIMAL_BYTES)
 
-#define OS_THREAD_ERR_INVALID_STATE     (0x2001)
-#define OS_THREAD_ERR_OK                OS_ERR_OK
 
 /* -------------------------------------------------------------------------------------------------------------- */
 /* UTILS */

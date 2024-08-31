@@ -30,6 +30,10 @@
 #include <os_macros.h>
 #endif /*INCLUDED_OS_MACROS_H*/
 
+#ifndef INCLUDED_OS_SEM_H
+#include <os_sem.h>
+#endif /*INCLUDED_OS_SEM_H*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////

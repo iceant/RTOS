@@ -48,6 +48,7 @@ void os_scheduler_lock(void);
 
 void os_scheduler_unlock(void);
 
+os_err_t os_scheduler_push_back_ready(os_thread_t* thread);
 /* -------------------------------------------------------------------------------------------------------------- */
 /* THREAD MANAGER */
 os_err_t os_scheduler_suspend(os_thread_t* thread);
@@ -57,5 +58,10 @@ os_err_t os_scheduler_resume(os_thread_t* thread);
 os_err_t os_scheduler_yield(os_thread_t* thread);
 
 os_err_t os_scheduler_delay(os_thread_t* thread, os_tick_t ticks);
+
+
+/* -------------------------------------------------------------------------------------------------------------- */
+/*  */
+os_bool_t os_scheduler_interrupt_nest();
 
 #endif /* INCLUDED_OS_SCHEDULER_H */

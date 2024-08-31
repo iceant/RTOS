@@ -6,7 +6,7 @@
 #include <os_macros.h>
 #include <os_timewheel.h>
 #include <assert.h>
-
+#include <os_sem.h>
 
 /* -------------------------------------------------------------------------------------------------------------- */
 /* CONTROL */
@@ -55,6 +55,7 @@ C_STATIC_FORCEINLINE void os_scheduler__wait_push_front(os_thread_t * thread){
     OS_LIST_INSERT_BEFORE(&os_scheduler__wait_list, &thread->ready_node);
 }
 
+
 /* -------------------------------------------------------------------------------------------------------------- */
 /* SVC FUNCTIONS */
 
@@ -88,6 +89,15 @@ static void os_scheduler__svc_thread_delay(cpu_uint_t * args, cpu_uint_t* result
     *result = os_scheduler_delay(thread_p, ticks);
 }
 
+#if 0
+extern os_err_t os_sem_take_in_kernel(os_sem_t * sem, os_tick_t  ticks);
+static void os_scheduler__svc_sem_take(cpu_uint_t * args, cpu_uint_t* result){
+    os_sem_t * p = (os_sem_t *)args[0];
+    os_tick_t ticks = (os_tick_t)args[1];
+    *result = os_sem_take_in_kernel(p, ticks);
+}
+#endif
+
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
 
@@ -118,6 +128,8 @@ os_err_t os_scheduler_init(void)
     cpu_kernel_register(2, os_scheduler__svc_thread_resume);
     cpu_kernel_register(3, os_scheduler__svc_thread_yield);
     cpu_kernel_register(4, os_scheduler__svc_thread_delay);
+//    cpu_kernel_register(5, os_scheduler__svc_sem_take);
+    
     
     return OS_ERR_OK;
 }
@@ -191,13 +203,12 @@ os_err_t os_scheduler_schedule(void){
         return OS_SCHEDULER_ERR_IRQ_NEST;
     }
     
-    
-    OS_SCHEDULER_LOCK();
-    
     if(os_scheduler__schedule_wip_flag==1){
         /* 同一时间只允许一个调度在运行 */
         return OS_SCHEDULER_ERR_WIP;
     }
+    
+    OS_SCHEDULER_LOCK();
     os_scheduler__schedule_wip_flag = 1;
     
     /* 找到最高优先级的任务，准备调度 */
@@ -235,7 +246,6 @@ os_err_t os_scheduler_schedule(void){
             os_scheduler__push_back_ready(os_scheduler__current_thread_p);
         }
     }
-
     
     /* 调度成功，返回 */
     OS_SCHEDULER_UNLOCK();
@@ -267,12 +277,16 @@ os_err_t os_scheduler_schedule_in_thread(void){
 /* THREAD MANAGE FUNCTIONS */
 
 os_err_t os_scheduler_suspend(os_thread_t * thread){
+    OS_SCHEDULER_LOCK_VAR();
+    OS_SCHEDULER_LOCK();
+    thread->state = OS_THREAD_STATE_SUSPEND;
+    thread->remain_ticks = 0;
+    OS_SCHEDULER_UNLOCK();
     return OS_ERR_OK;
 }
 
 os_err_t os_scheduler_resume(os_thread_t* thread)
 {
-    assert(thread->state==OS_THREAD_STATE_SUSPEND);
     OS_SCHEDULER_LOCK_VAR();
     OS_SCHEDULER_LOCK();
     os_scheduler__push_back_ready(thread);
@@ -295,6 +309,7 @@ os_err_t os_scheduler_yield(os_thread_t* thread)
 static void os_scheduler__thread_timeout(os_timer_t* timer, os_tick_t tick_now){
     os_thread_t * thread  = timer->userdata;
     os_scheduler__push_back_ready(thread);
+    thread->error |= OS_THREAD_ERR_TIMEOUT;
 }
 
 os_err_t os_scheduler_delay(os_thread_t* thread, os_tick_t ticks){
@@ -307,3 +322,11 @@ os_err_t os_scheduler_delay(os_thread_t* thread, os_tick_t ticks){
     return os_scheduler_schedule();
 }
 
+os_bool_t os_scheduler_interrupt_nest(){
+    return os_scheduler__interrupt_nest>0u;
+}
+
+os_err_t os_scheduler_push_back_ready(os_thread_t* thread){
+    os_scheduler__push_back_ready(thread);
+    return OS_ERR_OK;
+}

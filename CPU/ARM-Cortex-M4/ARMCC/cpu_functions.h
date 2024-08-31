@@ -203,4 +203,11 @@ C_STATIC_FORCEINLINE void cpu_local_irq_restore(cpu_uint_t value){
     cpu_enable_irq();
 }
 
+C_STATIC_FORCEINLINE int cpu_in_privilege(void){
+    if(cpu_get_ipsr()!=0)return 1;
+    if((cpu_get_control()&0x1)==0) return 1;
+    return 0;
+}
+
+
 #endif /*INCLUDED_CPU_FUNCTIONS_H*/
