@@ -54,3 +54,16 @@ os_err_t os_kernel_resume(os_thread_t * thread){
         return cpu_kernel_thread_resume(thread);
     }
 }
+
+os_err_t os_kernel_delay(os_thread_t * thread, os_tick_t ticks)
+{
+    if(cpu_in_privilege()){
+        os_err_t err =  os_scheduler_delay(thread, ticks);
+        if(err==OS_SCHEDULER_ERR_IRQ_NEST){
+            os_scheduler__need_schedule = OS_TRUE;
+        }
+        return err;
+    }else{
+        return cpu_kernel_thread_delay(thread, ticks);
+    }
+}

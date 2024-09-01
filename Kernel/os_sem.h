@@ -27,7 +27,6 @@ typedef struct os_sem_s{
     os_uint_t   value;
     os_list_t   pend_list;
     int flag;
-    os_cpulock_t lock;
     char name[OS_NAME_MAX_SIZE];
 }os_sem_t;
 

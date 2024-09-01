@@ -8,6 +8,12 @@
 #include <os_kernel_lock.h>
 #include <os_macros.h>
 #include <cpu.h>
+
+/* -------------------------------------------------------------------------------------------------------------- */
+/* EXTERNAL */
+extern os_err_t os_kernel_schedule(void);
+extern os_err_t os_kernel_resume(os_thread_t * thread);
+extern os_err_t os_kernel_delay(os_thread_t * thread, os_tick_t ticks);
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
 C_STATIC_FORCEINLINE void os_sem__push_back(os_sem_t * sem, os_thread_t* thread)
@@ -97,7 +103,6 @@ os_err_t os_sem_init(os_sem_t* sem, const char* name, os_uint_t value, int flag)
     sem->value = value;
     sem->flag = flag;
     OS_LIST_INIT(&sem->pend_list);
-    os_cpulock_init(&sem->lock);
     
     return OS_ERR_OK;
 }
@@ -139,7 +144,6 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
     os_err_t err;
     os_thread_t* thread;
     
-    
     if(sem->value>0u){
         sem->value--;
         return OS_ERR_OK;
@@ -151,13 +155,13 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
         OS_SEM_LOCK(sem);
         os_sem__push_back(sem,  os_thread_self());
         OS_SEM_UNLOCK(sem);
-        cpu_kernel_schedule();
+        os_kernel_schedule();
     }else{
         thread = os_thread_self();
         OS_SEM_LOCK(sem);
         os_sem__push_back(sem,  thread);
         OS_SEM_UNLOCK(sem);
-        cpu_kernel_thread_delay(thread, ticks);
+        os_kernel_delay(thread, ticks);
         if(OS_BIT_GET(thread->error, OS_THREAD_ERR_TIMEOUT_POS)){
             return OS_ERR_TIMEOUT;
         }
@@ -165,10 +169,8 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
     return OS_ERR_EAGAIN;
 }
 
-extern os_err_t os_kernel_resume(os_thread_t * thread);
 os_err_t os_sem_release(os_sem_t* sem){
     os_thread_t * thread;
-//    OS_SEM_TRY_LOCK(sem);
     OS_SEM_LOCK(sem);
     thread = os_sem__pop_one(sem);
     OS_SEM_UNLOCK(sem);

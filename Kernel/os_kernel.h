@@ -48,4 +48,6 @@ os_err_t os_kernel_systick(void);
 
 os_err_t os_kernel_resume(os_thread_t * thread);
 
+os_err_t os_kernel_delay(os_thread_t * thread, os_tick_t ticks);
+
 #endif /* INCLUDED_OS_KERNEL_H */
