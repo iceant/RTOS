@@ -131,6 +131,7 @@ os_err_t os_sem_take_in_kernel(os_sem_t* sem, os_tick_t ticks){
         os_sem__push_back(sem,  os_thread_self());
         OS_SEM_UNLOCK(sem);
         os_scheduler_schedule();
+        return OS_ERR_EAGAIN;
     }else{
         thread = os_thread_self();
         OS_SEM_LOCK(sem);
@@ -140,8 +141,9 @@ os_err_t os_sem_take_in_kernel(os_sem_t* sem, os_tick_t ticks){
         if(OS_BIT_GET(thread->error, OS_THREAD_ERR_TIMEOUT_POS)){
             return OS_ERR_TIMEOUT;
         }
+        return OS_ERR_EAGAIN;
     }
-    return OS_ERR_EAGAIN;
+
 }
 
 os_err_t os_sem_release_in_kernel(os_sem_t* sem){
@@ -151,7 +153,6 @@ os_err_t os_sem_release_in_kernel(os_sem_t* sem){
     OS_SEM_UNLOCK(sem);
     return os_scheduler_resume(thread);
 }
-
 
 os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
     if(cpu_in_privilege()){

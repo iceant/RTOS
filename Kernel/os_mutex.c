@@ -4,9 +4,6 @@
 #include <os_scheduler.h>
 #include "os_macros.h"
 
-/* -------------------------------------------------------------------------------------------------------------- */
-/* EXTERNAL */
-extern os_err_t os_kernel_resume(os_thread_t*);
 
 
 /* -------------------------------------------------------------------------------------------------------------- */
@@ -135,6 +132,7 @@ os_err_t os_mutex_take_in_kernel(os_mutex_t* mutex, os_tick_t ticks){
         os_mutex__push_back(mutex, os_scheduler__current_thread_p);
         OS_KERNEL_UNLOCK();
         os_scheduler_schedule();
+        return OS_ERR_EAGAIN;
     }else{
         os_mutex__push_back(mutex, os_scheduler__current_thread_p);
         OS_KERNEL_UNLOCK();
@@ -142,10 +140,8 @@ os_err_t os_mutex_take_in_kernel(os_mutex_t* mutex, os_tick_t ticks){
         if(OS_BIT_GET(os_scheduler__current_thread_p->error, OS_THREAD_ERR_TIMEOUT_POS)){
             return OS_ERR_TIMEOUT;
         }
+        return OS_ERR_EAGAIN;
     }
-    
-    OS_KERNEL_UNLOCK();
-    return OS_ERR_EAGAIN;
 }
 
 
