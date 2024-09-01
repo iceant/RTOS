@@ -5,5 +5,5 @@
 | 2       | cpu_kernel_thread_resume |              |
 | 3       | cpu_kernel_thread_yield  |              |
 | 4       | cpu_kernel_thread_delay  |              |
-| 5       | cpu_kernel_sem_take      |              |
+|         |                          |              |
 

@@ -4,9 +4,15 @@
 #include <os_macros.h>
 #include <os_scheduler.h>
 #include <cpu_kernel_functions.h>
+#include <os_kernel_lock.h>
 /* -------------------------------------------------------------------------------------------------------------- */
 
-static void os_thread__on_exit(os_thread_t* thread){
+static void os_thread__on_exit(){
+    OS_KERNEL_LOCK_VAR();
+    OS_KERNEL_LOCK();
+    os_thread_t* thread = os_thread_self();
+
+    
     if(thread->exit_function){
         thread->exit_function(thread);
     }
@@ -14,6 +20,9 @@ static void os_thread__on_exit(os_thread_t* thread){
     if((OS_BIT_GET(thread->flag, OS_THREAD_FLAG_CREATE_BIT)) == OS_THREAD_FLAG_CREATE_NEW){
         OS_FREE(thread);
     }
+    os_scheduler__current_thread_p = 0;
+    OS_KERNEL_UNLOCK();
+    cpu_kernel_schedule();
 }
 
 
