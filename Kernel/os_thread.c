@@ -7,6 +7,8 @@
 #include <os_kernel_lock.h>
 /* -------------------------------------------------------------------------------------------------------------- */
 
+extern os_err_t os_kernel_schedule(void);
+
 static void os_thread__on_exit(){
     OS_KERNEL_LOCK_VAR();
     OS_KERNEL_LOCK();
@@ -22,7 +24,7 @@ static void os_thread__on_exit(){
     }
     os_scheduler__current_thread_p = 0;
     OS_KERNEL_UNLOCK();
-    cpu_kernel_schedule();
+    os_kernel_schedule();
 }
 
 
