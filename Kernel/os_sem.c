@@ -14,6 +14,8 @@
 extern os_err_t os_kernel_schedule(void);
 extern os_err_t os_kernel_resume(os_thread_t * thread);
 extern os_err_t os_kernel_delay(os_thread_t * thread, os_tick_t ticks);
+
+
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
 C_STATIC_FORCEINLINE void os_sem__push_back(os_sem_t * sem, os_thread_t* thread)
@@ -107,40 +109,8 @@ os_err_t os_sem_init(os_sem_t* sem, const char* name, os_uint_t value, int flag)
     return OS_ERR_OK;
 }
 
-#if 0
-os_err_t os_sem_take_in_kernel(os_sem_t * sem, os_tick_t ticks){
-    os_err_t err;
-    OS_KERNEL_LOCK_VAR();
-    OS_KERNEL_LOCK();
-    
-    if(sem->value>0u){
-        sem->value--;
-        OS_KERNEL_UNLOCK();
-        return OS_ERR_OK;
-    }
-    
-    if(ticks==0){
-        OS_KERNEL_UNLOCK();
-        return OS_ERR_TIMEOUT;
-    }else if(ticks==OS_WAITING_INFINITY){
-        os_sem__push_back(sem,  os_thread_self());
-        OS_KERNEL_UNLOCK();
-        os_scheduler_schedule();
-        return OS_ERR_EAGAIN;
-    }else{
-        os_thread_t* thread = os_thread_self();
-        os_sem__push_back(sem,  thread);
-        OS_KERNEL_UNLOCK();
-        os_scheduler_delay(thread, ticks);
-        if(OS_BIT_GET(thread->error, OS_THREAD_ERR_TIMEOUT_POS)){
-            return OS_ERR_TIMEOUT;
-        }
-        return OS_ERR_EAGAIN;
-    }
-}
-#endif
 
-os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
+os_err_t os_sem_take_in_kernel(os_sem_t* sem, os_tick_t ticks){
     os_err_t err;
     os_thread_t* thread;
     
@@ -149,19 +119,24 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
         return OS_ERR_OK;
     }
     
+    if(os_scheduler__disable_nest>0u){
+        /* SCHEDULER DISABLED */
+        return OS_SEM_ERR_SCHEDULER_DISABLED;
+    }
+    
     if(ticks==0){
         return OS_ERR_TIMEOUT;
     }else if(ticks==OS_WAITING_INFINITY){
         OS_SEM_LOCK(sem);
         os_sem__push_back(sem,  os_thread_self());
         OS_SEM_UNLOCK(sem);
-        os_kernel_schedule();
+        os_scheduler_schedule();
     }else{
         thread = os_thread_self();
         OS_SEM_LOCK(sem);
         os_sem__push_back(sem,  thread);
         OS_SEM_UNLOCK(sem);
-        os_kernel_delay(thread, ticks);
+        os_scheduler_delay(thread, ticks);
         if(OS_BIT_GET(thread->error, OS_THREAD_ERR_TIMEOUT_POS)){
             return OS_ERR_TIMEOUT;
         }
@@ -169,13 +144,39 @@ os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
     return OS_ERR_EAGAIN;
 }
 
-os_err_t os_sem_release(os_sem_t* sem){
+os_err_t os_sem_release_in_kernel(os_sem_t* sem){
     os_thread_t * thread;
     OS_SEM_LOCK(sem);
     thread = os_sem__pop_one(sem);
     OS_SEM_UNLOCK(sem);
-    return os_kernel_resume(thread);
+    return os_scheduler_resume(thread);
 }
+
+
+os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
+    if(cpu_in_privilege()){
+        os_err_t error = os_sem_take_in_kernel(sem, ticks);
+        if(error==OS_SCHEDULER_ERR_IRQ_NEST){
+            os_scheduler__need_schedule = OS_TRUE;
+        }
+        return error;
+    }else{
+        return cpu_kernel_sem_take(sem, ticks);
+    }
+}
+
+os_err_t os_sem_release(os_sem_t* sem){
+    if(cpu_in_privilege()){
+        os_err_t error = os_sem_release_in_kernel(sem);
+        if(error==OS_SCHEDULER_ERR_IRQ_NEST){
+            os_scheduler__need_schedule = OS_TRUE;
+        }
+        return error;
+    }else{
+        return cpu_kernel_sem_release(sem);
+    }
+}
+
 
 /* -------------------------------------------------------------------------------------------------------------- */
 /* KERNEL FUNCTIONS */

@@ -7,7 +7,7 @@
 #include <os_timewheel.h>
 #include <assert.h>
 #include <os_sem.h>
-
+#include <os_mutex.h>
 /* -------------------------------------------------------------------------------------------------------------- */
 /* CONTROL */
 #define OS_SCHEDULER_LOCK_VAR() cpu_uint_t os_scheduler__lock_var__;
@@ -89,14 +89,33 @@ static void os_scheduler__svc_thread_delay(cpu_uint_t * args, cpu_uint_t* result
     *result = os_scheduler_delay(thread_p, ticks);
 }
 
-#if 0
-extern os_err_t os_sem_take_in_kernel(os_sem_t * sem, os_tick_t  ticks);
-static void os_scheduler__svc_sem_take(cpu_uint_t * args, cpu_uint_t* result){
-    os_sem_t * p = (os_sem_t *)args[0];
+extern os_err_t os_sem_take_in_kernel(os_sem_t* sem, os_tick_t ticks);
+extern os_err_t os_sem_release_in_kernel(os_sem_t* sem);
+
+static void os_sem__svc_take(cpu_uint_t * args, cpu_uint_t* result){
+    os_sem_t * p = (os_sem_t*)args[0];
     os_tick_t ticks = (os_tick_t)args[1];
     *result = os_sem_take_in_kernel(p, ticks);
 }
-#endif
+
+static void os_sem__svc_release(cpu_uint_t * args, cpu_uint_t* result){
+    os_sem_t * p = (os_sem_t*)args[0];
+    *result = os_sem_release_in_kernel(p);
+}
+
+extern os_err_t os_mutex_take_in_kernel(os_mutex_t* mutex, os_tick_t ticks);
+extern os_err_t os_mutex_release_in_kernel(os_mutex_t* mutex);
+
+static void os_mutex__svc_take(cpu_uint_t * args, cpu_uint_t* result){
+    os_mutex_t * p = (os_mutex_t*)args[0];
+    os_tick_t ticks = (os_tick_t)args[1];
+    *result = os_mutex_take_in_kernel(p, ticks);
+}
+
+static void os_mutex__svc_release(cpu_uint_t * args, cpu_uint_t* result){
+    os_mutex_t * p = (os_mutex_t*)args[0];
+    *result = os_mutex_release_in_kernel(p);
+}
 
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
@@ -128,7 +147,10 @@ os_err_t os_scheduler_init(void)
     cpu_kernel_register(2, os_scheduler__svc_thread_resume);
     cpu_kernel_register(3, os_scheduler__svc_thread_yield);
     cpu_kernel_register(4, os_scheduler__svc_thread_delay);
-//    cpu_kernel_register(5, os_scheduler__svc_sem_take);
+    cpu_kernel_register(5, os_sem__svc_take);
+    cpu_kernel_register(6, os_sem__svc_release);
+    cpu_kernel_register(7, os_mutex__svc_take);
+    cpu_kernel_register(8, os_mutex__svc_release);
     
     
     return OS_ERR_OK;
