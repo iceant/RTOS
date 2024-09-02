@@ -113,15 +113,7 @@ os_err_t os_thread_startup(os_thread_t* thread)
 os_err_t os_thread_suspend(os_thread_t* thread){
     thread->state = OS_THREAD_STATE_SUSPEND;
     thread->remain_ticks = 0;
-    if(cpu_in_privilege()){
-        os_err_t error = os_scheduler_schedule();
-        if(error==OS_SCHEDULER_ERR_IRQ_NEST){
-            os_scheduler__need_schedule = OS_TRUE;
-        }
-        return error;
-    }else{
-        return cpu_kernel_schedule();
-    }
+    return os_kernel_schedule();
 }
 
 os_err_t os_thread_resume(os_thread_t* thread){
