@@ -151,7 +151,11 @@ os_err_t os_sem_release_in_kernel(os_sem_t* sem){
     OS_SEM_LOCK(sem);
     thread = os_sem__pop_one(sem);
     OS_SEM_UNLOCK(sem);
-    return os_scheduler_resume(thread);
+    if(thread){
+        return os_scheduler_resume(thread);
+    }else{
+        os_scheduler_schedule();
+    }
 }
 
 os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){

@@ -6,6 +6,16 @@
 #include <cpu.h>
 #endif /*INCLUDED_CPU_H*/
 
+#if defined __has_include
+#  if __has_include (<os_config.h>)
+#    include <os_config.h>
+#  endif
+#else
+    #include <os_config.h>
+#endif
+
+
+
 /* -------------------------------------------------------------------------------------------------------------- */
 
 #ifndef OS_SIZEOF_VOID_P

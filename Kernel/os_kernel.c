@@ -12,6 +12,8 @@ os_err_t os_kernel_init(void){
     
     os_memory_init();
     
+    cpu_init();
+    
     cpu_kernel_init();
     
     os_timewheel_init();

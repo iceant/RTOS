@@ -4,6 +4,7 @@
 
 #include <tlsf.h>
 
+C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t os_memory__pool[OS_MEMORY_POOL_SIZE];
 
 os_err_t os_memory_init(void){

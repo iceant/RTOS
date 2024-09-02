@@ -96,10 +96,10 @@ int main(void){
 #if 1
     BSP_USART0_SetRxHandler(USART0_RxHandler, 0);
     os_sem_init(&USART0_RxSem, "USART0_RxSem", 0, OS_SEM_FLAG_FIFO);
-    os_thread_init(&USART0_RxThread, "USART0"
+    OS_THREAD_INIT(&USART0_RxThread, "USART0"
             , USART0_RxThread_Entry, 0
             , USART0_RxThreadStack, OS_ARRAY_SIZE(USART0_RxThreadStack)
-            , 20, 10, 0
+            , 20, 10
     );
 
     os_thread_startup(&USART0_RxThread);
@@ -110,7 +110,7 @@ int main(void){
     printf("os_kernel_startup()...done! ERROR Shoule Not Be Here!!!\n");
 
     while(1){
-        printf("Tick:%u\n", os_scheduler__lock_nest);
+        printf("Tick:%u\n", os_tick_get());
     }
 
     return 0;

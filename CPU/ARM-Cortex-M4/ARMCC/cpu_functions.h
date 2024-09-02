@@ -126,6 +126,7 @@ C_STATIC_FORCEINLINE void cpu_set_faultmask(uint32_t faultMask)
     __regFaultMask = (faultMask & (uint32_t)1U);
 }
 
+#if defined(__FPU_PRESENT)
 C_STATIC_FORCEINLINE uint32_t cpu_get_fpscr(void)
 {
     register uint32_t __regfpscr         C_ASM("fpscr");
@@ -137,7 +138,7 @@ C_STATIC_FORCEINLINE void cpu_set_fpscr(uint32_t fpscr)
     register uint32_t __regfpscr         C_ASM("fpscr");
     __regfpscr = (fpscr);
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////
 #define cpu_nop()                            __nop

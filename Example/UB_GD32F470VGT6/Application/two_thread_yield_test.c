@@ -33,11 +33,11 @@ static void worker(void* p){
 
 void TowThreadYieldTest_Start(void)
 {
-    os_thread_init(&thread1, "worker1", worker, (void*)300, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10, 0);
+    OS_THREAD_INIT(&thread1, "worker1", worker, (void*)300, stacks1, OS_ARRAY_SIZE(stacks1), 20, 10);
     os_thread_startup(&thread1);
 
 
-    os_thread_init(&thread2, "worker2", worker, (void*)200, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10, 0);
+    OS_THREAD_INIT(&thread2, "worker2", worker, (void*)200, stacks2, OS_ARRAY_SIZE(stacks2), 20, 10);
     os_thread_startup(&thread2);
 
 //    os_thread_init(&thread3, "worker3", worker, (void*)100, stacks3, OS_ARRAY_SIZE(stacks3), 24, 10, 0);

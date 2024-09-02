@@ -34,9 +34,9 @@ void Board_Init(void){
     //    SystemCoreClock = 240000000U;
     /* Configure the NVIC Preemption Priority Bits */
     nvic_priority_group_set(NVIC_PRIGROUP_PRE0_SUB4);
-    SysTick_Config(SystemCoreClock/OS_KERNEL_TICKS_PER_SECOND); /* 1ms = tick */
+    SysTick_Config(SystemCoreClock/OS_TICK_PER_SECOND); /* 1ms = tick */
     NVIC_SetPriority(SysTick_IRQn, 0x01);
-    NVIC_SetPriority(SVCall_IRQn, 0xFF);
+    NVIC_SetPriority(SVCall_IRQn, 0x00);
     NVIC_SetPriority(PendSV_IRQn, 0xFF);
 
     /*
