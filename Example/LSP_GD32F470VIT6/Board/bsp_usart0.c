@@ -20,6 +20,11 @@
 #define USARTx_IRQn             USART0_IRQn
 #define USARTx_IRQHandler       USART0_IRQHandler
 
+#define USARTx_DMA_TX_CLOCK         RCU_DMA1
+#define USARTx_DMA_TX_DMAx          DMA1
+#define USARTx_DMA_TX_DMA_CHn       DMA_CH7
+#define USARTx_DMA_TX_DMA_SUBPERIn  DMA_SUBPERI4
+#define USARTx_DATA_ADDRESS         ((uint32_t)&USART_DATA(USARTx))
 ////////////////////////////////////////////////////////////////////////////////
 ////
 
@@ -67,6 +72,37 @@ void BSP_USART0_SetRxHandler(BSP_USART0_RxHandler rxHandler, void* userdata)
     BSP_USART0__RxHandlerUserdata = userdata;
 }
 
+void BSP_USART0_EnableDMATx(void){
+    rcu_periph_clock_enable(USARTx_DMA_TX_CLOCK);
+}
+
+void BSP_USART0_DMATx(uint8_t* txBuffer, size_t size){
+    dma_single_data_parameter_struct dma_init_struct;
+    /* deinitialize DMA channel7(USART0 TX) */
+    dma_deinit(USARTx_DMA_TX_DMAx, USARTx_DMA_TX_DMA_CHn);
+    dma_init_struct.direction = DMA_MEMORY_TO_PERIPH;
+    dma_init_struct.memory0_addr = (uint32_t)txBuffer;
+    dma_init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
+    dma_init_struct.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
+    dma_init_struct.number = size;
+    dma_init_struct.periph_addr = USARTx_DATA_ADDRESS;
+    dma_init_struct.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
+    dma_init_struct.priority = DMA_PRIORITY_ULTRA_HIGH;
+    dma_single_data_mode_init(USARTx_DMA_TX_DMAx, USARTx_DMA_TX_DMA_CHn, &dma_init_struct);
+    /* configure DMA mode */
+    dma_circulation_disable(USARTx_DMA_TX_DMAx, USARTx_DMA_TX_DMA_CHn);
+    dma_channel_subperipheral_select(USARTx_DMA_TX_DMAx, USARTx_DMA_TX_DMA_CHn, USARTx_DMA_TX_DMA_SUBPERIn);
+    /* enable DMA channel7 */
+    dma_channel_enable(USARTx_DMA_TX_DMAx, USARTx_DMA_TX_DMA_CHn);
+    
+    /* USART DMA enable for transmission and reception */
+    usart_dma_transmit_config(USART0, USART_TRANSMIT_DMA_ENABLE);
+    usart_dma_receive_config(USART0, USART_RECEIVE_DMA_ENABLE);
+    
+    /* wait DMA channel transfer complete */
+    while(RESET == dma_flag_get(USARTx_DMA_TX_DMAx, USARTx_DMA_TX_DMA_CHn, DMA_FLAG_FTF));
+    
+}
 ////////////////////////////////////////////////////////////////////////////////
 ////
 

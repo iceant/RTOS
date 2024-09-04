@@ -31,6 +31,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--scatter ${CMAKE_C
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../SDK ${CMAKE_CURRENT_BINARY_DIR}/SDK)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC SDK)
+target_include_directories(SDK PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Application)
+target_include_directories(Kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Application)
+target_include_directories(CPU PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Application)
 
 ########################################################################################################################
 ## FWLIB
@@ -72,7 +75,6 @@ target_sources(${PROJECT_NAME} PUBLIC ${BOARD_SOURCES})
 target_sources(${PROJECT_NAME} PUBLIC ${APPLICATION_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Board/)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Application/)
-
 
 ########################################################################################################################
 ## ARMCC

@@ -154,7 +154,8 @@ os_err_t os_sem_release_in_kernel(os_sem_t* sem){
     if(thread){
         return os_scheduler_resume(thread);
     }else{
-        os_scheduler_schedule();
+//        return os_scheduler_schedule();
+        return OS_SEM_ERR_NOTHREAD;
     }
 }
 

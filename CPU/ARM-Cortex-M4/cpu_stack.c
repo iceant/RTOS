@@ -30,7 +30,7 @@ cpu_err_t cpu_stack_init(
     stack_p = (cpu_stack_t*)(stack_base+stack_size);    /* stack top: start from high address */
     
     *--stack_p = (cpu_stack_t)0x01000000u;              /* xPSR */
-    *--stack_p = (cpu_stack_t)program_entry;            /* program entry */
+    *--stack_p = (cpu_stack_t)program_entry;            /* R15(PC) Program Entry */
     *--stack_p = (cpu_stack_t)program_exit_entry;       /* R14(LR) */
     *--stack_p = (cpu_stack_t)0x12121212u;              /* R12 */
     *--stack_p = (cpu_stack_t)0x03030303u;              /* R3 */

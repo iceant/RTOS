@@ -20,6 +20,10 @@ void BSP_USART0_SetRxHandler(BSP_USART0_RxHandler rxHandler, void* userdata);
 
 void BSP_USART0_EnableRxIRQ(void);
 
+void BSP_USART0_DMATx(uint8_t* txBuffer, size_t size);
+
+void BSP_USART0_EnableDMATx(void);
+
 void BSP_USART0_Printf(const char* fmt, ...);
 
 #endif /* INCLUDED_BSP_USART0_H */

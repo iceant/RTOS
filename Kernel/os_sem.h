@@ -40,6 +40,7 @@ typedef struct os_sem_s{
 /* ERRORS */
 #define OS_SEM_ERR_OK                     OS_ERR_OK
 #define OS_SEM_ERR_SCHEDULER_DISABLED     1
+#define OS_SEM_ERR_NOTHREAD               2
 
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */

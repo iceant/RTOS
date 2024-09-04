@@ -15,6 +15,7 @@ void Board_Init(void)
     
     BSP_USART0_Init();
     BSP_USART0_EnableRxIRQ();
+    BSP_USART0_EnableDMATx();
     
 //    NVIC_SetPriority(SysTick_IRQn, 0xF1);
 
