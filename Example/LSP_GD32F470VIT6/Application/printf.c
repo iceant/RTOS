@@ -17,7 +17,7 @@ int os_printf(const char* fmt, ...){
     int size;
 //    OS_KERNEL_LOCK_VAR();
 //    OS_KERNEL_LOCK();
-    cpu_spinlock_lock(&lock);
+//    cpu_spinlock_lock(&lock);
     va_start(ap, fmt);
     size = vsnprintf(os_printf__buffer, OS_PRINTF_BUFFER_SIZE, fmt, ap);
     va_end(ap);
@@ -27,7 +27,7 @@ int os_printf(const char* fmt, ...){
     
     BSP_USART0_DMATx((uint8_t*)os_printf__buffer, size);
 //    OS_KERNEL_UNLOCK();
-    cpu_spinlock_unlock(&lock);
+//    cpu_spinlock_unlock(&lock);
     return size;
 }
 

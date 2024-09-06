@@ -21,6 +21,7 @@ os_uint_t os_scheduler__disable_nest;
 os_uint_t os_scheduler__interrupt_nest;
 os_tick_t os_scheduler__systick;
 os_thread_t * os_scheduler__current_thread_p;
+os_thread_t * os_scheduler__delay_thread_p;
 os_bool_t os_scheduler__need_schedule;
 
 /* -------------------------------------------------------------------------------------------------------------- */
@@ -117,6 +118,15 @@ static void os_mutex__svc_release(cpu_uint_t * args, cpu_uint_t* result){
     *result = os_mutex_release_in_kernel(p);
 }
 
+static void os_scheduler__lock(cpu_uint_t * args, cpu_uint_t* result){
+    *result = cpu_local_irq_save();
+}
+
+static void os_scheduler__unlock(cpu_uint_t * args, cpu_uint_t* result){
+    cpu_local_irq_restore((cpu_uint_t)args[0]);
+    *result = 0;
+}
+
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
 
@@ -151,6 +161,8 @@ os_err_t os_scheduler_init(void)
     cpu_kernel_register(6, os_sem__svc_release);
     cpu_kernel_register(7, os_mutex__svc_take);
     cpu_kernel_register(8, os_mutex__svc_release);
+    cpu_kernel_register(9, os_scheduler__lock);
+    cpu_kernel_register(10, os_scheduler__unlock);
     
     
     return OS_ERR_OK;
@@ -179,7 +191,16 @@ os_err_t os_scheduler_systick(void){
         return OS_SCHEDULER_ERR_DISABLED;
     }
     
-    os_scheduler__need_schedule = OS_FALSE;
+    if(os_scheduler__need_schedule && os_scheduler__delay_thread_p!=0){
+        /* 紧急调度 */
+        int cmp = os_priority_cmp(os_scheduler__current_thread_p->current_priority, os_scheduler__delay_thread_p->current_priority);
+        if(cmp==OS_PRIORITY_CMP_LOW){
+            os_scheduler__delay_thread_p = 0;
+            OS_SCHEDULER_UNLOCK();
+            return os_scheduler_yield(os_scheduler__current_thread_p);
+        }
+    }
+    
     os_scheduler__systick++;
     
     if(os_scheduler__current_thread_p->state==OS_THREAD_STATE_RUNNING){
@@ -199,7 +220,10 @@ os_err_t os_scheduler_systick(void){
     
     OS_SCHEDULER_UNLOCK();
     
-    return os_scheduler__need_schedule?OS_SCHEDULER_ERR_NEED_SCHEDULE:OS_ERR_OK;
+    if(os_scheduler__need_schedule){
+        return os_scheduler_schedule();
+    }
+    return OS_ERR_OK;
 }
 
 void os_scheduler_lock(void){

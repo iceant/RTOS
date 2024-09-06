@@ -17,6 +17,10 @@
 #include <bsp_usart0.h>
 #endif /*INCLUDED_BSP_USART0_H*/
 
+#ifndef INCLUDED_BSP_PULSE_H
+#include <bsp_pulse.h>
+#endif /*INCLUDED_BSP_PULSE_H*/
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

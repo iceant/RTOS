@@ -28,6 +28,10 @@
 #include <os_timer.h>
 #endif /*INCLUDED_OS_TIMER_H*/
 
+#ifndef INCLUDED_OS_CRITICAL_H
+#include <os_critical.h>
+#endif /*INCLUDED_OS_CRITICAL_H*/
+
 
 
 /* -------------------------------------------------------------------------------------------------------------- */

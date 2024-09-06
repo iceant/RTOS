@@ -17,6 +17,7 @@ extern os_uint_t os_scheduler__disable_nest;
 extern os_uint_t os_scheduler__interrupt_nest;
 extern os_tick_t os_scheduler__systick;
 extern os_thread_t * os_scheduler__current_thread_p;
+extern os_thread_t * os_scheduler__delay_thread_p;
 extern os_bool_t os_scheduler__need_schedule;
 
 /* -------------------------------------------------------------------------------------------------------------- */

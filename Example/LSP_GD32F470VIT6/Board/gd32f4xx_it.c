@@ -4,8 +4,6 @@
 
 void SysTick_Handler(void)
 {
-    os_interrupt_enter();
     os_kernel_systick();
-    os_interrupt_leave();
 }
 

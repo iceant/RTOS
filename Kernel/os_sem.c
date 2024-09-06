@@ -147,16 +147,28 @@ os_err_t os_sem_take_in_kernel(os_sem_t* sem, os_tick_t ticks){
 }
 
 os_err_t os_sem_release_in_kernel(os_sem_t* sem){
-    os_thread_t * thread;
-    OS_SEM_LOCK(sem);
+    os_thread_t * thread = 0;
+    os_err_t error;
+    OS_KERNEL_LOCK_VAR();
+    OS_KERNEL_LOCK();
+    sem->value++;
     thread = os_sem__pop_one(sem);
-    OS_SEM_UNLOCK(sem);
     if(thread){
-        return os_scheduler_resume(thread);
+        os_scheduler_push_back_ready(thread);
+        os_scheduler__need_schedule = OS_TRUE;
+        os_scheduler__delay_thread_p = thread;
+        error = OS_ERR_OK;
     }else{
-//        return os_scheduler_schedule();
-        return OS_SEM_ERR_NOTHREAD;
+        error = OS_SEM_ERR_NOTHREAD;
     }
+    OS_KERNEL_UNLOCK();
+//    if(thread){
+//        return os_scheduler_resume(thread);
+//    }else{
+//        return os_scheduler_schedule();
+////        return OS_SEM_ERR_NOTHREAD;
+//    }
+    return error;
 }
 
 os_err_t os_sem_take(os_sem_t* sem, os_tick_t ticks){
