@@ -119,11 +119,12 @@ static void os_mutex__svc_release(cpu_uint_t * args, cpu_uint_t* result){
 }
 
 static void os_scheduler__lock(cpu_uint_t * args, cpu_uint_t* result){
-    *result = cpu_local_irq_save();
+    cpu_uint_t level = (cpu_uint_t)args[0];
+    *result = cpu_local_basepri_disable(level);
 }
 
 static void os_scheduler__unlock(cpu_uint_t * args, cpu_uint_t* result){
-    cpu_local_irq_restore((cpu_uint_t)args[0]);
+    cpu_local_basepri_enable(args[0]);
     *result = 0;
 }
 
