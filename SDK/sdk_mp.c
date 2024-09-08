@@ -38,7 +38,7 @@ static int nbits  = SDK_MP_NBITS;
 static int nbytes = (SDK_MP_NBITS-1)/8 + 1;
 static int shift  = (SDK_MP_NBITS-1)%8;
 static unsigned char msb = 0xFF;
-static unsigned char temp[16 + 16 + 16 + 2*16+2];
+static unsigned char temp[16 + 16 + 16 + 2*16+2]={0};
 static sdk_mp_t tmp[] = {temp, temp+1*16, temp+2*16, temp+3*16};
 
 static int applyu(int op(sdk_mp_t, sdk_mp_t, sdk_mp_t, sdk_mp_t *), sdk_mp_t z, sdk_mp_t x,
@@ -74,6 +74,17 @@ static int apply(int op(sdk_mp_t, sdk_mp_t, sdk_mp_t, sdk_mp_t*), sdk_mp_t z, sd
 
 ////////////////////////////////////////////////////////////////////////////////
 ////
+void sdk_mp_init(void){
+    nbits  = SDK_MP_NBITS;
+    nbytes = (SDK_MP_NBITS-1)/8 + 1;
+    shift  = (SDK_MP_NBITS-1)%8;
+    msb = 0xFF;
+    memset(temp, 0, sizeof(temp));
+    tmp[0] = temp;
+    tmp[1] = temp+1*16;
+    tmp[2] = temp+2*16;
+    tmp[3] = temp+3*16;
+}
 
 int sdk_mp_set(int n) {
     int prev = nbits;

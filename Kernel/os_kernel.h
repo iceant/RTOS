@@ -50,8 +50,8 @@ os_err_t os_kernel_resume(os_thread_t * thread);
 
 os_err_t os_kernel_delay(os_thread_t * thread, os_tick_t ticks);
 
-int os_kernel_lock(int priority);
-
-void os_kernel_unlock(int priority);
+//int os_kernel_lock(int priority);
+//
+//void os_kernel_unlock(int priority);
 
 #endif /* INCLUDED_OS_KERNEL_H */

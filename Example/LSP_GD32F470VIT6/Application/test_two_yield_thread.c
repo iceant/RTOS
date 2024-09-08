@@ -1,8 +1,8 @@
 #include <test_two_yield_thread.h>
 #include <os_kernel.h>
-#include <stdio.h>
 #include <cpu.h>
 #include <sdk_fmt.h>
+#include <printf.h>
 
 C_ALIGNED(OS_ALIGN_SIZE)
 static uint8_t stacks1[2048];
@@ -15,9 +15,6 @@ static void thread_entry(void* p){
     while(1)
     {
         printf("%s\n", os_thread_self()->name);
-        if(yield_thread1.state==yield_thread2.state){
-            while(nStopFlag==0);
-        }
         os_thread_yield();
     }
 }

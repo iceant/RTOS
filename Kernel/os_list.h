@@ -52,7 +52,8 @@ do{                                \
 do{                       \
     OS_LIST_PREV_NEXT(N) = OS_LIST_NEXT(N); \
     OS_LIST_NEXT_PREV(N) = OS_LIST_PREV(N); \
-    OS_LIST_INIT(N);      \
+    OS_LIST_NEXT(N) = (N);      \
+    OS_LIST_PREV(N) = (N);      \
 }while(0)
 
 #define OS_LIST_CONTAINER(ptr, type, member) \

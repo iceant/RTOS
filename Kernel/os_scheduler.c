@@ -8,11 +8,12 @@
 #include <assert.h>
 #include <os_sem.h>
 #include <os_mutex.h>
+#include <os_memory.h>
 /* -------------------------------------------------------------------------------------------------------------- */
 /* CONTROL */
 #define OS_SCHEDULER_LOCK_VAR() cpu_uint_t os_scheduler__lock_var__;
-#define OS_SCHEDULER_LOCK()     os_scheduler__lock_var__ = cpu_local_irq_save()
-#define OS_SCHEDULER_UNLOCK()   cpu_local_irq_restore(os_scheduler__lock_var__)
+#define OS_SCHEDULER_LOCK()     os_scheduler__lock_var__ = cpu_local_basepri_disable(OS_LOCK_BASE_PRIORITY)
+#define OS_SCHEDULER_UNLOCK()   cpu_local_basepri_enable(os_scheduler__lock_var__)
 
 
 /* -------------------------------------------------------------------------------------------------------------- */
@@ -128,6 +129,42 @@ static void os_scheduler__unlock(cpu_uint_t * args, cpu_uint_t* result){
     *result = 0;
 }
 
+static void os_scheduler__thread_exit_in_kernel(os_thread_t* thread){
+    OS_SCHEDULER_LOCK_VAR();
+    OS_SCHEDULER_LOCK();
+    if(thread){
+        if(thread->exit_function){
+            thread->exit_function(thread);
+        }
+        thread->state = -1;
+        OS_LIST_REMOVE(&thread->ready_node);
+        OS_LIST_REMOVE(&thread->timer_node.timer_node);
+        OS_LIST_REMOVE(&thread->pend_node);
+
+        if((OS_BIT_GET(thread->flag, OS_THREAD_FLAG_CREATE_BIT)) == OS_THREAD_FLAG_CREATE_NEW){
+            OS_FREE(thread);
+        }
+    }
+    os_scheduler__current_thread_p = 0;
+    OS_SCHEDULER_UNLOCK();
+}
+
+static void os_scheduler__thread_exit(cpu_uint_t * args, cpu_uint_t * result){
+    os_scheduler__thread_exit_in_kernel((os_thread_t*)args[0]);
+    *result = 0;
+}
+
+static os_err_t os_scheduler_yield_no_schedule(os_thread_t* thread)
+{
+    assert(thread->state==OS_THREAD_STATE_RUNNING);
+    OS_SCHEDULER_LOCK_VAR();
+    OS_SCHEDULER_LOCK();
+    thread->state = OS_THREAD_STATE_YIELD;
+    thread->remain_ticks = 0;
+    os_scheduler__wait_push_back(thread);
+    OS_SCHEDULER_UNLOCK();
+    return OS_ERR_OK;
+}
 /* -------------------------------------------------------------------------------------------------------------- */
 /*  */
 
@@ -162,10 +199,18 @@ os_err_t os_scheduler_init(void)
     cpu_kernel_register(6, os_sem__svc_release);
     cpu_kernel_register(7, os_mutex__svc_take);
     cpu_kernel_register(8, os_mutex__svc_release);
-    cpu_kernel_register(9, os_scheduler__lock);
-    cpu_kernel_register(10, os_scheduler__unlock);
-    
-    
+    cpu_kernel_register(9, os_scheduler__thread_exit);
+
+    return OS_ERR_OK;
+}
+
+os_err_t os_scheduler_thread_exit(os_thread_t * thread){
+    if(cpu_in_privilege()){
+        os_scheduler__thread_exit_in_kernel(thread);
+        os_scheduler__need_schedule = OS_TRUE;
+    }else{
+        cpu_kernel_thread_exit(thread);
+    }
     return OS_ERR_OK;
 }
 
@@ -191,20 +236,11 @@ os_err_t os_scheduler_systick(void){
         OS_SCHEDULER_UNLOCK();
         return OS_SCHEDULER_ERR_DISABLED;
     }
-    
-    if(os_scheduler__need_schedule && os_scheduler__delay_thread_p!=0){
-        /* 紧急调度 */
-        int cmp = os_priority_cmp(os_scheduler__current_thread_p->current_priority, os_scheduler__delay_thread_p->current_priority);
-        if(cmp==OS_PRIORITY_CMP_LOW){
-            os_scheduler__delay_thread_p = 0;
-            OS_SCHEDULER_UNLOCK();
-            return os_scheduler_yield(os_scheduler__current_thread_p);
-        }
-    }
-    
+
     os_scheduler__systick++;
-    
-    if(os_scheduler__current_thread_p->state==OS_THREAD_STATE_RUNNING){
+
+    if(os_scheduler__current_thread_p && os_scheduler__current_thread_p->state==OS_THREAD_STATE_RUNNING){
+
         if(os_scheduler__current_thread_p->remain_ticks>0u){
             os_scheduler__current_thread_p->remain_ticks--;
         }
@@ -212,18 +248,31 @@ os_err_t os_scheduler_systick(void){
             os_scheduler__push_back_ready(os_scheduler__current_thread_p);
             os_scheduler__need_schedule = OS_TRUE;
         }
+
     }
-    
+
     err = os_timewheel_tick();
+
     if(err==OS_TIMEWHEEL_RET_NEED_SCHEDULE){
         os_scheduler__need_schedule = OS_TRUE;
     }
-    
+
+//    if(os_scheduler__need_schedule && os_scheduler__delay_thread_p!=0){
+//        /* 紧急调度 */
+//        int cmp = os_priority_cmp(os_scheduler__current_thread_p->current_priority, os_scheduler__delay_thread_p->current_priority);
+//        if(cmp==OS_PRIORITY_CMP_LOW){
+//            os_scheduler_yield_no_schedule(os_scheduler__current_thread_p);
+//            os_scheduler__need_schedule = OS_TRUE;
+//            os_scheduler__delay_thread_p = 0;
+//        }
+//    }
+//
+//    if(os_scheduler__need_schedule){
+//        OS_SCHEDULER_UNLOCK();
+//        return os_scheduler_schedule();
+//    }
+
     OS_SCHEDULER_UNLOCK();
-    
-    if(os_scheduler__need_schedule){
-        return os_scheduler_schedule();
-    }
     return OS_ERR_OK;
 }
 
@@ -341,6 +390,7 @@ os_err_t os_scheduler_resume(os_thread_t* thread)
     return os_scheduler_schedule();
 }
 
+
 os_err_t os_scheduler_yield(os_thread_t* thread)
 {
     assert(thread->state==OS_THREAD_STATE_RUNNING);
@@ -354,9 +404,10 @@ os_err_t os_scheduler_yield(os_thread_t* thread)
 }
 
 static void os_scheduler__thread_timeout(os_timer_t* timer, os_tick_t tick_now){
-    os_thread_t * thread  = timer->userdata;
+//    os_thread_t * thread  = timer->userdata;
+    os_thread_t* thread = OS_LIST_CONTAINER(timer, os_thread_t, timer_node);
     os_scheduler__push_back_ready(thread);
-    thread->error |= OS_THREAD_ERR_TIMEOUT;
+    thread->error = OS_BIT_SET(thread->error, OS_THREAD_ERR_TIMEOUT_POS);
 }
 
 os_err_t os_scheduler_delay(os_thread_t* thread, os_tick_t ticks){

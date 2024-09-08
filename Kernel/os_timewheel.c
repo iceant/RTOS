@@ -47,10 +47,10 @@ static os_tick_t os_timewheel__current_tick;
 
 static os_err_t os_timewheel__add_timer_again(os_timer_t * timer, os_tick_t tick_now)
 {
-    os_list_t * list_p = 0;
-    
+    register os_list_t * list_p = 0;
+
     timer->expires_tick = timer->ticks + tick_now;
-    
+
     if(timer->expires_tick <= OS_TV1_MAX){
         list_p = &os_timewheel__1[timer->expires_tick & OS_TVR_MASK];
     }else if(timer->expires_tick <= OS_TV2_MAX){
@@ -62,14 +62,14 @@ static os_err_t os_timewheel__add_timer_again(os_timer_t * timer, os_tick_t tick
     }else if(timer->expires_tick <= OS_TV5_MAX){
         list_p = &os_timewheel__5[(timer->expires_tick >> OS_TV_BITS(3)) & OS_TVN_MASK];
     }
-    
+
     if(!list_p){
         return OS_TIMEWHEEL_RET_ERROR;
     }
-    
+
     OS_LIST_REMOVE(&timer->timer_node);
     OS_LIST_INSERT_BEFORE(list_p, &timer->timer_node);
-    
+
     return OS_TIMEWHEEL_RET_OK;
 }
 /* -------------------------------------------------------------------------------------------------------------- */
@@ -85,6 +85,7 @@ os_err_t os_timewheel_init(void)
     OS_TV_INIT(os_timewheel__5);
     return OS_ERR_OK;
 }
+
 
 os_err_t os_timewheel_tick(void){
     os_err_t err = OS_ERR_OK;
@@ -133,29 +134,36 @@ os_err_t os_timewheel_add_timer(os_timer_t * timer, os_tick_t ticks
         , os_timer_timeout_t timeout_function, void* userdata, int flag)
 {
     os_list_t * list_p = 0;
-    
-    os_timer_init(timer, ticks, timeout_function, userdata, flag);
-    timer->expires_tick = os_timewheel__current_tick + ticks;
-    
-    if(timer->expires_tick <= OS_TV1_MAX){
-        list_p = &os_timewheel__1[timer->expires_tick & OS_TVR_MASK];
-    }else if(timer->expires_tick <= OS_TV2_MAX){
-        list_p = &os_timewheel__2[(timer->expires_tick >> OS_TV_BITS(0)) & OS_TVN_MASK];
-    }else if(timer->expires_tick <= OS_TV3_MAX){
-        list_p = &os_timewheel__3[(timer->expires_tick >> OS_TV_BITS(1)) & OS_TVN_MASK];
-    }else if(timer->expires_tick <= OS_TV4_MAX){
-        list_p = &os_timewheel__4[(timer->expires_tick >> OS_TV_BITS(2)) & OS_TVN_MASK];
-    }else if(timer->expires_tick <= OS_TV5_MAX){
-        list_p = &os_timewheel__5[(timer->expires_tick >> OS_TV_BITS(3)) & OS_TVN_MASK];
+
+    timer->ticks = ticks;
+    timer->expires_tick = 0u;
+    timer->timeout_function = timeout_function;
+    timer->userdata = userdata;
+    timer->flag = flag;
+
+    os_tick_t expire_tick = os_timewheel__current_tick + ticks;
+
+    if(expire_tick <= OS_TV1_MAX){
+        list_p = &os_timewheel__1[expire_tick & OS_TVR_MASK];
+    }else if(expire_tick <= OS_TV2_MAX){
+        list_p = &os_timewheel__2[(expire_tick >> OS_TV_BITS(0)) & OS_TVN_MASK];
+    }else if(expire_tick <= OS_TV3_MAX){
+        list_p = &os_timewheel__3[(expire_tick >> OS_TV_BITS(1)) & OS_TVN_MASK];
+    }else if(expire_tick <= OS_TV4_MAX){
+        list_p = &os_timewheel__4[(expire_tick >> OS_TV_BITS(2)) & OS_TVN_MASK];
+    }else if(expire_tick <= OS_TV5_MAX){
+        list_p = &os_timewheel__5[(expire_tick >> OS_TV_BITS(3)) & OS_TVN_MASK];
     }
-    
+
     if(!list_p){
         return OS_TIMEWHEEL_RET_ERROR;
     }
-    
+
+    timer->expires_tick = expire_tick;
+
     OS_LIST_REMOVE(&timer->timer_node);
     OS_LIST_INSERT_BEFORE(list_p, &timer->timer_node);
-    
+
     return OS_TIMEWHEEL_RET_OK;
 }
 

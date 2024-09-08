@@ -8,22 +8,11 @@
 /* -------------------------------------------------------------------------------------------------------------- */
 
 extern os_err_t os_kernel_schedule(void);
+extern os_err_t os_scheduler_thread_exit(os_thread_t * thread);
 
 static void os_thread__on_exit(){
-    OS_KERNEL_LOCK_VAR();
-    OS_KERNEL_LOCK();
     os_thread_t* thread = os_thread_self();
-
-
-    if(thread->exit_function){
-        thread->exit_function(thread);
-    }
-
-    if((OS_BIT_GET(thread->flag, OS_THREAD_FLAG_CREATE_BIT)) == OS_THREAD_FLAG_CREATE_NEW){
-        OS_FREE(thread);
-    }
-    os_scheduler__current_thread_p = 0;
-    OS_KERNEL_UNLOCK();
+    os_scheduler_thread_exit(thread);
     os_kernel_schedule();
 }
 
@@ -48,7 +37,7 @@ os_err_t os_thread_init(os_thread_t* thread
     thread->parameter = parameter;
     OS_LIST_INIT(&thread->ready_node);
     OS_LIST_INIT(&thread->pend_node);
-    os_timer_init(&thread->timer_node, 0, 0, 0, 0);
+    os_timer_init(&thread->timer_node, 0, 0, thread, 0);
     thread->stack_address = stack_address;
     thread->stack_size = stack_size;
     thread->init_ticks = init_ticks;

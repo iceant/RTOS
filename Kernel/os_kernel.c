@@ -67,21 +67,21 @@ os_err_t os_kernel_delay(os_thread_t * thread, os_tick_t ticks)
     }
 }
 
-int os_kernel_lock(int priority){
-    {
-        if(cpu_in_privilege()){
-            return cpu_local_basepri_disable(priority);
-        }else{
-            return cpu_kernel_lock(priority);
-        }
-    }
-}
-
-void os_kernel_unlock(int priority){
-    if(cpu_in_privilege()){
-        cpu_local_basepri_enable(priority);
-    }else{
-        cpu_kernel_unlock(priority);
-    }
-}
+//int os_kernel_lock(int priority){
+//    {
+//        if(cpu_in_privilege()){
+//            return cpu_local_basepri_disable(priority);
+//        }else{
+//            return cpu_kernel_lock(priority);
+//        }
+//    }
+//}
+//
+//void os_kernel_unlock(int priority){
+//    if(cpu_in_privilege()){
+//        cpu_local_basepri_enable(priority);
+//    }else{
+//        cpu_kernel_unlock(priority);
+//    }
+//}
 

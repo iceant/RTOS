@@ -40,9 +40,9 @@
     #endif /*INCLUDED_CPU_ATOMIC_H*/
 #endif
 
-#ifndef INCLUDED_CPU_SPINLOCK_H
-#include <cpu_spinlock.h>
-#endif /*INCLUDED_CPU_SPINLOCK_H*/
+#ifndef INCLUDED_CPU_EXCEPTION_H
+#include <cpu_exception.h>
+#endif /*INCLUDED_CPU_EXCEPTION_H*/
 
 
 

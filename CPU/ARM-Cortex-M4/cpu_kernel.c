@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <cpu_svc.h> /* internal usage */
 #include <cpu_stack.h>
+#include <cpu.h>
+#include <cpu_exception.h>
 /* -------------------------------------------------------------------------------------------------------------- */
 
 extern volatile uint8_t                cpu_stack__switch_flag;
@@ -34,11 +36,10 @@ static void cpu_kernel__startup(cpu_uint_t * args, cpu_uint_t* result){
 /* -------------------------------------------------------------------------------------------------------------- */
 
 
-
-
 /* -------------------------------------------------------------------------------------------------------------- */
 
 void cpu_kernel_init(void){
+    cpu_set_exception_handler(0);
     cpu_svc_init();
     cpu_svc_register(0, cpu_kernel__startup);
 }

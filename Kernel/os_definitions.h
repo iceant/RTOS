@@ -67,4 +67,8 @@
     #define OS_THREAD_IDLE_STACK_SIZE 512
 #endif
 
+#ifndef OS_LOCK_BASE_PRIORITY
+#define OS_LOCK_BASE_PRIORITY 0x10
+#endif
+
 #endif /* INCLUDED_OS_DEFINITIONS_H */

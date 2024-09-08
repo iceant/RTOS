@@ -29,7 +29,7 @@ typedef unsigned char * sdk_mp_t;
 #define SDK_MP_EDIVZERO     (-1002)
 ////////////////////////////////////////////////////////////////////////////////
 ////
-
+void sdk_mp_init(void);
 int sdk_mp_set(int n);
 int sdk_mp_new(unsigned long u, sdk_mp_t* result);
 void sdk_mp_free(sdk_mp_t *mp);

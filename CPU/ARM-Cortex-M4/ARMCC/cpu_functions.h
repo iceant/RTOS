@@ -213,11 +213,15 @@ C_STATIC_FORCEINLINE int cpu_in_privilege(void){
 C_STATIC_FORCEINLINE cpu_uint_t cpu_local_basepri_disable(cpu_uint_t disable_level){
     cpu_uint_t value = cpu_get_basepri();
     cpu_set_basepri(disable_level);
+    cpu_dsb();
+    cpu_isb();
     return value;
 }
 
 C_STATIC_FORCEINLINE void cpu_local_basepri_enable(cpu_uint_t enable_level){
     cpu_set_basepri(enable_level);
+    cpu_dsb();
+    cpu_isb();
 }
 
 

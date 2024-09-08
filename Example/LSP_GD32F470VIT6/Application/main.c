@@ -1,6 +1,5 @@
 #include <main.h>
 #include <board.h>
-#include <stdio.h>
 #include <os_kernel.h>
 #include <sdk_hex.h>
 #include <test_two_yield_thread.h>
@@ -101,6 +100,8 @@ int main(void){
     os_kernel_init();
     
     nvic_show_priority();
+    
+    os_printf_init();
     
 //    os_thread_init(&exit_thread, "exit_thd"
 //                   , exit_thread_entry, 0

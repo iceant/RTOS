@@ -10,7 +10,6 @@ int __svc(5)  cpu_kernel_sem_take(void* sem, int ticks) ;
 int __svc(6)  cpu_kernel_sem_release(void* sem) ;
 int __svc(7)  cpu_kernel_mutex_take(void* sem, int ticks) ;
 int __svc(8)  cpu_kernel_mutex_release(void* sem);
-int __svc(9)  cpu_kernel_lock(int);
-int __svc(10)  cpu_kernel_unlock(int);
+int __svc(9)  cpu_kernel_thread_exit(void* thread_p);
 
 #endif /* INCLUDED_CPU_KERNEL_FUNCTIONS_H */

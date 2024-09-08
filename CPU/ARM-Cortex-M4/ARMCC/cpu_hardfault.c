@@ -2,7 +2,7 @@
 #include <cpu_definitions.h>
 #include <stdio.h>
 #include <cpu_types.h>
-
+#include <cpu_exception.h>
 
 #if defined(CPU_HARDFAULT_ENABLE) && (CPU_HARDFAULT_ENABLE==1)
 __asm void HardFault_Handler(void){
@@ -131,6 +131,12 @@ static const char* show_exc_return(unsigned int value) {
 }
 
 void FAULT_PrintGeneralRegs(uint32_t *stackaddr){
+
+    cpu_exception_handler_t exceptionHandler = cpu_exception_get_handler();
+    if(exceptionHandler){
+        exceptionHandler(stackaddr);
+    }
+
     printf("\r\nExceptions:\r\n");
     printf("r0           : 0x%08x\r\n", stackaddr[14]);
     printf("r1           : 0x%08x\r\n", stackaddr[15]);
